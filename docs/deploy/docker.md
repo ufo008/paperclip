@@ -1,33 +1,33 @@
 ---
 title: Docker
-summary: Docker Compose quickstart
+summary: Docker Compose 快速开始
 ---
 
-Run Paperclip in Docker without installing Node or pnpm locally.
+在 Docker 中运行 Paperclip，无需在本地安装 Node 或 pnpm。
 
-## Compose Quickstart (Recommended)
+## Compose 快速开始（推荐）
 
 ```sh
 docker compose -f docker/docker-compose.quickstart.yml up --build
 ```
 
-Open [http://localhost:3100](http://localhost:3100).
+打开 [http://localhost:3100](http://localhost:3100)。
 
-Defaults:
+默认值：
 
-- Host port: `3100`
-- Data directory: `./data/docker-paperclip`
+- 主机端口：`3100`
+- 数据目录：`./data/docker-paperclip`
 
-Override with environment variables:
+用环境变量覆盖：
 
 ```sh
 PAPERCLIP_PORT=3200 PAPERCLIP_DATA_DIR=../data/pc \
   docker compose -f docker/docker-compose.quickstart.yml up --build
 ```
 
-**Note:** `PAPERCLIP_DATA_DIR` is resolved relative to the compose file (`docker/`), so `../data/pc` maps to `data/pc` in the project root.
+**注意：** `PAPERCLIP_DATA_DIR` 相对于 compose 文件（`docker/`）解析，所以 `../data/pc` 映射到项目根目录中的 `data/pc`。
 
-## Manual Docker Build
+## 手动 Docker 构建
 
 ```sh
 docker build -t paperclip-local .
@@ -39,23 +39,23 @@ docker run --name paperclip \
   paperclip-local
 ```
 
-## Data Persistence
+## 数据持久化
 
-All data is persisted under the bind mount (`./data/docker-paperclip`):
+所有数据都在绑定挂载下持久化（`./data/docker-paperclip`）：
 
-- Embedded PostgreSQL data
-- Uploaded assets
-- Local secrets key
-- Agent workspace data
+- 嵌入式 PostgreSQL 数据
+- 上传的资产
+- 本地密钥
+- 智能体工作区数据
 
-## Claude and Codex Adapters in Docker
+## Docker 中的 Claude 和 Codex 适配器
 
-The Docker image pre-installs:
+Docker 镜像预装了：
 
-- `claude` (Anthropic Claude Code CLI)
-- `codex` (OpenAI Codex CLI)
+- `claude`（Anthropic Claude Code CLI）
+- `codex`（OpenAI Codex CLI）
 
-Pass API keys to enable local adapter runs inside the container:
+传递 API 密钥以启用容器内的本地适配器运行：
 
 ```sh
 docker run --name paperclip \
@@ -68,4 +68,4 @@ docker run --name paperclip \
   paperclip-local
 ```
 
-Without API keys, the app runs normally — adapter environment checks will surface missing prerequisites.
+没有 API 密钥时，应用正常运行——适配器环境检查将显示缺失的先决条件。
