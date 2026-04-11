@@ -1,27 +1,27 @@
 ---
-title: Goals and Projects
-summary: Goal hierarchy and project management
+title: 目标和项目
+summary: 目标层级和项目管理
 ---
 
-Goals define the "why" and projects define the "what" for organizing work.
+目标定义"为什么"，项目定义"是什么"来组织工作。
 
-## Goals
+## 目标
 
-Goals form a hierarchy: company goals break down into team goals, which break down into agent-level goals.
+目标形成一个层级：公司目标分解为团队目标，团队目标分解为智能体级别目标。
 
-### List Goals
+### 列出目标
 
 ```
 GET /api/companies/{companyId}/goals
 ```
 
-### Get Goal
+### 获取目标
 
 ```
 GET /api/goals/{goalId}
 ```
 
-### Create Goal
+### 创建目标
 
 ```
 POST /api/companies/{companyId}/goals
@@ -33,7 +33,7 @@ POST /api/companies/{companyId}/goals
 }
 ```
 
-### Update Goal
+### 更新目标
 
 ```
 PATCH /api/goals/{goalId}
@@ -43,27 +43,27 @@ PATCH /api/goals/{goalId}
 }
 ```
 
-Valid status values: `planned`, `active`, `achieved`, `cancelled`.
+有效状态值：`planned`、`active`、`achieved`、`cancelled`。
 
-## Projects
+## 项目
 
-Projects group related issues toward a deliverable. They can be linked to goals and have workspaces (repository/directory configurations).
+项目将相关工单分组以实现可交付成果。它们可以链接到目标，并具有工作区（仓库/目录配置）。
 
-### List Projects
+### 列出项目
 
 ```
 GET /api/companies/{companyId}/projects
 ```
 
-### Get Project
+### 获取项目
 
 ```
 GET /api/projects/{projectId}
 ```
 
-Returns project details including workspaces.
+返回包括工作区的项目详情。
 
-### Create Project
+### 创建项目
 
 ```
 POST /api/companies/{companyId}/projects
@@ -82,13 +82,13 @@ POST /api/companies/{companyId}/projects
 }
 ```
 
-Notes:
+注意：
 
-- `workspace` is optional. If present, the project is created and seeded with that workspace.
-- A workspace must include at least one of `cwd` or `repoUrl`.
-- For repo-only projects, omit `cwd` and provide `repoUrl`.
+- `workspace` 是可选的。如果存在，项目会被创建并用该工作区种子化。
+- 工作区必须至少包含 `cwd` 或 `repoUrl` 之一。
+- 对于仅仓库的项目，省略 `cwd` 并提供 `repoUrl`。
 
-### Update Project
+### 更新项目
 
 ```
 PATCH /api/projects/{projectId}
@@ -97,9 +97,9 @@ PATCH /api/projects/{projectId}
 }
 ```
 
-## Project Workspaces
+## 项目工作区
 
-Workspaces link a project to a repository and directory:
+工作区将项目链接到仓库和目录：
 
 ```
 POST /api/projects/{projectId}/workspaces
@@ -112,9 +112,9 @@ POST /api/projects/{projectId}/workspaces
 }
 ```
 
-Agents use the primary workspace to determine their working directory for project-scoped tasks.
+智能体使用主工作区来确定项目范围任务的working directory。
 
-### Manage Workspaces
+### 管理工作区
 
 ```
 GET /api/projects/{projectId}/workspaces
