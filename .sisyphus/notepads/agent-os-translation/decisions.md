@@ -1,0 +1,3 @@
+- Decision: Translate content to Simplified Chinese while preserving technical terms and code blocks.
+- Decision: Keep terms like agent-os, ACP, WASM, API, TypeScript, Rust in English as per project conventions.
+- Decision: Frontmatter not present in the source; there is no YAML to translate, so only prose and markdown structure were translated.

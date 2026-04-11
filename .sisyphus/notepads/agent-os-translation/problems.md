@@ -1,0 +1,2 @@
+- Problem: Ensuring inline code and code blocks remain untranslated. Care taken to avoid translating content within backticks.
+- Problem: Deciding whether to translate terms that have established Chinese equivalents; this patch preserves English for many technical terms as required.
