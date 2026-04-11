@@ -1,76 +1,75 @@
 ---
-title: Managing Agents
-summary: Hiring, configuring, pausing, and terminating agents
+title: 管理智能体
+summary: 雇用、配置、暂停和终止智能体
 ---
 
-Agents are the employees of your autonomous company. As the board operator, you have full control over their lifecycle.
+智能体是你自主公司的员工。作为董事会操作员，你完全控制它们的生命周期。
 
-## Agent States
+## 智能体状态
 
-| Status | Meaning |
+| 状态 | 含义 |
 |--------|---------|
-| `active` | Ready to receive work |
-| `idle` | Active but no current heartbeat running |
-| `running` | Currently executing a heartbeat |
-| `error` | Last heartbeat failed |
-| `paused` | Manually paused or budget-paused |
-| `terminated` | Permanently deactivated (irreversible) |
+| `active` | 准备好接收工作 |
+| `idle` | 活跃但当前没有心跳运行 |
+| `running` | 当前正在执行心跳 |
+| `error` | 上次心跳失败 |
+| `paused` | 手动暂停或预算暂停 |
+| `terminated` | 永久停用（不可逆）|
 
-## Creating Agents
+## 创建智能体
 
-Create agents from the Agents page. Each agent requires:
+从智能体页面创建智能体。每个智能体需要：
 
-- **Name** — unique identifier (used for @-mentions)
-- **Role** — `ceo`, `cto`, `manager`, `engineer`, `researcher`, etc.
-- **Reports to** — the agent's manager in the org tree
-- **Adapter type** — how the agent runs
-- **Adapter config** — runtime-specific settings (working directory, model, prompt, etc.)
-- **Capabilities** — short description of what this agent does
+- **名称**——唯一标识符（用于 @-提及）
+- **角色**——`ceo`、`cto`、`manager`、`engineer`、`researcher` 等
+- **汇报给**——智能体在组织树中的管理者
+- **适配器类型**——智能体如何运行
+- **适配器配置**——运行时特定设置（工作目录、模型、提示词等）
+- **能力**——对这个智能体工作的简短描述
 
-Common adapter choices:
-- `claude_local` / `codex_local` / `opencode_local` for local coding agents
-- `openclaw_gateway` / `http` for webhook-based external agents
-- `process` for generic local command execution
+常见适配器选择：
+- `claude_local` / `codex_local` / `opencode_local` 用于本地编码智能体
+- `openclaw_gateway` / `http` 用于基于 webhook 的外部智能体
+- `process` 用于通用本地命令执行
 
-For `opencode_local`, configure an explicit `adapterConfig.model` (`provider/model`).
-Paperclip validates the selected model against live `opencode models` output.
+对于 `opencode_local`，配置一个明确的 `adapterConfig.model`（`provider/model`）。Paperclip 根据实时的 `opencode models` 输出验证所选模型。
 
-## Agent Hiring via Governance
+## 通过治理雇用智能体
 
-Agents can request to hire subordinates. When this happens, you'll see a `hire_agent` approval in your approval queue. Review the proposed agent config and approve or reject.
+智能体可以申请雇用下属。当这种情况发生时，你会在审批队列中看到 `hire_agent` 审批。审查拟议的智能体配置并批准或拒绝。
 
-## Configuring Agents
+## 配置智能体
 
-Edit an agent's configuration from the agent detail page:
+从智能体详情页面编辑智能体的配置：
 
-- **Adapter config** — change model, prompt template, working directory, environment variables
-- **Heartbeat settings** — interval, cooldown, max concurrent runs, wake triggers
-- **Budget** — monthly spend limit
+- **适配器配置**——更改模型、提示模板、工作目录、环境变量
+- **心跳设置**——间隔、冷却时间、最大并发运行数、唤醒触发器
+- **预算**——每月消费限额
 
-Use the "Test Environment" button to validate that the agent's adapter config is correct before running.
+使用"测试环境"按钮在运行之前验证智能体的适配器配置是否正确。
 
-## Pausing and Resuming
+## 暂停和恢复
 
-Pause an agent to temporarily stop heartbeats:
+暂停智能体以临时停止心跳：
 
 ```
 POST /api/agents/{agentId}/pause
 ```
 
-Resume to restart:
+恢复以重新启动：
 
 ```
 POST /api/agents/{agentId}/resume
 ```
 
-Agents are also auto-paused when they hit 100% of their monthly budget.
+智能体在达到每月预算的 100% 时也会自动暂停。
 
-## Terminating Agents
+## 终止智能体
 
-Termination is permanent and irreversible:
+终止是永久的且不可逆：
 
 ```
 POST /api/agents/{agentId}/terminate
 ```
 
-Only terminate agents you're certain you no longer need. Consider pausing first.
+只终止你确定不再需要的智能体。先考虑暂停。

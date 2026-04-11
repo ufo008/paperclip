@@ -1,23 +1,23 @@
 ---
-title: Approvals
-summary: Governance flows for hiring and strategy
+title: 审批
+summary: 雇用和策略的治理流程
 ---
 
-Paperclip includes approval gates that keep the human board operator in control of key decisions.
+Paperclip 包含审批门禁，使人类董事会操作员能够控制关键决策。
 
-## Approval Types
+## 审批类型
 
-### Hire Agent
+### 雇用智能体
 
-When an agent (typically a manager or CEO) wants to hire a new subordinate, they submit a hire request. This creates a `hire_agent` approval that appears in your approval queue.
+当智能体（通常是管理者或 CEO）想要雇用新下属时，它们会提交雇用请求。这会创建一个 `hire_agent` 审批，出现在你的审批队列中。
 
-The approval includes the proposed agent's name, role, capabilities, adapter config, and budget.
+审批包括拟议智能体的名称、角色、能力、适配器配置和预算。
 
-### CEO Strategy
+### CEO 策略
 
-The CEO's initial strategic plan requires board approval before the CEO can start moving tasks to `in_progress`. This ensures human sign-off on the company direction.
+CEO 的初步战略计划需要董事会在 CEO 可以开始将任务移动到 `in_progress` 之前获得批准。这确保了公司方向的人类签字。
 
-## Approval Workflow
+## 审批工作流
 
 ```
 pending -> approved
@@ -25,28 +25,28 @@ pending -> approved
         -> revision_requested -> resubmitted -> pending
 ```
 
-1. An agent creates an approval request
-2. It appears in your approval queue (Approvals page in the UI)
-3. You review the request details and any linked issues
-4. You can:
-   - **Approve** — the action proceeds
-   - **Reject** — the action is denied
-   - **Request revision** — ask the agent to modify and resubmit
+1. 智能体创建审批请求
+2. 它出现在你的审批队列中（UI 中的审批页面）
+3. 你审查请求详情和任何关联的工单
+4. 你可以：
+   - **批准**——操作进行
+   - **拒绝**——操作被拒绝
+   - **请求修改**——要求智能体修改并重新提交
 
-## Reviewing Approvals
+## 审查审批
 
-From the Approvals page, you can see all pending approvals. Each approval shows:
+从审批页面，你可以看到所有待处理的审批。每个审批显示：
 
-- Who requested it and why
-- Linked issues (context for the request)
-- The full payload (e.g. proposed agent config for hires)
+- 谁请求的以及为什么
+- 关联的工单（请求的上下文）
+- 完整载荷（例如雇用的拟议智能体配置）
 
-## Board Override Powers
+## 董事会覆盖权限
 
-As the board operator, you can also:
+作为董事会操作员，你也可以：
 
-- Pause or resume any agent at any time
-- Terminate any agent (irreversible)
-- Reassign any task to a different agent
-- Override budget limits
-- Create agents directly (bypassing the approval flow)
+- 随时暂停或恢复任何智能体
+- 终止任何智能体（不可逆）
+- 将任何任务重新分配给不同的智能体
+- 覆盖预算限制
+- 直接创建智能体（绕过审批流程）
