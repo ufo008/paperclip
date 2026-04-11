@@ -1,123 +1,123 @@
-# Feedback Voting — Local Data Guide
+# 反馈投票 — 本地数据指南
 
-When you rate an agent's response with **Helpful** (thumbs up) or **Needs work** (thumbs down), Paperclip saves your vote locally alongside your running instance. This guide covers what gets stored, how to access it, and how to export it.
+当你对智能体的响应评价为**有帮助**（竖起大拇指）或**需要改进**（大拇指朝下）时，Paperclip 会将你的投票本地保存到你的运行实例中。本指南涵盖存储了什么、如何访问它以及如何导出它。
 
-## How voting works
+## 投票如何工作
 
-1. Click **Helpful** or **Needs work** on any agent comment or document revision.
-2. If you click **Needs work**, an optional text prompt appears: _"What could have been better?"_ You can type a reason or dismiss it.
-3. A consent dialog asks whether to keep the vote local or share it. Your choice is remembered for future votes.
+1. 在任何智能体评论或文档修订上点击**有帮助**或**需要改进**。
+2. 如果你点击**需要改进**，会出现一个可选的文本提示：_"有什么可以改进的？"_ 你可以输入原因或关闭它。
+3. 一个同意对话框询问是将投票保存在本地还是分享。你的选择会被记住以用于未来的投票。
 
-### What gets stored
+### 存储了什么
 
-Each vote creates two local records:
+每次投票创建两个本地记录：
 
-| Record | What it contains |
+| 记录 | 包含内容 |
 |--------|-----------------|
-| **Vote** | Your vote (up/down), optional reason text, sharing preference, consent version, timestamp |
-| **Trace bundle** | Full context snapshot: the voted-on comment/revision text, issue title, agent info, your vote, and reason — everything needed to understand the feedback in isolation |
+| **投票** | 你的投票（赞成/反对）、可选的原因文本、分享偏好、同意版本、时间戳 |
+| **追踪包** | 完整的上下文快照：被投票的评论/修订文本、工单标题、智能体信息、你的投票和原因——理解反馈所需的一切 |
 
-All data lives in your local Paperclip database. Nothing leaves your machine unless you explicitly choose to share.
+所有数据都保存在你的本地 Paperclip 数据库中。除非你明确选择分享，否则任何内容都不会离开你的机器。
 
-When a vote is marked for sharing, Paperclip immediately tries to upload the trace bundle through the Telemetry Backend. The upload is compressed in transit so full trace bundles stay under gateway size limits. If that immediate push fails, the trace is left in a retriable failed state for later flush attempts. The app server never uploads raw feedback trace bundles directly to object storage.
+当投票被标记为分享时，Paperclip 会立即尝试通过遥测后端上传追踪包。传输过程中进行压缩，因此完整的追踪包保持在网关大小限制内。如果即时推送失败，追踪会处于可重试的失败状态以供后续刷新。应用服务器永远不会将原始反馈追踪包直接上传到对象存储。
 
-## Viewing your votes
+## 查看你的投票
 
-### Quick report (terminal)
+### 快速报告（终端）
 
 ```bash
 pnpm paperclipai feedback report
 ```
 
-Shows a color-coded summary: vote counts, per-trace details with reasons, and export statuses.
+显示颜色编码的摘要：投票计数、每个追踪的详情及原因，以及导出状态。
 
 ```bash
-# Installed CLI
+# 已安装 CLI
 paperclipai feedback report
 
-# Point to a different server or company
+# 指向不同的服务器或公司
 pnpm paperclipai feedback report --api-base http://127.0.0.1:3000 --company-id <company-id>
 
-# Include raw payload dumps in the report
+# 在报告中包含原始载荷转储
 pnpm paperclipai feedback report --payloads
 ```
 
-### API endpoints
+### API 端点
 
-All endpoints require board-user access (automatic in local dev).
+所有端点都需要 board 用户访问（本地开发中自动）。
 
-**List votes for an issue:**
+**列出工单的投票：**
 ```bash
 curl http://127.0.0.1:3102/api/issues/<issueId>/feedback-votes
 ```
 
-**List trace bundles for an issue (with full payloads):**
+**列出工单的追踪包（带有完整载荷）：**
 ```bash
 curl 'http://127.0.0.1:3102/api/issues/<issueId>/feedback-traces?includePayload=true'
 ```
 
-**List all traces company-wide:**
+**列出全公司范围的追踪：**
 ```bash
 curl 'http://127.0.0.1:3102/api/companies/<companyId>/feedback-traces?includePayload=true'
 ```
 
-**Get a single trace envelope record:**
+**获取单个追踪信封记录：**
 ```bash
 curl http://127.0.0.1:3102/api/feedback-traces/<traceId>
 ```
 
-**Get the full export bundle for a trace:**
+**获取追踪的完整导出包：**
 ```bash
 curl http://127.0.0.1:3102/api/feedback-traces/<traceId>/bundle
 ```
 
-#### Filtering
+#### 过滤
 
-The trace endpoints accept query parameters:
+追踪端点接受查询参数：
 
-| Parameter | Values | Description |
+| 参数 | 值 | 描述 |
 |-----------|--------|-------------|
-| `vote` | `up`, `down` | Filter by vote direction |
-| `status` | `local_only`, `pending`, `sent`, `failed` | Filter by export status |
-| `targetType` | `issue_comment`, `issue_document_revision` | Filter by what was voted on |
-| `sharedOnly` | `true` | Only show votes the user chose to share |
-| `includePayload` | `true` | Include the full context snapshot |
-| `from` / `to` | ISO date | Date range filter |
+| `vote` | `up`, `down` | 按投票方向过滤 |
+| `status` | `local_only`, `pending`, `sent`, `failed` | 按导出状态过滤 |
+| `targetType` | `issue_comment`, `issue_document_revision` | 按被投票的内容过滤 |
+| `sharedOnly` | `true` | 仅显示用户选择分享的投票 |
+| `includePayload` | `true` | 包含完整上下文快照 |
+| `from` / `to` | ISO 日期 | 日期范围过滤 |
 
-## Exporting your data
+## 导出你的数据
 
-### Export to files + zip
+### 导出到文件 + zip
 
 ```bash
 pnpm paperclipai feedback export
 ```
 
-Creates a timestamped directory with:
+创建带时间戳的目录：
 
 ```
 feedback-export-20260331T120000Z/
-  index.json                    # manifest with summary stats
+  index.json                    # 带有摘要统计的清单
   votes/
-    PAP-123-a1b2c3d4.json      # vote metadata (one per vote)
+    PAP-123-a1b2c3d4.json      # 投票元数据（每个投票一个）
   traces/
-    PAP-123-e5f6g7h8.json      # Paperclip feedback envelope (one per trace)
+    PAP-123-e5f6g7h8.json      # Paperclip 反馈信封（每个追踪一个）
   full-traces/
     PAP-123-e5f6g7h8/
-      bundle.json              # full export manifest for the trace
-      ...raw adapter files     # codex / claude / opencode session artifacts when available
+      bundle.json              # 追踪的完整导出清单
+      ...raw adapter files     # 可用时的 codex / claude / opencode 会话制品
 feedback-export-20260331T120000Z.zip
 ```
 
-Exports are full by default. `traces/` keeps the Paperclip envelope, while `full-traces/` contains the richer per-trace bundle plus any recoverable adapter-native files.
+导出默认是完整的。`traces/` 保存 Paperclip 信封，而 `full-traces/` 包含更丰富的每追踪包以及任何可恢复的适配器本机文件。
 
 ```bash
-# Custom server and output directory
+# 自定义服务器和输出目录
 pnpm paperclipai feedback export --api-base http://127.0.0.1:3000 --company-id <company-id> --out ./my-export
 ```
 
-### Reading an exported trace
+### 读取导出的追踪
 
-Open any file in `traces/` to see:
+打开 `traces/` 中的任何文件可以看到：
 
 ```json
 {
@@ -146,47 +146,47 @@ Open any file in `traces/` to see:
 }
 ```
 
-Open `full-traces/<issue>-<trace>/bundle.json` to see the expanded export metadata, including capture notes, adapter type, integrity metadata, and the inventory of raw files written alongside it.
+打开 `full-traces/<issue>-<trace>/bundle.json` 可以看到扩展的导出元数据，包括捕获笔记、适配器类型、完整性元数据以及随其写入的原始文件清单。
 
-Each entry in `bundle.json.files[]` includes the actual captured file payload under `contents`, not just a pathname. For text artifacts this is stored as UTF-8 text; binary artifacts use base64 plus an `encoding` marker.
+`bundle.json.files[]` 中的每个条目在 `contents` 下包含实际捕获的文件载荷，而不仅仅是路径名。对于文本制品，这存储为 UTF-8 文本；二进制制品使用 base64 加上 `encoding` 标记。
 
-Built-in local adapters now export their native session artifacts more directly:
+内置本地适配器现在更直接地导出它们的本机会话制品：
 
-- `codex_local`: `adapter/codex/session.jsonl`
-- `claude_local`: `adapter/claude/session.jsonl`, plus any `adapter/claude/session/...` sidecar files and `adapter/claude/debug.txt` when present
-- `opencode_local`: `adapter/opencode/session.json`, `adapter/opencode/messages/*.json`, and `adapter/opencode/parts/<messageId>/*.json`, with optional `project.json`, `todo.json`, and `session-diff.json`
+- `codex_local`：`adapter/codex/session.jsonl`
+- `claude_local`：`adapter/claude/session.jsonl`，加上任何 `adapter/claude/session/...` 边车文件和 `adapter/claude/debug.txt`（当存在时）
+- `opencode_local`：`adapter/opencode/session.json`、`adapter/opencode/messages/*.json` 和 `adapter/opencode/parts/<messageId>/*.json`，带有可选的 `project.json`、`todo.json` 和 `session-diff.json`
 
-## Sharing preferences
+## 分享偏好
 
-The first time you vote, a consent dialog asks:
+第一次投票时，会出现一个同意对话框：
 
-- **Keep local** — vote is stored locally only (`sharedWithLabs: false`)
-- **Share this vote** — vote is marked for sharing (`sharedWithLabs: true`)
+- **保存在本地** — 投票仅保存在本地（`sharedWithLabs: false`）
+- **分享此投票** — 投票被标记为分享（`sharedWithLabs: true`）
 
-Your preference is saved per-company. You can change it any time via the feedback settings. Votes marked "keep local" are never queued for export.
+你的偏好按公司保存。你可以通过反馈设置随时更改它。标记为"保存在本地"的投票永远不会排队等待导出。
 
-## Data lifecycle
+## 数据生命周期
 
-| Status | Meaning |
+| 状态 | 含义 |
 |--------|---------|
-| `local_only` | Vote stored locally, not marked for sharing |
-| `pending` | Marked for sharing, saved locally, and waiting for the immediate upload attempt |
-| `sent` | Successfully transmitted |
-| `failed` | Transmission attempted but failed (for example the backend is unreachable or not configured); later flushes retry once a backend is available |
+| `local_only` | 投票保存在本地，未标记分享 |
+| `pending` | 标记为分享，保存本地，等待即时上传尝试 |
+| `sent` | 成功传输 |
+| `failed` | 尝试传输但失败（例如后端不可达或未配置）；当后端可用时，后续刷新重试 |
 
-Your local database always retains the full vote and trace data regardless of sharing status.
+无论分享状态如何，你的本地数据库始终保留完整的投票和追踪数据。
 
-## Remote sync
+## 远程同步
 
-Votes you choose to share are sent to the Telemetry Backend immediately from the vote request. The server also keeps a background flush worker so failed traces can retry later. The Telemetry Backend validates the request, then persists the bundle into its configured object storage.
+你选择分享的投票会从投票请求立即发送到遥测后端。服务器还保持后台刷新工作器，以便后续重试失败的追踪。遥测后端验证请求，然后将包持久化到其配置的对象存储中。
 
-- App server responsibility: build the bundle, POST it to Telemetry Backend, update trace status
-- Telemetry Backend responsibility: authenticate the request, validate payload shape, compress/store the bundle, return the final object key
-- Retry behavior: failed uploads move to `failed` with an error message in `failureReason`, and the worker retries them on later ticks
-- Default endpoint: when no feedback export backend URL is configured, Paperclip falls back to `https://telemetry.paperclip.ing`
-- Important nuance: the uploaded object is a snapshot of the full bundle at vote time. If you fetch a local bundle later and the underlying adapter session file has continued to grow, the local regenerated bundle may be larger than the already-uploaded snapshot for that same trace.
+- 应用服务器责任：构建包、POST 到遥测后端、更新追踪状态
+- 遥测后端责任：认证请求、验证载荷形状、压缩/存储包、返回最终对象键
+- 重试行为：失败的上传会移动到 `failed`，并在 `failureReason` 中带有错误消息，工作器在后续 tick 时重试
+- 默认端点：当未配置反馈导出后端 URL 时，Paperclip 回退到 `https://telemetry.paperclip.ing`
+- 重要细节：上传的对象是投票时完整包的快照。如果你稍后获取本地包，但底层适配器会话文件继续增长，本地重新生成的包可能比同一追踪的已上传快照更大
 
-Exported objects use a deterministic key pattern so they are easy to inspect:
+导出的对象使用确定性键模式，因此易于检查：
 
 ```text
 feedback-traces/<companyId>/YYYY/MM/DD/<exportId-or-traceId>.json
