@@ -1,94 +1,94 @@
-# Contributing Guide
+# 贡献指南
 
-Thanks for wanting to contribute!
+感谢您愿意贡献！
 
-We really appreciate both small fixes and thoughtful larger changes.
+我们非常感谢小型修复和深思熟虑的大型更改。
 
-## Two Paths to Get Your Pull Request Accepted
+## 让拉取请求被接受的两种途径
 
-### Path 1: Small, Focused Changes (Fastest way to get merged)
+### 途径 1：小型、专注的更改（最快合并方式）
 
-- Pick **one** clear thing to fix/improve
-- Touch the **smallest possible number of files**
-- Make sure the change is very targeted and easy to review
-- All tests pass and CI is green
-- Greptile score is 5/5 with all comments addressed
-- Use the [PR template](.github/PULL_REQUEST_TEMPLATE.md)
+- 选择**一个**明确的修复/改进点
+- 触及**尽可能少的文件**
+- 确保更改非常有针对性，易于审查
+- 所有测试通过且 CI 为绿色
+- Greptile 评分为 5/5，且所有评论均已处理
+- 使用 [PR 模板](.github/PULL_REQUEST_TEMPLATE.md)
 
-These almost always get merged quickly when they're clean.
+这些更改如果干净利落，几乎总能快速合并。
 
-### Path 2: Bigger or Impactful Changes
+### 途径 2：更大或更有影响力的更改
 
-- **First** talk about it in Discord → #dev channel  
-  → Describe what you're trying to solve  
-  → Share rough ideas / approach
-- Once there's rough agreement, build it
-- In your PR include:
-  - Before / After screenshots (or short video if UI/behavior change)
-  - Clear description of what & why
-  - Proof it works (manual testing notes)
-  - All tests passing and CI green
-  - Greptile score 5/5 with all comments addressed
-  - [PR template](.github/PULL_REQUEST_TEMPLATE.md) fully filled out
+- **首先**在 Discord → #dev 频道讨论
+  → 描述您要解决的问题
+  → 分享粗略的想法/方法
+- 一旦有粗略共识，就开始构建
+- 在您的 PR 中包括：
+  - 之前/之后截图（如果 UI/行为有变化，或短视频）
+  - 清晰的描述（是什么和为什么）
+  - 证明其有效的证据（手动测试笔记）
+  - 所有测试通过且 CI 为绿色
+  - Greptile 评分 5/5，且所有评论均已处理
+  - [PR 模板](.github/PULL_REQUEST_TEMPLATE.md) 完整填写
 
-PRs that follow this path are **much** more likely to be accepted, even when they're large.
+遵循此途径的 PR **更有可能**被接受，即使它们很大。
 
-## PR Requirements (all PRs)
+## PR 要求（所有 PR）
 
-### Use the PR Template
+### 使用 PR 模板
 
-Every pull request **must** follow the PR template at [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md). If you create a PR via the GitHub API or other tooling that bypasses the template, copy its contents into your PR description manually. The template includes required sections: Thinking Path, What Changed, Verification, Risks, Model Used, and a Checklist.
+每个拉取请求**必须**遵循 [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) 中的 PR 模板。如果您通过 GitHub API 或其他绕过模板的工具创建 PR，请手动将其内容复制到 PR 描述中。模板包括必需部分：Thinking Path、What Changed、Verification、Risks、Model Used 和 Checklist。
 
-### Model Used (Required)
+### Model Used（必需）
 
-Every PR must include a **Model Used** section specifying which AI model produced or assisted with the change. Include the provider, exact model ID/version, context window size, and any relevant capability details (e.g., reasoning mode, tool use). If no AI was used, write "None — human-authored". This applies to all contributors — human and AI alike.
+每个 PR 必须包含一个 **Model Used** 部分，指定生成或辅助更改的 AI 模型。包括提供商、确切的模型 ID/版本、上下文窗口大小以及任何相关功能细节（例如推理模式、工具使用）。如果未使用 AI，请写 "None — human-authored"。这适用于所有贡献者——人类和 AI  alike。
 
-### Tests Must Pass
+### 测试必须通过
 
-All tests must pass before a PR can be merged. Run them locally first and verify CI is green after pushing.
+所有测试必须在 PR 合并之前通过。先在本地运行测试，确保推送后 CI 为绿色。
 
-### Greptile Review
+### Greptile 审查
 
-We use [Greptile](https://greptile.com) for automated code review. Your PR must achieve a **5/5 Greptile score** with **all Greptile comments addressed** before it can be merged. If Greptile leaves comments, fix or respond to each one and request a re-review.
+我们使用 [Greptile](https://greptile.com) 进行自动化代码审查。您的 PR 必须达到 **5/5 Greptile 评分**，且**所有 Greptile 评论均已处理**，然后才能合并。如果 Greptile 留下评论，请修复或回复每一条，并请求重新审查。
 
-## General Rules (both paths)
+## 一般规则（两种途径）
 
-- Write clear commit messages
-- Keep PR title + description meaningful
-- One PR = one logical change (unless it's a small related group)
-- Run tests locally first
-- Be kind in discussions 😄
+- 写清晰的 commit 消息
+- 保持 PR 标题和描述有意义
+- 一个 PR = 一个逻辑更改（除非是一组小型相关更改）
+- 先在本地运行测试
+- 在讨论中保持友善 😄
 
-## Writing a Good PR message
+## 写好 PR 消息
 
-Your PR description must follow the [PR template](.github/PULL_REQUEST_TEMPLATE.md). All sections are required. The "thinking path" at the top explains from the top of the project down to what you fixed. E.g.:
+您的 PR 描述必须遵循 [PR 模板](.github/PULL_REQUEST_TEMPLATE.md)。所有部分都是必需的。顶部的 "thinking path" 从项目顶部向下解释到您修复的内容。例如：
 
-### Thinking Path Example 1:
+### Thinking Path 示例 1：
 
-> - Paperclip orchestrates ai-agents for zero-human companies
-> - There are many types of adapters for each LLM model provider
-> - But LLM's have a context limit and not all agents can automatically compact their context
-> - So we need to have an adapter-specific configuration for which adapters can and cannot automatically compact their context
-> - This pull request adds per-adapter configuration of compaction, either auto or paperclip managed
-> - That way we can get optimal performance from any adapter/provider in Paperclip
+> - Paperclip 为零人类公司编排 AI 智能体
+> - 每个 LLM 模型提供商都有多种适配器类型
+> - 但 LLM 有上下文限制，并非所有智能体都能自动压缩其上下文
+> - 因此我们需要为适配器提供特定的配置，以确定哪些适配器可以或不能自动压缩上下文
+> - 此拉取请求为每个适配器添加了压缩配置，可以是自动或由 Paperclip 管理
+> - 这样我们就可以从任何适配器/提供商中获得 Paperclip 的最佳性能
 
-### Thinking Path Example 2:
+### Thinking Path 示例 2：
 
-> - Paperclip orchestrates ai-agents for zero-human companies
-> - But humans want to watch the agents and oversee their work
-> - Human users also operate in teams and so they need their own logins, profiles, views etc.
-> - So we have a multi-user system for humans
-> - But humans want to be able to update their own profile picture and avatar
-> - But the avatar upload form wasn't saving the avatar to the file storage system
-> - So this PR fixes the avatar upload form to use the file storage service
-> - The benefit is we don't have a one-off file storage for just one aspect of the system, which would cause confusion and extra configuration
+> - Paperclip 为零人类公司编排 AI 智能体
+> - 但人类希望观察智能体并监督其工作
+> - 人类用户也以团队形式运作，因此他们需要自己的登录、配置文件、视图等
+> - 因此我们为人类提供了多用户系统
+> - 但人类希望能够更新自己的个人资料图片和头像
+> - 但头像上传表单没有将头像保存到文件存储系统
+> - 因此此 PR 修复了头像上传表单以使用文件存储服务
+> - 这样我们就不会为系统的一个方面提供单独的文件存储，这会造成混淆和额外配置
 
-Then have the rest of your normal PR message after the Thinking Path.
+然后在 Thinking Path 之后写您正常的 PR 消息。
 
-This should include details about what you did, why you did it, why it matters & the benefits, how we can verify it works, and any risks.
+这应该包括关于您做了什么、为什么这样做、为什么重要及收益、如何验证它有效，以及任何风险的详细信息。
 
-Please include screenshots if possible if you have a visible change. (use something like the [agent-browser skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/SKILL.md) or similar to take screenshots). Ideally, you include before and after screenshots.
+如果您的更改是可见的，请尽可能包含截图。（可以使用 [agent-browser skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/SKILL.md) 或类似工具来截图）。最好包括之前和之后的截图。
 
-Questions? Just ask in #dev — we're happy to help.
+有问题？直接在 #dev 提问——我们很乐意提供帮助。
 
-Happy hacking!
+祝编程愉快！
