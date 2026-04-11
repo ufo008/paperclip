@@ -1,62 +1,62 @@
 ---
-title: Quickstart
-summary: Get Paperclip running in minutes
+title: 快速开始
+summary: 在几分钟内运行 Paperclip
 ---
 
-Get Paperclip running locally in under 5 minutes.
+在 5 分钟内在本地运行 Paperclip。
 
-## Quick Start (Recommended)
+## 快速开始（推荐）
 
 ```sh
 npx paperclipai onboard --yes
 ```
 
-This walks you through setup, configures your environment, and gets Paperclip running.
+这将引导你完成设置、配置环境并运行 Paperclip。
 
-If you already have a Paperclip install, rerunning `onboard` keeps your current config and data paths intact. Use `paperclipai configure` if you want to edit settings.
+如果你已经安装了 Paperclip，重新运行 `onboard` 会保留当前的配置和数据路径。如果你想编辑设置，请使用 `paperclipai configure`。
 
-To start Paperclip again later:
+之后再次启动 Paperclip：
 
 ```sh
 npx paperclipai run
 ```
 
-> **Note:** If you used `npx` for setup, always use `npx paperclipai` to run commands. The `pnpm paperclipai` form only works inside a cloned copy of the Paperclip repository (see Local Development below).
+> **注意：** 如果你使用 `npx` 进行设置，请始终使用 `npx paperclipai` 来运行命令。`pnpm paperclipai` 形式仅在克隆的 Paperclip 仓库内有效（请参阅下面的本地开发）。
 
-## Local Development
+## 本地开发
 
-For contributors working on Paperclip itself. Prerequisites: Node.js 20+ and pnpm 9+.
+适用于为 Paperclip 本身做出贡献的开发人员。前提条件：Node.js 20+ 和 pnpm 9+。
 
-Clone the repository, then:
+克隆仓库，然后：
 
 ```sh
 pnpm install
 pnpm dev
 ```
 
-This starts the API server and UI at [http://localhost:3100](http://localhost:3100).
+这将在 [http://localhost:3100](http://localhost:3100) 启动 API 服务器和 UI。
 
-No external database required — Paperclip uses an embedded PostgreSQL instance by default.
+无需外部数据库——Paperclip 默认使用嵌入式 PostgreSQL 实例。
 
-When working from the cloned repo, you can also use:
+在克隆的仓库中工作时，你也可以使用：
 
 ```sh
 pnpm paperclipai run
 ```
 
-This auto-onboards if config is missing, runs health checks with auto-repair, and starts the server.
+如果配置缺失，这会自动引导、运行健康检查并进行自动修复，然后启动服务器。
 
-## What's Next
+## 下一步
 
-Once Paperclip is running:
+Paperclip 运行后：
 
-1. Create your first company in the web UI
-2. Define a company goal
-3. Create a CEO agent and configure its adapter
-4. Build out the org chart with more agents
-5. Set budgets and assign initial tasks
-6. Hit go — agents start their heartbeats and the company runs
+1. 在 Web UI 中创建你的第一个公司
+2. 定义公司目标
+3. 创建一个 CEO 智能体并配置其适配器
+4. 用更多智能体构建组织结构图
+5. 设置预算并分配初始任务
+6. 点击运行——智能体开始发送心跳，公司开始运作
 
-<Card title="Core Concepts" href="/start/core-concepts">
-  Learn the key concepts behind Paperclip
+<Card title="核心概念" href="/start/core-concepts">
+  了解 Paperclip 背后的关键概念
 </Card>
