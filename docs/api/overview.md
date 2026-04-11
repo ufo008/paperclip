@@ -1,62 +1,62 @@
 ---
-title: API Overview
-summary: Authentication, base URL, error codes, and conventions
+title: API 概述
+summary: 认证、基础 URL、错误代码和约定
 ---
 
-Paperclip exposes a RESTful JSON API for all control plane operations.
+Paperclip 为所有控制平面操作暴露了一个 RESTful JSON API。
 
-## Base URL
+## 基础 URL
 
-Default: `http://localhost:3100/api`
+默认：`http://localhost:3100/api`
 
-All endpoints are prefixed with `/api`.
+所有端点都带有 `/api` 前缀。
 
-## Authentication
+## 认证
 
-All requests require an `Authorization` header:
+所有请求都需要 `Authorization` 头：
 
 ```
 Authorization: Bearer <token>
 ```
 
-Tokens are either:
+Token 可以是：
 
-- **Agent API keys** — long-lived keys created for agents
-- **Agent run JWTs** — short-lived tokens injected during heartbeats (`PAPERCLIP_API_KEY`)
-- **User session cookies** — for board operators using the web UI
+- **Agent API 密钥**——为智能体创建的长寿命密钥
+- **Agent 运行 JWT**——在心跳期间注入的短寿命 token（`PAPERCLIP_API_KEY`）
+- **用户会话 Cookie**——供使用 Web UI 的董事会操作员使用
 
-## Request Format
+## 请求格式
 
-- All request bodies are JSON with `Content-Type: application/json`
-- Company-scoped endpoints require `:companyId` in the path
-- Run audit trail: include `X-Paperclip-Run-Id` header on all mutating requests during heartbeats
+- 所有请求体都是 JSON，带有 `Content-Type: application/json`
+- 公司范围的端点需要在路径中包含 `:companyId`
+- 运行审计跟踪：在心跳期间的所有变更请求上包含 `X-Paperclip-Run-Id` 头
 
-## Response Format
+## 响应格式
 
-All responses return JSON. Successful responses return the entity directly. Errors return:
+所有响应都返回 JSON。成功响应直接返回实体。错误返回：
 
 ```json
 {
-  "error": "Human-readable error message"
+  "error": "人类可读的错误消息"
 }
 ```
 
-## Error Codes
+## 错误代码
 
-| Code | Meaning | What to Do |
+| 代码 | 含义 | 怎么做 |
 |------|---------|------------|
-| `400` | Validation error | Check request body against expected fields |
-| `401` | Unauthenticated | API key missing or invalid |
-| `403` | Unauthorized | You don't have permission for this action |
-| `404` | Not found | Entity doesn't exist or isn't in your company |
-| `409` | Conflict | Another agent owns the task. Pick a different one. **Do not retry.** |
-| `422` | Semantic violation | Invalid state transition (e.g. backlog -> done) |
-| `500` | Server error | Transient failure. Comment on the task and move on. |
+| `400` | 验证错误 | 检查请求体是否符合预期字段 |
+| `401` | 未认证 | API 密钥缺失或无效 |
+| `403` | 未授权 | 你没有此操作的权限 |
+| `404` | 未找到 | 实体不存在或不在你的公司中 |
+| `409` | 冲突 | 另一个智能体拥有该任务。选择另一个。**不要重试。** |
+| `422` | 语义违规 | 无效的状态转换（例如 backlog -> done）|
+| `500` | 服务器错误 | 瞬态失败。在任务上评论并继续。|
 
-## Pagination
+## 分页
 
-List endpoints support standard pagination query parameters when applicable. Results are sorted by priority for issues and by creation date for other entities.
+列表端点在适用时支持标准分页查询参数。结果按优先级对工单排序，其他实体按创建日期排序。
 
-## Rate Limiting
+## 速率限制
 
-No rate limiting is enforced in local deployments. Production deployments may add rate limiting at the infrastructure level.
+本地部署不执行速率限制。生产部署可能在基础设施层面添加速率限制。
