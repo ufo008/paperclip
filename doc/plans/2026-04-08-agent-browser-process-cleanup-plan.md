@@ -1,21 +1,21 @@
 # PAP-1231 Agent Browser Process Cleanup Plan
 
-Status: Proposed
-Date: 2026-04-08
-Related issue: `PAP-1231`
-Audience: Engineering
+状态：提议中
+日期：2026-04-08
+相关 issue：`PAP-1231`
+受众：工程
 
 ## Goal
 
-Explain why browser processes accumulate during local agent runs and define a cleanup plan that fixes the general process-ownership problem rather than treating `agent-browser` as a one-off.
+解释为什么浏览器进程在本地代理运行期间积累，并定义一个修复通用进程所有权问题的清理计划，而不是将 `agent-browser` 视为一次性的。
 
 ## Short answer
 
-Yes, there is a likely root cause in Paperclip's local execution model.
+是的，Paperclip 本地执行模型中可能存在一个可能的根本原因。
 
-Today, heartbeat-run local adapters persist and manage only the top-level spawned PID. Their timeout/cancel path uses direct `child.kill()` semantics. That is weaker than the runtime-service path, which already tracks and terminates whole process groups.
+今天，心跳运行的本地适配器仅持久化和管理顶层派生的 PID。它们的超时/取消路径使用直接的 `child.kill()` 语义。这比运行时服务路径弱，后者已经跟踪并终止整个进程组。
 
-If Codex, Claude, Cursor, or a skill launched through them starts Chrome or Chromium helpers, Paperclip can lose ownership of those descendants even when it still believes it handled the run correctly.
+如果 Codex、Claude、Cursor 或通过它们启动的技能启动了 Chrome 或 Chromium 帮助进程，Paperclip 可能会失去对这些后代的所有权，即使它仍然认为正确处理了运行。
 
 ## Observed implementation facts
 
@@ -23,216 +23,216 @@ If Codex, Claude, Cursor, or a skill launched through them starts Chrome or Chro
 
 `packages/adapter-utils/src/server-utils.ts`
 
-- `runChildProcess()` spawns the adapter command and records only `child.pid`
-- timeout handling sends `SIGTERM` and then `SIGKILL` to the direct child
-- there is no process-group creation or process-group kill path there today
+- `runChildProcess()` 生成适配器命令并仅记录 `child.pid`
+- 超时处理向直接子进程发送 `SIGTERM`，然后发送 `SIGKILL`
+- 今天在那里没有进程组创建或进程组 kill 路径
 
 `packages/db/src/schema/heartbeat_runs.ts`
 
-- `heartbeat_runs` stores `process_pid`
-- there is no persisted `process_group_id`
+- `heartbeat_runs` 存储 `process_pid`
+- 没有持久化的 `process_group_id`
 
 `server/src/services/heartbeat.ts`
 
-- cancellation logic uses the in-memory child handle and calls `child.kill()`
-- orphaned-run recovery checks whether the recorded direct PID is alive
-- the recovery model is built around one tracked process, not a descendant tree
+- 取消逻辑使用内存中的 child handle 并调用 `child.kill()`
+- 孤儿运行恢复检查记录的 direct PID 是否存活
+- 恢复模型建立在跟踪一个进程而不是后代树的基础上
 
 ### 2. Workspace runtime already uses stronger ownership
 
 `server/src/services/workspace-runtime.ts`
 
-- runtime services are spawned with `detached: process.platform !== "win32"`
-- the service record stores `processGroupId`
-- shutdown calls `terminateLocalService()` with group-aware killing
+- 运行时服务使用 `detached: process.platform !== "win32"` 生成
+- 服务记录存储 `processGroupId`
+- 关闭使用组感知的 killing 调用 `terminateLocalService()`
 
 `server/src/services/local-service-supervisor.ts`
 
-- `terminateLocalService()` prefers `process.kill(-processGroupId, signal)` on POSIX
-- it escalates from `SIGTERM` to `SIGKILL`
+- `terminateLocalService()` 在 POSIX 上首选 `process.kill(-processGroupId, signal)`
+- 它从 `SIGTERM` 升级到 `SIGKILL`
 
-This is the clearest internal comparison point: Paperclip already has one local-process subsystem that treats process-group ownership as the right abstraction.
+这是最清晰的内部比较点：Paperclip 已经有了一个将进程组所有权视为正确抽象的本地进程子系统。
 
 ### 3. The current recovery path explains why leaks would be visible but hard to reason about
 
-If the direct adapter process exits, hangs, or is cancelled after launching a browser subtree:
+如果直接适配器进程退出、挂起或在启动浏览器子树后被取消：
 
-- Paperclip may think it cancelled the run because the parent process is gone
-- descendant Chrome helpers may still be running
-- orphan recovery has no persisted process-group identity to reconcile or reap later
+- Paperclip 可能认为它取消了运行，因为父进程已消失
+- 后代 Chrome 帮助进程可能仍在运行
+- 孤儿恢复没有持久化的进程组标识来协调或稍后回收
 
-That makes the failure look like an `agent-browser` problem when the more general bug is "executor descendants are not owned strongly enough."
+这使得失败看起来像 `agent-browser` 问题，而更一般的 bug 是"执行器后代没有被足够强地拥有"。
 
 ## Why `agent-browser` makes the problem obvious
 
-Inference:
+推断：
 
-- Chromium is intentionally multi-process
-- browser automation often leaves a browser process plus renderer, GPU, utility, and crashpad/helper children
-- skills that open browsers repeatedly amplify the symptom because each run can produce several descendant processes
+- Chromium 是有意多进程的
+- 浏览器自动化经常留下浏览器进程加上渲染器、GPU、实用程序和 crashpad/帮助子进程
+- 重复打开浏览器的技能放大了症状，因为每次运行可以产生多个后代进程
 
-So `agent-browser` is probably not the root cause. It is the workload that exposes the weak ownership model fastest.
+所以 `agent-browser` 可能不是根本原因。它是最快暴露弱所有权模型的工作负载。
 
 ## Success condition
 
-This work is successful when Paperclip can:
+当 Paperclip 可以做到时，这项工作是成功的：
 
-1. start a local adapter run and own the full descendant tree it created
-2. cancel, timeout, or recover that run without leaving Chrome descendants behind on POSIX
-3. detect and clean up stale local descendants after server restarts
-4. expose enough metadata that operators can see which run owns which spawned process tree
+1. 启动本地适配器运行并拥有其创建的完整后代树
+2. 取消、超时或恢复该运行而不在 POSIX 上留下 Chrome 后代
+3. 在服务器重启后检测和清理过期的本地后代
+4. 暴露足够的元数据，以便操作员可以看到哪个运行拥有哪个生成的进程树
 
 ## Non-goals
 
-Do not:
+不要：
 
-- special-case `agent-browser` only
-- depend on manual `pkill chrome` cleanup as the primary fix
-- require every skill author to add bespoke browser teardown logic before Paperclip can clean up correctly
-- change remote/http adapter behavior as part of the first pass
+- 仅 special-case `agent-browser`
+- 将手动 `pkill chrome` 清理作为主要修复依赖
+- 在 Paperclip 可以正确清理之前要求每个技能作者添加定制的浏览器拆卸逻辑
+- 作为第一阶段的一部分更改远程/HTTP 适配器行为
 
 ## Proposed plan
 
 ### Phase 0: reproduce and instrument
 
-Objective:
+目标：
 
-- make the leak measurable from Paperclip's side before changing execution semantics
+- 在更改执行语义之前，使泄漏可从 Paperclip 方面衡量
 
-Work:
+工作：
 
-- add a reproducible local test script or fixture that launches a child process which itself launches descendants and ignores normal parent exit
-- capture parent PID, descendant PIDs, and run ID in logs during local adapter execution
-- document current behavior separately for:
-  - normal completion
-  - timeout
-  - explicit cancellation
-  - server restart during run
+- 添加可重现的本地测试脚本或fixture，启动一个子进程，该子进程启动后代并在正常父退出时忽略
+- 在本地适配器执行期间在日志中捕获父 PID、后代 PID 和运行 ID
+- 单独记录当前行为用于：
+  - 正常完成
+  - 超时
+  - 显式取消
+  - 运行期间的服务器重启
 
-Deliverable:
+交付物：
 
-- one short repro note attached to the implementation issue or child issue
+- 附加到实施 issue 或子 issue 的一个简短 repro 说明
 
 ### Phase 1: give heartbeat-run local adapters process-group ownership
 
-Objective:
+目标：
 
-- align adapter-run execution with the stronger runtime-service model
+- 将适配器运行执行与更强的运行时服务模型对齐
 
-Work:
+工作：
 
-- update `runChildProcess()` to create a dedicated process group on POSIX
-- persist both:
+- 更新 `runChildProcess()` 在 POSIX 上创建专用进程组
+- 持久化两者：
   - direct PID
-  - process-group ID
-- update the run cancellation and timeout paths to kill the group first, then escalate
-- keep direct-PID fallback behavior for platforms where group kill is not available
+  - 进程组 ID
+- 更新运行取消和超时路径以首先 kill 组，然后升级
+- 为不支持组 kill 的平台保持 direct-PID 回退行为
 
-Likely touched surfaces:
+可能触摸的表面：
 
 - `packages/adapter-utils/src/server-utils.ts`
 - `packages/db/src/schema/heartbeat_runs.ts`
 - `packages/shared/src/types/heartbeat.ts`
 - `server/src/services/heartbeat.ts`
 
-Important design choice:
+重要设计选择：
 
-- use the same ownership model for all local child-process adapters, not just Codex or Claude
+- 为所有本地子进程适配器使用相同的所有权模型，而不仅仅是 Codex 或 Claude
 
 ### Phase 2: make restart recovery group-aware
 
-Objective:
+目标：
 
-- prevent stale descendants from surviving server crashes or restarts indefinitely
+- 防止过时后代在服务器崩溃或重启时无限期地存活
 
-Work:
+工作：
 
-- teach orphan reconciliation to inspect the persisted process-group ID, not only the direct PID
-- if the direct parent is gone but the group still exists, mark the run as detached-orphaned with clearer metadata
-- decide whether restart recovery should:
-  - adopt the still-running group, or
-  - terminate it as unrecoverable
+- 教孤儿协调检查持久化的进程组 ID，而不仅是 direct PID
+- 如果直接父已消失但组仍然存在，将运行标记为 detached-orphaned，并带有更清晰的元数据
+- 决定重启恢复应该：
+  - 采用仍在运行的组，或
+  - 将其终止为不可恢复
 
-Recommendation:
+建议：
 
-- for heartbeat runs, prefer terminating unrecoverable orphan groups rather than adopting them unless we can prove the adapter session remains safe and observable
+- 对于心跳运行，倾向于终止不可恢复的孤儿组，除非我们可以证明适配器会话保持安全和可观察
 
-Reason:
+原因：
 
-- runtime services are long-lived and adoptable
-- heartbeat runs are task executions with stricter audit and cancellation semantics
+- 运行时服务是长寿的且可采用的
+- 心跳运行是具有更严格审计和取消语义的任务执行
 
 ### Phase 3: add operator-visible cleanup tools
 
-Objective:
+目标：
 
-- make the system diagnosable when ownership still fails
+- 当所有权仍然失败时使系统可诊断
 
-Work:
+工作：
 
-- surface the tracked process metadata in run details or debug endpoints
-- add a control-plane cleanup action or CLI utility for stale local run processes owned by Paperclip
-- scope cleanup by run/agent/company instead of broad browser-name matching
+- 在运行详情或调试端点中显示跟踪的进程元数据
+- 为 Paperclip 拥有的过时本地运行进程添加控制平面清理操作或 CLI 实用程序
+- 按运行/代理/公司范围清理，而不是广泛的浏览器名称匹配
 
-This should replace ad hoc scripts as the general-purpose escape hatch.
+这应该替换临时脚本作为通用逃生舱。
 
 ### Phase 4: cover platform and regression cases
 
-Objective:
+目标：
 
-- keep the fix from regressing and define platform behavior explicitly
+- 防止修复回归并明确平台行为
 
-Tests to add:
+要添加的测试：
 
-- unit tests around process-group-aware cancellation in adapter execution utilities
-- heartbeat recovery tests for:
-  - surviving descendant tree after parent loss
-  - timeout cleanup
-  - cancellation cleanup
-- platform-conditional behavior notes for Windows, where negative-PID group kill does not apply
+- 适配器执行工具中进程组感知取消的单元测试
+- 心跳恢复测试用于：
+  - 父丢失后存活后代树
+  - 超时清理
+  - 取消清理
+- Windows 的平台条件行为说明，其中负 PID 组 kill 不适用
 
 ## Recommended first implementation slice
 
-The first shipping slice should be narrow:
+第一个 shipping slice 应该狭窄：
 
-1. introduce process-group ownership for local heartbeat-run adapters on POSIX
-2. persist group metadata on `heartbeat_runs`
-3. switch timeout/cancel paths from direct-child kill to group kill
-4. add one regression test that proves descendants die with the parent run
+1. 在 POSIX 上为本地心跳运行适配器引入进程组所有权
+2. 在 `heartbeat_runs` 上持久化组元数据
+3. 将超时/取消路径从 direct-child kill 切换到组 kill
+4. 添加一个回归测试，证明后代与父运行一起死亡
 
-That should address the main Chrome accumulation path without taking on the full restart-recovery design in the same patch.
+这应该解决主要 Chrome 积累路径，而不在同一补丁中承担完整的重启恢复设计。
 
 ## Risks
 
 ### 1. Over-killing unrelated processes
 
-If process-group boundaries are created incorrectly, cleanup could terminate more than the run owns.
+如果进程组边界创建不正确，清理可能终止比运行拥有的更多进程。
 
-Mitigation:
+缓解：
 
-- create a fresh process group only for the spawned adapter command
-- persist and target that exact group
+- 仅为生成的适配器命令创建一个新的进程组
+- 持久化并精确目标该组
 
 ### 2. Cross-platform differences
 
-Windows does not support the POSIX negative-PID kill pattern used elsewhere in the repo.
+Windows 不支持 repo 中其他地方使用的 POSIX 负 PID kill 模式。
 
-Mitigation:
+缓解：
 
-- ship POSIX-first
-- keep direct-child fallback on Windows
-- document Windows as partial until job-object or equivalent handling is designed
+- 首先 shipping POSIX
+- 在 Windows 上保持 direct-child 回退
+- 将 Windows 记录为部分，直到设计了 job-object 或等效处理
 
 ### 3. Session recovery complexity
 
-Adopting a still-running orphaned group may look attractive but can break observability if stdout/stderr pipes are already gone.
+采用仍在运行的孤儿组可能看起来有吸引力，但如果 stdout/stderr 管道已经消失，可能会破坏可观察性。
 
-Mitigation:
+缓解：
 
-- default to deterministic cleanup for heartbeat runs unless adoption is explicitly proven safe
+- 默认为心跳运行进行确定性清理，除非采用被明确证明安全
 
 ## Recommendation
 
-Treat this as a Paperclip executor ownership bug, not an `agent-browser` bug.
+将这视为 Paperclip 执行器所有权 bug，而不是 `agent-browser` bug。
 
-`agent-browser` should remain a useful repro case, but the implementation should be shared across all local child-process adapters so any descendant process tree spawned by Codex, Claude, Cursor, Gemini, Pi, or OpenCode is owned and cleaned up consistently.
+`agent-browser` 应该保持作为一个有用的 repro case，但实施应该在所有本地子进程适配器之间共享，以便 Codex、Claude、Cursor、Gemini、Pi 或 OpenCode 生成的任何后代进程树被一致地拥有和清理。

@@ -1,78 +1,78 @@
-# Instructions for writing the README.md
+# README.md 编写指南
 
-The readme should be visually interesting, to the point, not too long.
-Use the copy from the website in cases where we need some.
+README 应该视觉上有吸引力，简洁明了，不要太长。
+在需要时可以使用网站上的文案。
 
-- gives the pitch why, e.g. from the homepage.
+- 提供价值主张，例如来自首页的内容。
 
-## Outline
+## 大纲
 
-- image header up top
+- 顶部的图片标题
 - Paperclip
-- Manage autonomous AI Businesses
-- The open-source AI-agent orchestrator teams of agents that run companies
+- 管理自主 AI 企业
+- 开源的 AI Agent 编排系统，协调多个 Agent 来运营公司
 
-- a video
+- 一个视频
 
-# What is it
+# 什么是 Paperclip
 
-Paperclip is a node server & UI that orchestrates a team of agents to run businesses.
+Paperclip 是一个 Node 服务器和 UI，用于编排一支 Agent 团队来运营业务。
 
-Bring-your-own agents, assign goals, and track your agent's work and costs.
+带上你自己的 Agent，分配目标，并跟踪你的 Agent 的工作和成本。
 
-It looks like a task manager but has specialized skills and agent coordination
+它看起来像一个任务管理器，但具有专业的技能和 Agent 协调能力。
 
-**It's high taste, and feels good to use**
+**它品味高尚，使用起来感觉很棒。**
 
-# Paperclip is right for you if:
+# Paperclip 适合你如果：
 
-- You want to build autonomous companies
-- You want to coordinate many different types agents (OpenClaw, Codex, Claude, Cursor, etc.) to collaborate towards a common goal
-- You have 20 simultaneous Claude Code terminals open (and lose track of what everyone is working on)
-- You want to let your agents run autonomously 24/7, but still audit their work and chime in when needed
-- You want to monitor costs
-- You want a process for managing your agents that feels like using a task manager
-- You want to manage your autonomous businesses from your phone
+- 你想建立自主公司
+- 你想协调多种不同类型的 Agent（OpenClaw、Codex、Claude、Cursor 等）共同朝着一个目标努力
+- 你同时运行着 20 个 Claude Code 终端（并且丢失了对每个人正在做什么的追踪）
+- 你想让你的 Agent 全天候自主运行，但仍需审核它们的工作并在需要时介入
+- 你想监控成本
+- 你想要一个管理 Agent 的流程，感觉像使用任务管理器
+- 你想用手机管理你的自主业务
 
-# What is not
+# 什么不是
 
-Paperclip is not:
+Paperclip 不是：
 
-- a code review tool
-- opinionated about what agent you use
+- 代码审查工具
+- 对你使用什么 Agent 有意见
 
-# the problem
+# 问题
 
-If you want to be maximally effective with agents, you need to
+如果你想最大限度地提高 Agent 的效率，你需要
 
-# quickstart
+# 快速开始
 
-# faq
+# 常见问题
 
-# comparison
+# 对比
 
-# contributing
+# 贡献
 
-# community
+# 社区
 
-# license
+# 许可证
 
-# footer
+# 页脚
 
-## Examples:
+## 示例：
 
-- https://github.com/klawsh/klaw.sh - nice header, nice tables
-  - what is it
-  - the problem
-  - quickstart
-  - faq
-  - comparison
-  - contributing
-  - community
-  - license
-  - footer
-- https://github.com/nearai/ironclaw - nice header
-  - philosophy
-- https://github.com/TinyAGI/tinyclaw - nice header, nice video
-- https://github.com/ryoppippi/ccusage - nice header,
-- https://github.com/can1357/oh-my-pi - a little long
+- https://github.com/klawsh/klaw.sh - 漂亮的标题，漂亮的表格
+  - 什么是它
+  - 问题
+  - 快速开始
+  - 常见问题
+  - 对比
+  - 贡献
+  - 社区
+  - 许可证
+  - 页脚
+- https://github.com/nearai/ironclaw - 漂亮的标题
+  - 理念
+- https://github.com/TinyAGI/tinyclaw - 漂亮的标题，漂亮的视频
+- https://github.com/ryoppippi/ccusage - 漂亮的标题，
+- https://github.com/can1357/oh-my-pi - 有点长

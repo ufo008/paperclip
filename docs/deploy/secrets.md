@@ -1,72 +1,72 @@
 ---
-title: Secrets Management
-summary: Master key, encryption, and strict mode
+title: 密钥管理
+summary: 主密钥、加密和严格模式
 ---
 
-Paperclip encrypts secrets at rest using a local master key. Agent environment variables that contain sensitive values (API keys, tokens) are stored as encrypted secret references.
+Paperclip 使用本地主密钥对静态的密钥进行加密。包含敏感值（API 密钥、令牌）的智能体环境变量存储为加密的密钥引用。
 
-## Default Provider: `local_encrypted`
+## 默认提供商：`local_encrypted`
 
-Secrets are encrypted with a local master key stored at:
+密钥使用存储在以下位置的本地主密钥加密：
 
 ```
 ~/.paperclip/instances/default/secrets/master.key
 ```
 
-This key is auto-created during onboarding. The key never leaves your machine.
+此密钥在引导期间自动创建。密钥永远不会离开你的机器。
 
-## Configuration
+## 配置
 
-### CLI Setup
+### CLI 设置
 
-Onboarding writes default secrets config:
+引导写入默认密钥配置：
 
 ```sh
 pnpm paperclipai onboard
 ```
 
-Update secrets settings:
+更新密钥设置：
 
 ```sh
 pnpm paperclipai configure --section secrets
 ```
 
-Validate secrets config:
+验证密钥配置：
 
 ```sh
 pnpm paperclipai doctor
 ```
 
-### Environment Overrides
+### 环境覆盖
 
-| Variable | Description |
+| 变量 | 描述 |
 |----------|-------------|
-| `PAPERCLIP_SECRETS_MASTER_KEY` | 32-byte key as base64, hex, or raw string |
-| `PAPERCLIP_SECRETS_MASTER_KEY_FILE` | Custom key file path |
-| `PAPERCLIP_SECRETS_STRICT_MODE` | Set to `true` to enforce secret refs |
+| `PAPERCLIP_SECRETS_MASTER_KEY` | 32 字节密钥，作为 base64、hex 或原始字符串 |
+| `PAPERCLIP_SECRETS_MASTER_KEY_FILE` | 自定义密钥文件路径 |
+| `PAPERCLIP_SECRETS_STRICT_MODE` | 设置为 `true` 以强制执行密钥引用 |
 
-## Strict Mode
+## 严格模式
 
-When strict mode is enabled, sensitive env keys (matching `*_API_KEY`, `*_TOKEN`, `*_SECRET`) must use secret references instead of inline plain values.
+当启用严格模式时，敏感 env 密钥（匹配 `*_API_KEY`、`*_TOKEN`、`*_SECRET`）必须使用密钥引用而不是内联纯值。
 
 ```sh
 PAPERCLIP_SECRETS_STRICT_MODE=true
 ```
 
-Recommended for any deployment beyond local trusted.
+推荐用于本地信任以外的任何部署。
 
-## Migrating Inline Secrets
+## 迁移内联密钥
 
-If you have existing agents with inline API keys in their config, migrate them to encrypted secret refs:
+如果你有现有智能体在其配置中包含内联 API 密钥，将它们迁移到加密密钥引用：
 
 ```sh
-pnpm secrets:migrate-inline-env         # dry run
-pnpm secrets:migrate-inline-env --apply # apply migration
+pnpm secrets:migrate-inline-env         # 试运行
+pnpm secrets:migrate-inline-env --apply # 应用迁移
 ```
 
-## Secret References in Agent Config
+## 智能体配置中的密钥引用
 
-Agent environment variables use secret references:
+智能体环境变量使用密钥引用：
 
 ```json
 {
@@ -80,4 +80,4 @@ Agent environment variables use secret references:
 }
 ```
 
-The server resolves and decrypts these at runtime, injecting the real value into the agent process environment.
+服务器在运行时解析和解密这些，将真实值注入智能体进程环境。

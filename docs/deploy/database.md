@@ -1,62 +1,62 @@
 ---
-title: Database
-summary: Embedded PGlite vs Docker Postgres vs hosted
+title: 数据库
+summary: 嵌入式 PGlite vs Docker Postgres vs 托管
 ---
 
-Paperclip uses PostgreSQL via Drizzle ORM. There are three ways to run the database.
+Paperclip 通过 Drizzle ORM 使用 PostgreSQL。有三种运行数据库的方式。
 
-## 1. Embedded PostgreSQL (Default)
+## 1. 嵌入式 PostgreSQL（默认）
 
-Zero config. If you don't set `DATABASE_URL`, the server starts an embedded PostgreSQL instance automatically.
+零配置。如果你不设置 `DATABASE_URL`，服务器会自动启动嵌入式 PostgreSQL 实例。
 
 ```sh
 pnpm dev
 ```
 
-On first start, the server:
+首次启动时，服务器：
 
-1. Creates `~/.paperclip/instances/default/db/` for storage
-2. Ensures the `paperclip` database exists
-3. Runs migrations automatically
-4. Starts serving requests
+1. 创建 `~/.paperclip/instances/default/db/` 用于存储
+2. 确保 `paperclip` 数据库存在
+3. 自动运行迁移
+4. 开始服务请求
 
-Data persists across restarts. To reset: `rm -rf ~/.paperclip/instances/default/db`.
+数据在重启之间持久化。重置：`rm -rf ~/.paperclip/instances/default/db`。
 
-The Docker quickstart also uses embedded PostgreSQL by default.
+Docker quickstart 默认也使用嵌入式 PostgreSQL。
 
-## 2. Local PostgreSQL (Docker)
+## 2. 本地 PostgreSQL（Docker）
 
-For a full PostgreSQL server locally:
+对于完整的本地 PostgreSQL 服务器：
 
 ```sh
 docker compose up -d
 ```
 
-This starts PostgreSQL 17 on `localhost:5432`. Set the connection string:
+这在 `localhost:5432` 启动 PostgreSQL 17。设置连接字符串：
 
 ```sh
 cp .env.example .env
 # DATABASE_URL=postgres://paperclip:paperclip@localhost:5432/paperclip
 ```
 
-Push the schema:
+推送 schema：
 
 ```sh
 DATABASE_URL=postgres://paperclip:paperclip@localhost:5432/paperclip \
   npx drizzle-kit push
 ```
 
-## 3. Hosted PostgreSQL (Supabase)
+## 3. 托管 PostgreSQL（Supabase）
 
-For production, use a hosted provider like [Supabase](https://supabase.com/).
+对于生产环境，使用像 [Supabase](https://supabase.com/) 这样的托管提供商。
 
-1. Create a project at [database.new](https://database.new)
-2. Copy the connection string from Project Settings > Database
-3. Set `DATABASE_URL` in your `.env`
+1. 在 [database.new](https://database.new) 创建一个项目
+2. 从项目设置 > 数据库复制连接字符串
+3. 在你的 `.env` 中设置 `DATABASE_URL`
 
-Use the **direct connection** (port 5432) for migrations and the **pooled connection** (port 6543) for the application.
+对于迁移使用**直接连接**（端口 5432），对于应用程序使用**池化连接**（端口 6543）。
 
-If using connection pooling, disable prepared statements:
+如果使用连接池，禁用预处理语句：
 
 ```ts
 // packages/db/src/client.ts
@@ -66,12 +66,12 @@ export function createDb(url: string) {
 }
 ```
 
-## Switching Between Modes
+## 模式之间切换
 
-| `DATABASE_URL` | Mode |
+| `DATABASE_URL` | 模式 |
 |----------------|------|
-| Not set | Embedded PostgreSQL |
-| `postgres://...localhost...` | Local Docker PostgreSQL |
-| `postgres://...supabase.com...` | Hosted Supabase |
+| 未设置 | 嵌入式 PostgreSQL |
+| `postgres://...localhost...` | 本地 Docker PostgreSQL |
+| `postgres://...supabase.com...` | 托管 Supabase |
 
-The Drizzle schema (`packages/db/src/schema/`) is the same regardless of mode.
+无论模式如何，Drizzle schema（`packages/db/src/schema/`）都是相同的。

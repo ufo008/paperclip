@@ -1,229 +1,229 @@
-# ClipHub — The Company Registry
+# ClipHub — 企业注册表
 
-**Download a company.**
+**下载一家企业。**
 
-ClipHub is the public registry where people share, discover, and download Paperclip company configurations. A company template is a portable artifact containing an entire org — agents, reporting structure, adapter configs, role definitions, seed tasks — ready to spin up with one command.
-
----
-
-## What It Is
-
-ClipHub is to Paperclip what a package registry is to a programming language. Paperclip already supports exportable org configs (see [SPEC.md](./SPEC.md) §2). ClipHub is the public directory where those exports live.
-
-A user builds a working company in Paperclip — a dev shop, a marketing agency, a research lab, a content studio — exports the template, and publishes it to ClipHub. Anyone can browse, search, download, and spin up that company on their own Paperclip instance.
-
-The tagline: **you can literally download a company.**
+ClipHub 是一个公共注册表，人们在这里分享、发现和下载 Paperclip 企业配置。一个企业模板是一个可移植的产物，包含整个组织——智能体、汇报结构、适配器配置、角色定义、初始任务——只需一条命令即可启动。
 
 ---
 
-## What Gets Published
+## 它是什么
 
-A ClipHub package is a **company template export** — the portable artifact format defined in the Paperclip spec. It contains:
+ClipHub 对于 Paperclip 的意义，就像包注册表对于编程语言的意义。Paperclip 已经支持可导出的组织配置（参见 [SPEC.md](./SPEC.md) §2）。ClipHub 是这些导出文件所在的公共目录。
 
-| Component | Description |
+用户在 Paperclip 中构建一家正常运转的企业——一家开发公司、一家营销机构、一家研究实验室、一家内容工作室——然后导出模板并发布到 ClipHub。任何人都可以浏览、搜索、下载，并在自己的 Paperclip 实例上启动该企业。
+
+标语：**你真的可以下载一家企业。**
+
+---
+
+## 发布什么
+
+ClipHub 包是一个**企业模板导出**——Paperclip 规范中定义的可移植产物格式。它包含：
+
+| 组件 | 描述 |
 |---|---|
-| **Company metadata** | Name, description, intended use case, category |
-| **Org chart** | Full reporting hierarchy — who reports to whom |
-| **Agent definitions** | Every agent: name, role, title, capabilities description |
-| **Adapter configs** | Per-agent adapter type and configuration (SOUL.md, HEARTBEAT.md, CLAUDE.md, process commands, webhook URLs — whatever the adapter needs) |
-| **Seed tasks** | Optional starter tasks and initiatives to bootstrap the company's first run |
-| **Budget defaults** | Suggested token/cost budgets per agent and per company |
+| **企业元数据** | 名称、描述、预期用例、类别 |
+| **组织架构图** | 完整的汇报层级——谁向谁汇报 |
+| **智能体定义** | 每个智能体：名称、角色、职位、能力描述 |
+| **适配器配置** | 每个智能体的适配器类型和配置（SOUL.md、HEARTBEAT.md、CLAUDE.md、进程命令、webhook URL——适配器需要的任何东西） |
+| **初始任务** | 可选的启动任务和计划，用于引导企业的首次运行 |
+| **预算默认值** | 每个智能体和每个企业的建议 token/成本预算 |
 
-Templates are **structure, not state.** No in-progress tasks, no historical cost data, no runtime artifacts. Just the blueprint.
+模板是**结构，不是状态。** 没有进行中的任务、没有历史成本数据、没有运行时产物。只有蓝图。
 
-### Sub-packages
+### 子包
 
-Not every use case needs a whole company. ClipHub also supports publishing individual components:
+并非每个用例都需要整个企业。ClipHub 也支持发布单独的组件：
 
-- **Agent templates** — a single agent config (e.g. "Senior TypeScript Engineer", "SEO Content Writer", "DevOps Agent")
-- **Team templates** — a subtree of the org chart (e.g. "Marketing Team: CMO + 3 reports", "Engineering Pod: Tech Lead + 4 Engineers")
-- **Adapter configs** — reusable adapter configurations independent of any specific agent role
+- **智能体模板**——单个智能体配置（例如"高级 TypeScript 工程师"、"SEO 内容写手"、"DevOps 智能体"）
+- **团队模板**——组织架构图的子树（例如"营销团队：CMO + 3 名下属"、"工程小组：技术负责人 + 4 名工程师"）
+- **适配器配置**——独立于任何特定智能体角色的可重用适配器配置
 
-These can be mixed into existing companies. Download an agent, slot it into your org, assign a manager, go.
+这些可以混合到现有企业中。下载一个智能体，将其插入你的组织，分配一个上级，开始工作。
 
 ---
 
-## Core Features
+## 核心功能
 
-### Browse & Discover
+### 浏览与发现
 
-The homepage surfaces companies across several dimensions:
+首页从多个维度展示企业：
 
-- **Featured** — editorially curated, high-quality templates
-- **Popular** — ranked by downloads, stars, and forks
-- **Recent** — latest published or updated
-- **Categories** — browseable by use case (see Categories below)
+- **精选**——编辑精选的高质量模板
+- **热门**——按下载量、star 数和 fork 数排名
+- **最新**——最近发布或更新的
+- **类别**——按用例浏览（见下文类别）
 
-Each listing shows: name, short description, org size (agent count), category, adapter types used, star count, download count, and a mini org chart preview.
+每个列表显示：名称、简短描述、组织规模（智能体数量）、类别、使用的适配器类型、star 数量、下载数量，以及迷你组织架构图预览。
 
-### Search
+### 搜索
 
-Search is **semantic, not keyword-only.** Powered by vector embeddings so you can search by intent:
+搜索是**语义搜索，不是仅关键词搜索。** 由向量嵌入驱动，因此你可以按意图搜索：
 
-- "marketing agency that runs facebook ads" → finds relevant company templates even if those exact words aren't in the title
-- "small dev team for building APIs" → finds lean engineering orgs
-- "content pipeline with writers and editors" → finds content studio templates
+- "运行 facebook 广告的营销机构"→ 找到相关企业模板，即使标题中没有这些确切的词
+- "用于构建 API 的小型开发团队"→ 找到精简的工程组织
+- "带有写作和编辑的内容流水线"→ 找到内容工作室模板
 
-Also supports filtering by: category, agent count range, adapter types, star count, recency.
+还支持按以下条件筛选：类别、智能体数量范围、适配器类型、star 数量、最新程度。
 
-### Company Detail Page
+### 企业详情页
 
-Clicking into a company template shows:
+点击进入企业模板会显示：
 
-- **Full description** — what this company does, how it operates, what to expect
-- **Interactive org chart** — visual tree of every agent with role, title, and capabilities
-- **Agent list** — expandable details for each agent (adapter type, config summary, role description)
-- **Seed tasks** — the starter initiatives and tasks included
-- **Budget overview** — suggested cost structure
-- **Install command** — one-line CLI command to download and create
-- **Version history** — changelog, semver, previous versions available
-- **Community** — stars, comments, forks count
+- **完整描述**——这家企业做什么、如何运作、期望什么
+- **交互式组织架构图**——每个智能体的可视化树状图，包含角色、职位和能力
+- **智能体列表**——每个智能体的可展开详情（适配器类型、配置摘要、角色描述）
+- **初始任务**——包含的启动计划和任务
+- **预算概览**——建议的成本结构
+- **安装命令**——一行 CLI 命令用于下载和创建
+- **版本历史**——变更日志、semver、可用的先前版本
+- **社区**——star、评论、fork 数量
 
-### Install & Fork
+### 安装与 Fork
 
-Two ways to use a template:
+使用模板的两种方式：
 
-**Install (fresh start):**
+**安装（全新开始）：**
 ```
 paperclip install cliphub:<publisher>/<company-slug>
 ```
-Downloads the template and creates a new company in your local Paperclip instance. You add your own API keys, set budgets, customize agents, and hit go.
+下载模板并在本地 Paperclip 实例中创建新企业。你添加自己的 API 密钥、设置预算、自定义智能体，然后启动。
 
-**Fork:**
-Forking creates a copy of the template under your own ClipHub account. You can modify it, republish it as your own variant, and the fork lineage is tracked. This enables evolutionary improvement — someone publishes a marketing agency, you fork it, add a social media team, republish.
+**Fork：**
+Fork 会在你自己的 ClipHub 账户下创建模板的副本。你可以修改它，将你自己的变体重新发布，而 fork 的 lineage 会被跟踪。这使得演进式改进成为可能——有人发布了一家营销机构，你 fork 它，添加一个社交媒体团队，重新发布。
 
-### Stars & Comments
+### Stars 与评论
 
-- **Stars** — bookmark and signal quality. Star count is a primary ranking signal.
-- **Comments** — threaded discussion on each listing. Ask questions, share results, suggest improvements.
+- **Stars**——书签和信号质量。Star 数量是主要的排名信号。
+- **评论**——每个列表的线程讨论。提问、分享结果、提出改进建议。
 
-### Download Counts & Signals
+### 下载数量与信号
 
-Every install is counted. The registry tracks:
+每次安装都会被计数。注册表跟踪：
 
-- Total downloads (all time)
-- Downloads per version
-- Fork count
-- Star count
+- 总下载量（所有时间）
+- 每个版本的下载量
+- Fork 数量
+- Star 数量
 
-These signals feed into search ranking and discovery.
+这些信号会影响搜索排名和发现。
 
 ---
 
-## Publishing
+## 发布
 
-### Who Can Publish
+### 谁可以发布
 
-Anyone with a GitHub account can publish to ClipHub. Authentication is via GitHub OAuth.
+任何拥有 GitHub 账户的人都可以发布到 ClipHub。身份验证通过 GitHub OAuth。
 
-### How to Publish
+### 如何发布
 
-From within Paperclip, export your company as a template, then publish:
+在 Paperclip 内部，将你的企业导出为模板，然后发布：
 
 ```
 paperclip export --template my-company
 paperclip publish cliphub my-company
 ```
 
-Or use the web UI to upload a template export directly.
+或者使用网页 UI 直接上传模板导出。
 
-### What You Provide
+### 你提供什么
 
-When publishing, you specify:
+发布时，你需要指定：
 
-| Field | Required | Description |
+| 字段 | 必填 | 描述 |
 |---|---|---|
-| `slug` | yes | URL-safe identifier (e.g. `lean-dev-shop`) |
-| `name` | yes | Display name |
-| `description` | yes | What this company does and who it's for |
-| `category` | yes | Primary category (see below) |
-| `tags` | no | Additional tags for discovery |
-| `version` | yes | Semver (e.g. `1.0.0`) |
-| `changelog` | no | What changed in this version |
-| `readme` | no | Extended documentation (markdown) |
-| `license` | no | Usage terms |
+| `slug` | 是 | URL 安全的标识符（例如 `lean-dev-shop`） |
+| `name` | 是 | 显示名称 |
+| `description` | 是 | 这家企业做什么以及适用对象 |
+| `category` | 是 | 主要类别（见下文） |
+| `tags` | 否 | 用于发现的附加标签 |
+| `version` | 是 | Semver（例如 `1.0.0`） |
+| `changelog` | 否 | 此版本的变更内容 |
+| `readme` | 否 | 扩展文档（markdown） |
+| `license` | 否 | 使用条款 |
 
-### Versioning
+### 版本控制
 
-Templates use semantic versioning. Each publish creates an immutable version. Users can install any version or default to `latest`. Version history and changelogs are visible on the detail page.
+模板使用语义版本控制。每次发布都会创建一个不可变版本。用户可以安装任何版本或默认为 `latest`。版本历史和变更日志在详情页可见。
 
-### The `sync` Command
+### `sync` 命令
 
-For power users who maintain multiple templates:
+对于维护多个模板的高级用户：
 
 ```
 paperclip cliphub sync
 ```
 
-Scans your local exported templates and publishes any that are new or updated. Useful for maintaining a portfolio of company templates from a single repo.
+扫描你本地导出的模板并发布任何新的或更新的。这对于从单个仓库维护企业模板组合很有用。
 
 ---
 
-## Categories
+## 类别
 
-Company templates are organized by use case:
+企业模板按用例组织：
 
-| Category | Examples |
+| 类别 | 示例 |
 |---|---|
-| **Software Development** | Full-stack dev shop, API development team, mobile app studio |
-| **Marketing & Growth** | Performance marketing agency, content marketing team, SEO shop |
-| **Content & Media** | Content studio, podcast production, newsletter operation |
-| **Research & Analysis** | Market research firm, competitive intelligence, data analysis team |
-| **Operations** | Customer support org, internal ops team, QA/testing shop |
-| **Sales** | Outbound sales team, lead generation, account management |
-| **Finance & Legal** | Bookkeeping service, compliance monitoring, financial analysis |
-| **Creative** | Design agency, copywriting studio, brand development |
-| **General Purpose** | Starter templates, minimal orgs, single-agent setups |
+| **软件开发** | 全栈开发公司、API 开发团队、移动应用工作室 |
+| **营销与增长** | 效果营销机构、内容营销团队、SEO 公司 |
+| **内容与媒体** | 内容工作室、播客制作、通讯运营 |
+| **研究与分析** | 市场研究公司、竞争情报、数据分析团队 |
+| **运营** | 客户支持组织、内部运营团队、QA/测试公司 |
+| **销售** | 外呼销售团队、潜在客户开发、客户管理 |
+| **财务与法务** | 记账服务、合规监控、财务分析 |
+| **创意** | 设计机构、文案工作室、品牌开发 |
+| **通用** | 入门模板、精简组织、单智能体设置 |
 
-Categories are not exclusive — a template can have one primary category plus tags for cross-cutting concerns.
+类别不是互斥的——一个模板可以有一个主要类别加上用于跨领域问题的标签。
 
 ---
 
-## Moderation & Trust
+## 审核与信任
 
-### Verified Publishers
+### 认证发布者
 
-Publishers who meet certain thresholds (account age, published templates with good signals) earn a verified badge. Verified templates rank higher in search.
+满足特定阈值（账户年龄、具有良好信号的已发布模板）的发布者会获得认证徽章。认证模板在搜索中排名更高。
 
-### Security Review
+### 安全审查
 
-Company templates contain adapter configurations, which may include executable commands (process adapter) or webhook URLs (HTTP adapter). The moderation system:
+企业模板包含适配器配置，可能包括可执行命令（进程适配器）或 webhook URL（HTTP 适配器）。审核系统：
 
-1. **Automated scanning** — checks adapter configs for suspicious patterns (arbitrary code execution, exfiltration URLs, credential harvesting)
-2. **Community reporting** — any signed-in user can flag a template. Auto-hidden after multiple reports pending review.
-3. **Manual review** — moderators can approve, reject, or request changes
+1. **自动扫描**——检查适配器配置中是否有可疑模式（任意代码执行、数据泄露 URL、凭证收集）
+2. **社区举报**——任何登录用户都可以标记模板。多次举报后自动隐藏，等待审核。
+3. **人工审核**——审核员可以批准、拒绝或请求更改
 
-### Account Gating
+### 账户限制
 
-New accounts have a waiting period before they can publish. This prevents drive-by spam.
+新账户在发布前有等待期。这可以防止路过式垃圾信息。
 
 ---
 
-## Architecture
+## 架构
 
-ClipHub is a **separate service** from Paperclip itself. Paperclip is self-hosted; ClipHub is a hosted registry that Paperclip instances talk to.
+ClipHub 是一个与 Paperclip **独立的服务**。Paperclip 是自托管的；ClipHub 是一个托管注册表，Paperclip 实例与之通信。
 
-### Integration Points
+### 集成点
 
-| Layer | Role |
+| 层 | 角色 |
 |---|---|
-| **ClipHub Web** | Browse, search, discover, comment, star — the website |
-| **ClipHub API** | Registry API for publishing, downloading, searching programmatically |
-| **Paperclip CLI** | `paperclipai install`, `paperclipai publish`, `paperclipai cliphub sync` — built into Paperclip |
-| **Paperclip UI** | "Browse ClipHub" panel in the Paperclip web UI for discovering templates without leaving the app |
+| **ClipHub Web** | 浏览、搜索、发现、评论、star——网站 |
+| **ClipHub API** | 用于程序化发布、下载、搜索的注册表 API |
+| **Paperclip CLI** | `paperclipai install`、`paperclipai publish`、`paperclipai cliphub sync`——内置于 Paperclip |
+| **Paperclip UI** | Paperclip 网页 UI 中的"Browse ClipHub"面板，无需离开应用即可发现模板 |
 
-### Tech Stack
+### 技术栈
 
-| Layer | Technology |
+| 层 | 技术 |
 |---|---|
-| Frontend | React + Vite (consistent with Paperclip) |
-| Backend | TypeScript + Hono (consistent with Paperclip) |
-| Database | PostgreSQL |
-| Search | Vector embeddings for semantic search |
-| Auth | GitHub OAuth |
-| Storage | Template zips stored in object storage (S3 or equivalent) |
+| 前端 | React + Vite（与 Paperclip 一致） |
+| 后端 | TypeScript + Hono（与 Paperclip 一致） |
+| 数据库 | PostgreSQL |
+| 搜索 | 用于语义搜索的向量嵌入 |
+| 认证 | GitHub OAuth |
+| 存储 | 模板 zip 存储在对象存储（S3 或同等服务）中 |
 
-### Data Model (Sketch)
+### 数据模型（草稿）
 
 ```
 Publisher
@@ -253,84 +253,84 @@ Report
 
 ---
 
-## User Flows
+## 用户流程
 
-### "I want to start a company"
+### "我想创建一家企业"
 
-1. Open ClipHub, browse by category or search "dev shop for building SaaS"
-2. Find a template that fits — "Lean SaaS Dev Shop (CEO + CTO + 3 Engineers)"
-3. Read the description, inspect the org chart, check the comments
-4. Run `paperclipai install cliphub:acme/lean-saas-shop`
-5. Paperclip creates the company locally with all agents pre-configured
-6. Set your API keys, adjust budgets, add your initial tasks
-7. Hit go
+1. 打开 ClipHub，按类别浏览或搜索"用于构建 SaaS 的开发公司"
+2. 找到合适的模板——"精简 SaaS 开发公司（CEO + CTO + 3 名工程师）"
+3. 阅读描述，检查组织架构图，查看评论
+4. 运行 `paperclipai install cliphub:acme/lean-saas-shop`
+5. Paperclip 在本地创建包含所有预配置智能体的企业
+6. 设置你的 API 密钥，调整预算，添加你的初始任务
+7. 启动
 
-### "I built something great and want to share it"
+### "我做出了很棒的东西，想分享它"
 
-1. Build and iterate on a company in Paperclip until it works well
-2. Export: `paperclipai export --template my-agency`
-3. Publish: `paperclipai publish cliphub my-agency`
-4. Fill in description, category, tags on the web UI
-5. Template is live — others can find and install it
+1. 在 Paperclip 中构建和迭代企业，直到运行良好
+2. 导出：`paperclipai export --template my-agency`
+3. 发布：`paperclipai publish cliphub my-agency`
+4. 在网页 UI 上填写描述、类别、标签
+5. 模板上线——其他人可以找到并安装它
 
-### "I want to improve someone else's company"
+### "我想改进别人创建的企业"
 
-1. Find a template on ClipHub that's close to what you need
-2. Fork it to your account
-3. Install your fork locally, modify the org (add agents, change configs, restructure teams)
-4. Export and re-publish as your own variant
-5. Fork lineage visible on both the original and your version
+1. 在 ClipHub 上找到一个接近你需求的模板
+2. Fork 到你的账户
+3. 在本地安装你的 fork，修改组织（添加智能体、更改配置、重构团队）
+4. 导出并作为你自己的变体重新发布
+5. Fork lineage 在原始版本和你自己的版本上都可见
 
-### "I just need one great agent, not a whole company"
+### "我只需要一个优秀的智能体，不需要整个企业"
 
-1. Search ClipHub for agent templates: "senior python engineer"
-2. Find a well-starred agent config
-3. Install just that agent: `paperclipai install cliphub:acme/senior-python-eng --agent`
-4. Assign it to a manager in your existing company
-5. Done
-
----
-
-## Relationship to Paperclip
-
-ClipHub is **not required** to use Paperclip. You can build companies entirely from scratch without ever touching ClipHub. But ClipHub dramatically lowers the barrier to entry:
-
-- **New users** get a working company in minutes instead of hours
-- **Experienced users** share proven configurations with the community
-- **The ecosystem** compounds — every good template makes the next company easier to build
-
-ClipHub is to Paperclip what a package registry is to a language runtime: optional, but transformative.
+1. 在 ClipHub 上搜索智能体模板："高级 python 工程师"
+2. 找到一个 star 多的智能体配置
+3. 只安装那个智能体：`paperclipai install cliphub:acme/senior-python-eng --agent`
+4. 在你现有企业中为其分配一个上级
+5. 完成
 
 ---
 
-## V1 Scope
+## 与 Paperclip 的关系
 
-### Must Have
+ClipHub **不是使用 Paperclip 所必需的**。你完全可以从零开始构建企业，而无需接触 ClipHub。但 ClipHub 大大降低了入门门槛：
 
-- [ ] Template publishing (upload via CLI or web)
-- [ ] Template browsing (list, filter by category)
-- [ ] Template detail page (description, org chart, agent list, install command)
-- [ ] Semantic search (vector embeddings)
-- [ ] `paperclipai install cliphub:<publisher>/<slug>` CLI command
-- [ ] GitHub OAuth authentication
+- **新用户**可以在几分钟内获得一个工作企业，而不是几个小时
+- **有经验的用户**与社区分享经过验证的配置
+- **生态系统**不断积累——每一个好的模板都让下一个企业更容易构建
+
+ClipHub 对于 Paperclip 的意义，就像包注册表对于语言运行时的意义：可选，但变革性。
+
+---
+
+## V1 范围
+
+### 必须有
+
+- [ ] 模板发布（通过 CLI 或网页上传）
+- [ ] 模板浏览（列表、按类别筛选）
+- [ ] 模板详情页（描述、组织架构图、智能体列表、安装命令）
+- [ ] 语义搜索（向量嵌入）
+- [ ] `paperclipai install cliphub:<publisher>/<slug>` CLI 命令
+- [ ] GitHub OAuth 身份验证
 - [ ] Stars
-- [ ] Download counts
-- [ ] Versioning (semver, version history)
-- [ ] Basic moderation (community reporting, auto-hide)
+- [ ] 下载计数
+- [ ] 版本控制（semver、版本历史）
+- [ ] 基本审核（社区举报、自动隐藏）
 
 ### V2
 
-- [ ] Comments / threaded discussion
-- [ ] Forking with lineage tracking
-- [ ] Agent and team sub-packages
-- [ ] Verified publisher badges
-- [ ] Automated security scanning of adapter configs
-- [ ] "Browse ClipHub" panel in Paperclip web UI
-- [ ] `paperclipai cliphub sync` for bulk publishing
-- [ ] Publisher profiles and portfolios
+- [ ] 评论/线程讨论
+- [ ] 带 lineage 跟踪的 Forking
+- [ ] 智能体和团队子包
+- [ ] 认证发布者徽章
+- [ ] 适配器配置的自动化安全扫描
+- [ ] Paperclip 网页 UI 中的"Browse ClipHub"面板
+- [ ] 用于批量发布的 `paperclipai cliphub sync`
+- [ ] 发布者资料和作品集
 
-### Not in Scope
+### 范围外
 
-- Paid / premium templates (everything is free and public, at least initially)
-- Private registries (may be a future enterprise feature)
-- Running companies on ClipHub (it's a registry, not a runtime — consistent with Paperclip's own philosophy)
+- 付费/高级模板（一切都是免费和公开的，至少最初是这样）
+- 私有注册表（可能是未来的企业功能）
+- 在 ClipHub 上运行企业（它是一个注册表，不是运行时——与 Paperclip 自身的理念一致）

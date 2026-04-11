@@ -1,176 +1,176 @@
-# Release Automation Setup
+# 发布自动化设置
 
-This document covers the GitHub and npm setup required for the current Paperclip release model:
+本文档涵盖当前 Paperclip 发布模型所需的 GitHub 和 npm 设置：
 
-- automatic canaries from `master`
-- manual stable promotion from a chosen source ref
-- npm trusted publishing via GitHub OIDC
-- protected release infrastructure in a public repository
+- 来自 `master` 的自动 canary 版本
+- 来自选定源引用的手动 stable promotion
+- 通过 GitHub OIDC 进行 npm trusted publishing
+- 公共仓库中的受保护发布基础设施
 
-Repo-side files that depend on this setup:
-
-- `.github/workflows/release.yml`
-- `.github/CODEOWNERS`
-
-Note:
-
-- the release workflows intentionally use `pnpm install --no-frozen-lockfile`
-- this matches the repo's current policy where `pnpm-lock.yaml` is refreshed by GitHub automation after manifest changes land on `master`
-- the publish jobs then restore `pnpm-lock.yaml` before running `scripts/release.sh`, so the release script still sees a clean worktree
-
-## 1. Merge the Repo Changes First
-
-Before touching GitHub or npm settings, merge the release automation code so the referenced workflow filenames already exist on the default branch.
-
-Required files:
+依赖此设置的仓库端文件：
 
 - `.github/workflows/release.yml`
 - `.github/CODEOWNERS`
 
-## 2. Configure npm Trusted Publishing
+注意：
 
-Do this for every public package that Paperclip publishes.
+- 发布 workflow 故意使用 `pnpm install --no-frozen-lockfile`
+- 这符合仓库当前的策略，即 `pnpm-lock.yaml` 在 manifest 变更合并到 `master` 后由 GitHub automation 刷新
+- 然后发布 job 在运行 `scripts/release.sh` 之前恢复 `pnpm-lock.yaml`，因此发布脚本仍然看到干净的工作树
 
-At minimum that includes:
+## 1. 首先合并仓库变更
+
+在接触 GitHub 或 npm 设置之前，先合并发布自动化代码，使引用的 workflow 文件名已存在于默认分支上。
+
+所需文件：
+
+- `.github/workflows/release.yml`
+- `.github/CODEOWNERS`
+
+## 2. 配置 npm Trusted Publishing
+
+对 Paperclip 发布的每个公共包执行此操作。
+
+最少包括：
 
 - `paperclipai`
 - `@paperclipai/server`
 - `@paperclipai/ui`
-- public packages under `packages/`
+- `packages/` 下的公共包
 
-### 2.1. In npm, open each package settings page
+### 2.1. 在 npm 中打开每个包的设置页面
 
-For each package:
+对于每个包：
 
-1. open npm as an owner of the package
-2. go to the package settings / publishing access area
-3. add a trusted publisher for the GitHub repository `paperclipai/paperclip`
+1. 以包所有者的身份打开 npm
+2. 进入包的设置/发布访问区域
+3. 为 GitHub 仓库 `paperclipai/paperclip` 添加 trusted publisher
 
-### 2.2. Add one trusted publisher entry per package
+### 2.2. 为每个包添加一个 trusted publisher 条目
 
-npm currently allows one trusted publisher configuration per package.
+npm 目前允许每个包配置一个 trusted publisher。
 
-Configure:
+配置：
 
 - workflow: `.github/workflows/release.yml`
 
-Repository:
+仓库：
 
 - `paperclipai/paperclip`
 
-Environment name:
+环境名称：
 
-- leave the npm trusted-publisher environment field blank
+- 将 npm trusted-publisher 环境字段留空
 
-Why:
+原因：
 
-- the single `release.yml` workflow handles both canary and stable publishing
-- GitHub environments `npm-canary` and `npm-stable` still enforce different approval rules on the GitHub side
+- 单一的 `release.yml` workflow 处理 canary 和 stable 发布
+- GitHub environments `npm-canary` 和 `npm-stable` 仍然在 GitHub 端强制执行不同的审批规则
 
-### 2.3. Verify trusted publishing before removing old auth
+### 2.3. 在移除旧认证之前验证 trusted publishing
 
-After the workflows are live:
+workflow 上线后：
 
-1. run a canary publish
-2. confirm npm publish succeeds without any `NPM_TOKEN`
-3. run a stable dry-run
-4. run one real stable publish
+1. 运行一次 canary 发布
+2. 确认 npm 发布成功且没有任何 `NPM_TOKEN`
+3. 运行一次 stable dry-run
+4. 运行一次真正的 stable 发布
 
-Only after that should you remove old token-based access.
+只有在完成上述步骤后才应移除基于 token 的旧访问权限。
 
-## 3. Remove Legacy npm Tokens
+## 3. 移除遗留的 npm Tokens
 
-After trusted publishing works:
+Trusted publishing 正常工作后：
 
-1. revoke any repository or organization `NPM_TOKEN` secrets used for publish
-2. revoke any personal automation token that used to publish Paperclip
-3. if npm offers a package-level setting to restrict publishing to trusted publishers, enable it
+1. 撤销用于发布的任何仓库或组织的 `NPM_TOKEN` secrets
+2. 撤销任何曾经用于发布 Paperclip 的个人 automation token
+3. 如果 npm 提供包级别设置以限制仅允许 trusted publishers 发布，请启用它
 
-Goal:
+目标：
 
-- no long-lived npm publishing token should remain in GitHub Actions
+- 不应在 GitHub Actions 中保留任何长期有效的 npm 发布 token
 
-## 4. Create GitHub Environments
+## 4. 创建 GitHub Environments
 
-Create two environments in the GitHub repository:
+在 GitHub 仓库中创建两个 environments：
 
 - `npm-canary`
 - `npm-stable`
 
-Path:
+路径：
 
-1. GitHub repository
+1. GitHub 仓库
 2. `Settings`
 3. `Environments`
 4. `New environment`
 
-## 5. Configure `npm-canary`
+## 5. 配置 `npm-canary`
 
-Recommended settings for `npm-canary`:
+`npm-canary` 建议设置：
 
 - environment name: `npm-canary`
-- required reviewers: none
-- wait timer: none
+- required reviewers: 无
+- wait timer: 无
 - deployment branches and tags:
-  - selected branches only
-  - allow `master`
+  - 仅 selected branches
+  - 允许 `master`
 
-Reasoning:
+原因：
 
-- every push to `master` should be able to publish a canary automatically
-- no human approval should be required for canaries
+- 每次推送到 `master` 都应能够自动发布 canary
+- canary 不需要人工审批
 
-## 6. Configure `npm-stable`
+## 6. 配置 `npm-stable`
 
-Recommended settings for `npm-stable`:
+`npm-stable` 建议设置：
 
 - environment name: `npm-stable`
-- required reviewers: at least one maintainer other than the person triggering the workflow when possible
-- prevent self-review: enabled
-- admin bypass: disabled if your team can tolerate it
-- wait timer: optional
+- required reviewers: 至少一名 maintainer，且尽可能不要由触发 workflow 的人审批
+- prevent self-review: 启用
+- admin bypass: 如果团队能接受则禁用
+- wait timer: 可选
 - deployment branches and tags:
-  - selected branches only
-  - allow `master`
+  - 仅 selected branches
+  - 允许 `master`
 
-Reasoning:
+原因：
 
-- stable publishes should require an explicit human approval gate
-- the workflow is manual, but the environment should still be the real control point
+- stable 发布应需要明确的人工审批门禁
+- workflow 是手动的，但 environment 仍然是真正的控制点
 
-## 7. Protect `master`
+## 7. 保护 `master`
 
-Open the branch protection settings for `master`.
+打开 `master` 的分支保护设置。
 
-Recommended rules:
+建议规则：
 
-1. require pull requests before merging
-2. require status checks to pass before merging
-3. require review from code owners
-4. dismiss stale approvals when new commits are pushed
-5. restrict who can push directly to `master`
+1. 合并前需要 pull requests
+2. 合并前需要 status checks 通过
+3. 需要 code owners 审查
+4. 推送新 commits 时清除过期的 approvals
+5. 限制谁能直接推送到 `master`
 
-At minimum, make sure workflow and release script changes cannot land without review.
+至少确保 workflow 和发布脚本变更不能在没有审查的情况下合并。
 
-## 8. Enforce CODEOWNERS Review
+## 8. 强制执行 CODEOWNERS 审查
 
-This repo now includes `.github/CODEOWNERS`, but GitHub only enforces it if branch protection requires code owner reviews.
+此仓库现在包含 `.github/CODEOWNERS`，但 GitHub 只有在分支保护要求 code owner 审查时才会执行它。
 
-In branch protection for `master`, enable:
+在 `master` 的分支保护中，启用：
 
 - `Require review from Code Owners`
 
-Then verify the owner entries are correct for your actual maintainer set.
+然后验证所有者条目对您的实际 maintainer 集是正确的。
 
-Current file:
+当前文件：
 
 - `.github/CODEOWNERS`
 
-If `@cryppadotta` is not the right reviewer identity in the public repo, change it before enabling enforcement.
+如果 `@cryppadotta` 在公共仓库中不是正确的审查者身份，请在启用强制执行之前进行更改。
 
-## 9. Protect Release Infrastructure Specifically
+## 9. 特别保护发布基础设施
 
-These files should always trigger code owner review:
+这些文件应始终触发 code owner 审查：
 
 - `.github/workflows/release.yml`
 - `scripts/release.sh`
@@ -181,101 +181,101 @@ These files should always trigger code owner review:
 - `doc/RELEASING.md`
 - `doc/PUBLISHING.md`
 
-If you want stronger controls, add a repository ruleset that explicitly blocks direct pushes to:
+如果您需要更强的控制，请添加一个仓库 ruleset，明确阻止直接推送至：
 
 - `.github/workflows/**`
 - `scripts/release*`
 
-## 10. Do Not Store a Claude Token in GitHub Actions
+## 10. 不要在 GitHub Actions 中存储 Claude Token
 
-Do not add a personal Claude or Anthropic token for automatic changelog generation.
+不要添加个人 Claude 或 Anthropic token 用于自动 changelog 生成。
 
-Recommended policy:
+建议策略：
 
-- stable changelog generation happens locally from a trusted maintainer machine
-- canaries never generate changelogs
+- stable changelog 生成在可信的 maintainer 机器上本地进行
+- canary 永不生成 changelog
 
-This keeps LLM spending intentional and avoids a high-value token sitting in Actions.
+这保持 LLM 消费是有意的，并避免高价值 token 暴露在 Actions 中。
 
-## 11. Verify the Canary Workflow
+## 11. 验证 Canary Workflow
 
-After setup:
+设置完成后：
 
-1. merge a harmless commit to `master`
-2. open the `Release` workflow run triggered by that push
-3. confirm it passes verification
-4. confirm publish succeeds under the `npm-canary` environment
-5. confirm npm now shows a new `canary` release
-6. confirm a git tag named `canary/vYYYY.MDD.P-canary.N` was pushed
+1. 向 `master` 合并一个无害的 commit
+2. 打开由该推送触发的 `Release` workflow run
+3. 确认它通过验证
+4. 确认在 `npm-canary` environment 下发布成功
+5. 确认 npm 现在显示一个新的 `canary` 版本
+6. 确认推送了一个名为 `canary/vYYYY.MDD.P-canary.N` 的 git tag
 
-Install-path check:
+安装路径检查：
 
 ```bash
 npx paperclipai@canary onboard
 ```
 
-## 12. Verify the Stable Workflow
+## 12. 验证 Stable Workflow
 
-After at least one good canary exists:
+在至少有一个好的 canary 存在后：
 
-1. resolve the target stable version with `./scripts/release.sh stable --date YYYY-MM-DD --print-version`
-2. prepare `releases/vYYYY.MDD.P.md` on the source commit you want to promote
-3. open `Actions` -> `Release`
-4. run it with:
-   - `source_ref`: the tested commit SHA or canary tag source commit
-   - `stable_date`: leave blank or set the intended UTC date like `2026-03-18`
-     do not enter a version like `2026.318.0`; the workflow computes that from the date
+1. 使用 `./scripts/release.sh stable --date YYYY-MM-DD --print-version` 确定目标 stable 版本
+2. 在要 promote 的源 commit 上准备 `releases/vYYYY.MDD.P.md`
+3. 打开 `Actions` -> `Release`
+4. 使用以下参数运行：
+   - `source_ref`: 测试过的 commit SHA 或 canary tag 源 commit
+   - `stable_date`: 留空或设置预期的 UTC 日期如 `2026-03-18`
+     不要输入类似 `2026.318.0` 的版本号；workflow 从日期计算版本
    - `dry_run`: `true`
-5. confirm the dry-run succeeds
-6. rerun with `dry_run: false`
-7. approve the `npm-stable` environment when prompted
-8. confirm npm `latest` points to the new stable version
-9. confirm git tag `vYYYY.MDD.P` exists
-10. confirm the GitHub Release was created
+5. 确认 dry-run 成功
+6. 使用 `dry_run: false` 重新运行
+7. 提示时批准 `npm-stable` environment
+8. 确认 npm `latest` 指向新的 stable 版本
+9. 确认 git tag `vYYYY.MDD.P` 存在
+10. 确认 GitHub Release 已创建
 
-Implementation note:
+实现说明：
 
-- the GitHub Actions stable workflow calls `create-github-release.sh` with `PUBLISH_REMOTE=origin`
-- local maintainer usage can still pass `PUBLISH_REMOTE=public-gh` explicitly when needed
+- GitHub Actions stable workflow 使用 `PUBLISH_REMOTE=origin` 调用 `create-github-release.sh`
+- 本地 maintainer 使用时仍可在需要时显式传递 `PUBLISH_REMOTE=public-gh`
 
-## 13. Suggested Maintainer Policy
+## 13. 建议的 Maintainer 策略
 
-Use this policy going forward:
+今后使用此策略：
 
-- canaries are automatic and cheap
-- stables are manual and approved
-- only stables get public notes and announcements
-- release notes are committed before stable publish
-- rollback uses `npm dist-tag`, not unpublish
+- canary 是自动的且成本低廉
+- stable 是手动的且需要审批
+- 只有 stable 才有公共说明和公告
+- 发布说明在 stable 发布之前提交
+- rollback 使用 `npm dist-tag`，而不是 unpublish
 
-## 14. Troubleshooting
+## 14. 故障排除
 
-### Trusted publishing fails with an auth error
+### Trusted publishing 因认证错误失败
 
-Check:
+检查：
 
-1. the workflow filename on GitHub exactly matches the filename configured in npm
-2. the package has the trusted publisher entry for the correct repository
-3. the job has `id-token: write`
-4. the job is running from the expected repository, not a fork
+1. GitHub 上的 workflow 文件名与 npm 中配置的文件名完全匹配
+2. 该包为正确的仓库设置了 trusted publisher 条目
+3. job 有 `id-token: write`
+4. job 正在预期仓库中运行，而不是 fork
 
-### Stable workflow runs but never asks for approval
+### Stable workflow 运行但从不请求审批
 
-Check:
+检查：
 
-1. the `publish` job uses environment `npm-stable`
-2. the environment actually has required reviewers configured
-3. the workflow is running in the canonical repository, not a fork
+1. `publish` job 使用 environment `npm-stable`
+2. 该 environment 实际配置了 required reviewers
+3. workflow 在规范仓库中运行，而不是 fork
 
-### CODEOWNERS does not trigger
+### CODEOWNERS 不触发
 
-Check:
+检查：
 
-1. `.github/CODEOWNERS` is on the default branch
-2. branch protection on `master` requires code owner review
-3. the owner identities in the file are valid reviewers with repository access
+1. `.github/CODEOWNERS` 在默认分支上
+2. `master` 的分支保护需要 code owner 审查
+3. 文件中的所有者身份是具有仓库访问权限的有效审查者
 
-## Related Docs
+## 相关文档
 
 - [doc/RELEASING.md](RELEASING.md)
 - [doc/PUBLISHING.md](PUBLISHING.md)

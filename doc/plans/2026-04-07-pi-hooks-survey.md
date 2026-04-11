@@ -1,37 +1,37 @@
 # Pi Hook Survey
 
-Status: investigation note
-Date: 2026-04-07
+状态：调查说明
+日期：2026-04-07
 
 ## Why this exists
 
-We were asked to find the hook surfaces exposed by `pi` and `pi-mono`, then decide which ideas transfer cleanly into Paperclip.
+我们被要求找到 `pi` 和 `pi-mono` 暴露的 hook 表面，然后决定哪些理念可以干净地转移到 Paperclip。
 
-This note is based on direct source inspection of:
+本文档基于对以下内容的直接源码检查：
 
-- `badlogic/pi` default branch and `pi2` branch
+- `badlogic/pi` 默认分支和 `pi2` 分支
 - `badlogic/pi-mono` `packages/coding-agent`
-- current Paperclip plugin and adapter surfaces in this repo
+- 此 repo 中当前的 Paperclip 插件和适配器表面
 
 ## Short answer
 
-- Current `pi` does not expose a comparable extension hook API. What it exposes today is a JSON event stream from `pi-agent`.
-- `pi-mono` does expose a real extension hook system. It is broad, typed, and intentionally allows mutation of agent/runtime behavior.
-- Paperclip should copy only the safe subset:
-  - typed event subscriptions
-  - read-only run lifecycle events
-  - explicit worker lifecycle hooks
-  - plugin-to-plugin events
-- Paperclip should not copy the dangerous subset:
-  - arbitrary mutation hooks on core control-plane decisions
-  - project-local plugin loading
-  - built-in tool shadowing by name collision
+- 当前的 `pi` 不暴露可比的扩展 hook API。它今天暴露的是来自 `pi-agent` 的 JSON 事件流。
+- `pi-mono` 确实暴露了一个真正的扩展 hook 系统。它广泛、类型化，并有意允许改变代理/运行时行为。
+- Paperclip 应该只复制安全的子集：
+  - 类型化事件订阅
+  - 只读运行生命周期事件
+  - 显式工作进程生命周期 hook
+  - 插件到插件事件
+- Paperclip 不应该复制危险的子集：
+  - 对核心控制平面决策的任意变更 hook
+  - 项目本地插件加载
+  - 通过名称冲突的内置工具遮蔽
 
 ## What `pi` has today
 
-Current `badlogic/pi` is primarily a GPU pod manager plus a lightweight agent runner. It does not expose a `pi.on(...)`-style extension API like `pi-mono`.
+当前的 `badlogic/pi` 主要是一个 GPU pod 管理器加上轻量级代理运行器。它不暴露像 `pi-mono` 那样的 `pi.on(...)` 风格扩展 API。
 
-The closest thing to hooks is the `pi-agent --json` event stream:
+最接近 hook 的是 `pi-agent --json` 事件流：
 
 - `session_start`
 - `user_message`
@@ -44,15 +44,15 @@ The closest thing to hooks is the `pi-agent --json` event stream:
 - `error`
 - `interrupted`
 
-That makes `pi` useful as an event producer, but not as a host for third-party runtime interception.
+这使得 `pi` 作为事件生产者有用，但不是作为第三方运行时拦截的主机。
 
 ## What `pi-mono` has
 
-`pi-mono` exposes a real extension API through `packages/coding-agent/src/core/extensions/types.ts`.
+`pi-mono` 通过 `packages/coding-agent/src/core/extensions/types.ts` 暴露了一个真正的扩展 API。
 
 ### Extension event hooks
 
-Verified `pi.on(...)` hook names:
+验证的 `pi.on(...)` hook 名称：
 
 - `resources_discover`
 - `session_start`
@@ -84,7 +84,7 @@ Verified `pi.on(...)` hook names:
 
 ### Other extension surfaces
 
-`pi-mono` extensions can also:
+`pi-mono` 扩展也可以：
 
 - `registerTool(...)`
 - `registerCommand(...)`
@@ -93,105 +93,105 @@ Verified `pi.on(...)` hook names:
 - `registerMessageRenderer(...)`
 - `registerProvider(...)`
 - `unregisterProvider(...)`
-- use an inter-extension event bus via `pi.events`
+- 通过 `pi.events` 使用插件间事件总线
 
 ### Important behavior
 
-`pi-mono` hooks are not just observers. Several can actively mutate behavior:
+`pi-mono` hook 不仅仅是观察者。有几个可以主动改变行为：
 
-- `before_agent_start` can rewrite the effective system prompt and inject messages
-- `context` can replace the message set before an LLM call
-- `before_provider_request` can rewrite the serialized provider payload
-- `tool_call` can mutate tool inputs and block execution
-- `tool_result` can rewrite tool output
-- `user_bash` can replace shell execution entirely
-- `input` can transform or fully handle user input before normal processing
+- `before_agent_start` 可以重写有效系统提示并注入消息
+- `context` 可以替换 LLM 调用前的消息集
+- `before_provider_request` 可以重写序列化的 provider 有效载荷
+- `tool_call` 可以变更工具输入并阻止执行
+- `tool_result` 可以重写工具输出
+- `user_bash` 可以完全替换 shell 执行
+- `input` 可以转换或在正常处理之前完全处理用户输入
 
-That is a good fit for a local coding harness. It is not automatically a good fit for a company control plane.
+这非常适合本地编码工具。这不是自动适合公司控制平面的。
 
 ## What Paperclip already has
 
-Paperclip already has several hook-like surfaces, but they are much narrower and safer:
+Paperclip 已经有了一些 hook 类似的表面，但它们更窄且更安全：
 
-- plugin worker lifecycle hooks such as `setup()` and `onHealth()`
-- declared webhook endpoints for plugins
-- scheduled jobs
-- a typed plugin event bus with filtering and plugin namespacing
-- adapter runtime hooks for logs/status/usage in the run pipeline
+- 插件工作进程生命周期 hook，如 `setup()` 和 `onHealth()`
+- 为插件声明的 webhook 端点
+- 调度作业
+- 带过滤和插件命名空间的类型化插件事件总线
+- 运行管道中用于日志/状态/使用量的适配器运行时 hook
 
-The plugin event bus is already pointed in the right direction:
+插件事件总线已经指向正确的方向：
 
-- core domain events can be subscribed to
-- filters are applied server-side
-- plugin-emitted events are namespaced under `plugin.<pluginId>.*`
-- plugins do not override core behavior by name collision
+- 可以订阅核心领域事件
+- 过滤器在服务器端应用
+- 插件发出的事件在 `plugin.<pluginId>.*` 下命名空间
+- 插件不会通过名称冲突覆盖核心行为
 
 ## What transfers well to Paperclip
 
-These ideas from `pi-mono` fit Paperclip with little conceptual risk:
+这些来自 `pi-mono` 的理念与 Paperclip 几乎没有概念风险：
 
 ### 1. Read-only run lifecycle subscriptions
 
-Paperclip should continue exposing run and transcript events to plugins, for example:
+Paperclip 应继续向插件暴露运行和记录事件，例如：
 
-- run started / finished
-- tool started / finished
-- usage reported
-- issue comment created
+- 运行开始/结束
+- 工具开始/结束
+- 使用量报告
+- issue 评论创建
 
-This matches Paperclip's control-plane posture: observe, react, automate.
+这与 Paperclip 的控制平面姿态匹配：观察、反应、自动化。
 
 ### 2. Plugin-to-plugin events
 
-Paperclip already has this. It is worth keeping and extending.
+Paperclip 已经有了。这是值得保持和扩展的。
 
-This is the clean replacement for many ad hoc hook chains.
+这是许多临时 hook 链的干净替代品。
 
 ### 3. Explicit worker lifecycle hooks
 
-Paperclip already has `setup()` and `onHealth()`. That is the right shape.
+Paperclip 已经有 `setup()` 和 `onHealth()`。这是正确的形状。
 
-If more lifecycle is needed, it should stay explicit and host-controlled.
+如果需要更多生命周期，它应该保持显式和主机控制。
 
 ### 4. Trusted adapter-level prompt/runtime middleware
 
-Some `pi-mono` ideas do belong in Paperclip, but only inside trusted adapter/runtime code:
+一些 `pi-mono` 理念确实属于 Paperclip，但仅在可信适配器/运行时代码内部：
 
-- prompt shaping before a run starts
-- provider request customization
-- tool execution wrappers for local coding adapters
+- 运行开始前的提示塑造
+- provider 请求定制
+- 本地编码适配器的工具执行包装器
 
-This should be an adapter surface, not a general company plugin surface.
+这应该是适配器表面，而不是通用公司插件表面。
 
 ## What should not transfer directly
 
-These `pi-mono` capabilities are a bad fit for Paperclip core:
+这些 `pi-mono` 能力不适合 Paperclip 核心：
 
 ### 1. Arbitrary mutation hooks on control-plane decisions
 
-Paperclip should not let general plugins rewrite:
+Paperclip 不应让通用插件重写：
 
-- issue checkout semantics
-- approval outcomes
-- budget enforcement
-- assignment rules
-- company scoping
+- issue 检出语义
+- 审批结果
+- 预算执行
+- 分配规则
+- 公司范围
 
-Those are core invariants.
+这些是核心不变量。
 
 ### 2. Tool shadowing by name collision
 
-`pi-mono`'s low-friction override model is great for a personal coding harness.
+`pi-mono` 的低摩擦覆盖模型对个人编码工具很好。
 
-Paperclip should keep plugin tools namespaced and non-shadowing.
+Paperclip 应保持插件工具命名空间和非遮蔽。
 
 ### 3. Project-local plugin loading
 
-Paperclip is an operator-controlled control plane. Repo-local plugin auto-loading would make behavior too implicit and too hard to govern.
+Paperclip 是一个操作员控制的控制平面。Repo 本地插件自动加载会使行为太隐式和太难管理。
 
 ### 4. UI-session-specific hooks as first-class product surface
 
-Hooks like:
+像这样的 hook：
 
 - `session_before_switch`
 - `session_before_fork`
@@ -200,49 +200,49 @@ Hooks like:
 - `input`
 - `user_bash`
 
-are tied to `pi-mono` being an interactive terminal coding harness.
+与 `pi-mono` 作为交互式终端编码工具绑定。
 
-They do not map directly to Paperclip's board-and-issues model.
+它们不直接映射到 Paperclip 的 board-and-issues 模型。
 
 ## Recommended Paperclip direction
 
-If we want a "hooks" story inspired by `pi-mono`, it should split into two layers:
+如果我们想要受 `pi-mono` 启发的"hooks"故事，它应该分成两层：
 
 ### Layer 1: safe control-plane plugins
 
-Allowed surfaces:
+允许的表面：
 
-- typed domain event subscriptions
-- jobs
-- webhooks
-- plugin-to-plugin events
-- UI slots and bridge actions
-- plugin-owned tools and data endpoints
+- 类型化领域事件订阅
+- 作业
+- Webhooks
+- 插件到插件事件
+- UI 槽和桥接动作
+- 插件拥有的工具和数据端点
 
-Disallowed:
+不允许：
 
-- mutation of core issue/approval/budget invariants
+- 对核心 issue/approval/budget 不变量的变更
 
 ### Layer 2: trusted runtime middleware
 
-For adapters and other trusted runtime packages only:
+仅适用于适配器和其他可信运行时包：
 
-- prompt assembly hooks
-- provider payload hooks
-- tool execution wrappers
-- transcript rendering helpers
+- 提示组装 hook
+- provider 有效载荷 hook
+- 工具执行包装器
+- 记录渲染辅助器
 
-This is where the best `pi-mono` runtime ideas belong.
+这是最好的 `pi-mono` 运行时理念所属的地方。
 
 ## Bottom line
 
-If the question is "what hooks do `pi` and `pi-mono` have?":
+如果问题是"`pi` 和 `pi-mono` 有什么 hooks？"
 
-- `pi`: JSON output events, not a general extension hook system
-- `pi-mono`: a broad extension hook API with 27 named event hooks plus tool/command/provider registration
+- `pi`：JSON 输出事件，不是通用扩展 hook 系统
+- `pi-mono`：广泛的扩展 hook API，有 27 个命名事件 hook 加上工具/命令/provider 注册
 
-If the question is "what works for Paperclip too?":
+如果问题是"什么对 Paperclip 也有效？"
 
-- yes: typed event subscriptions, worker lifecycle hooks, namespaced plugin events, read-only run lifecycle events
-- maybe, but trusted-only: prompt/provider/tool middleware around adapter execution
-- no: arbitrary mutation hooks on control-plane invariants, project-local plugin loading, tool shadowing
+- 是：类型化事件订阅、工作进程生命周期 hook、命名空间插件事件、只读运行生命周期事件
+- 也许，但仅可信：围绕适配器执行的提示/provider/工具中间件
+- 否：对控制平面不变量的任意变更 hook、项目本地插件加载、工具遮蔽

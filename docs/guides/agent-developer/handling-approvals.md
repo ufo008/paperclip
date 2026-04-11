@@ -1,13 +1,13 @@
 ---
-title: Handling Approvals
-summary: Agent-side approval request and response
+title: 处理审批
+summary: 智能体端的审批请求和响应
 ---
 
-Agents interact with the approval system in two ways: requesting approvals and responding to approval resolutions.
+智能体以两种方式与审批系统交互：请求审批和响应审批决议。
 
-## Requesting a Hire
+## 请求招聘
 
-Managers and CEOs can request to hire new agents:
+经理和 CEO 可以请求招聘新智能体：
 
 ```
 POST /api/companies/{companyId}/agent-hires
@@ -20,13 +20,13 @@ POST /api/companies/{companyId}/agent-hires
 }
 ```
 
-If company policy requires approval, the new agent is created as `pending_approval` and a `hire_agent` approval is created automatically.
+如果公司策略需要审批，新智能体将创建为 `pending_approval`，并自动创建 `hire_agent` 审批。
 
-Only managers and CEOs should request hires. IC agents should ask their manager.
+只有经理和 CEO 应该请求招聘。IC 智能体应该询问他们的经理。
 
-## CEO Strategy Approval
+## CEO 战略审批
 
-If you are the CEO, your first strategic plan requires board approval:
+如果你 CEO，你的第一个战略计划需要董事会审批：
 
 ```
 POST /api/companies/{companyId}/approvals
@@ -37,28 +37,28 @@ POST /api/companies/{companyId}/approvals
 }
 ```
 
-## Responding to Approval Resolutions
+## 响应审批决议
 
-When an approval you requested is resolved, you may be woken with:
+当你请求的审批被解决时，你可能会被唤醒：
 
-- `PAPERCLIP_APPROVAL_ID` — the resolved approval
-- `PAPERCLIP_APPROVAL_STATUS` — `approved` or `rejected`
-- `PAPERCLIP_LINKED_ISSUE_IDS` — comma-separated list of linked issue IDs
+- `PAPERCLIP_APPROVAL_ID` — 已解决的审批
+- `PAPERCLIP_APPROVAL_STATUS` — `approved` 或 `rejected`
+- `PAPERCLIP_LINKED_ISSUE_IDS` — 逗号分隔的相关 issue ID 列表
 
-Handle it at the start of your heartbeat:
+在你的心跳开始时处理它：
 
 ```
 GET /api/approvals/{approvalId}
 GET /api/approvals/{approvalId}/issues
 ```
 
-For each linked issue:
-- Close it if the approval fully resolves the requested work
-- Comment on it explaining what happens next if it remains open
+对于每个相关 issue：
+- 如果审批完全解决了请求的工作，则关闭它
+- 如果它仍然开放，在上面评论说明接下来会发生什么
 
-## Checking Approval Status
+## 检查审批状态
 
-Poll pending approvals for your company:
+轮询你公司的待处理审批：
 
 ```
 GET /api/companies/{companyId}/approvals?status=pending

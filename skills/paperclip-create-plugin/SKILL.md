@@ -1,43 +1,42 @@
 ---
 name: paperclip-create-plugin
 description: >
-  Create new Paperclip plugins with the current alpha SDK/runtime. Use when
-  scaffolding a plugin package, adding a new example plugin, or updating plugin
-  authoring docs. Covers the supported worker/UI surface, route conventions,
-  scaffold flow, and verification steps.
+  使用当前的 alpha SDK/runtime 创建新的 Paperclip 插件。当你需要搭建插件包、
+  添加新的示例插件或更新插件创作文档时使用。涵盖支持的 worker/UI 表面、
+  路由约定、搭建流程和验证步骤。
 ---
 
-# Create a Paperclip Plugin
+# 创建 Paperclip 插件
 
-Use this skill when the task is to create, scaffold, or document a Paperclip plugin.
+当任务是创建、搭建或记录 Paperclip 插件时使用此技能。
 
-## 1. Ground rules
+## 1. 基本规则
 
-Read these first when needed:
+需要时首先阅读：
 
 1. `doc/plugins/PLUGIN_AUTHORING_GUIDE.md`
 2. `packages/plugins/sdk/README.md`
-3. `doc/plugins/PLUGIN_SPEC.md` only for future-looking context
+3. 仅当需要面向未来的上下文时阅读 `doc/plugins/PLUGIN_SPEC.md`
 
-Current runtime assumptions:
+当前运行时假设：
 
-- plugin workers are trusted code
-- plugin UI is trusted same-origin host code
-- worker APIs are capability-gated
-- plugin UI is not sandboxed by manifest capabilities
-- no host-provided shared plugin UI component kit yet
-- `ctx.assets` is not supported in the current runtime
+- 插件 worker 是可信代码
+- 插件 UI 是可信的同源主机代码
+- worker API 是能力门控的
+- 插件 UI 不通过 manifest capabilities 进行沙箱处理
+- 尚无主机提供的共享插件 UI 组件工具包
+- 当前运行时不支持 `ctx.assets`
 
-## 2. Preferred workflow
+## 2. 首选工作流
 
-Use the scaffold package instead of hand-writing the boilerplate:
+使用 scaffold 包而不是手写样板：
 
 ```bash
 pnpm --filter @paperclipai/create-paperclip-plugin build
 node packages/plugins/create-paperclip-plugin/dist/index.js <npm-package-name> --output <target-dir>
 ```
 
-For a plugin that lives outside the Paperclip repo, pass `--sdk-path` and let the scaffold snapshot the local SDK/shared packages into `.paperclip-sdk/`:
+对于位于 Paperclip 仓库之外的插件，传递 `--sdk-path` 并让 scaffold 将本地 SDK/shared 包快照到 `.paperclip-sdk/`：
 
 ```bash
 pnpm --filter @paperclipai/create-paperclip-plugin build
@@ -46,14 +45,14 @@ node packages/plugins/create-paperclip-plugin/dist/index.js @acme/plugin-name \
   --sdk-path /absolute/path/to/paperclip/packages/plugins/sdk
 ```
 
-Recommended target inside this repo:
+此仓库中的推荐目标：
 
-- `packages/plugins/examples/` for example plugins
-- another `packages/plugins/<name>/` folder if it is becoming a real package
+- `packages/plugins/examples/` 用于示例插件
+- 如果它正在成为真正的包，则是另一个 `packages/plugins/<name>/` 文件夹
 
-## 3. After scaffolding
+## 3. 搭建后
 
-Check and adjust:
+检查并调整：
 
 - `src/manifest.ts`
 - `src/worker.ts`
@@ -61,27 +60,27 @@ Check and adjust:
 - `tests/plugin.spec.ts`
 - `package.json`
 
-Make sure the plugin:
+确保插件：
 
-- declares only supported capabilities
-- does not use `ctx.assets`
-- does not import host UI component stubs
-- keeps UI self-contained
-- uses `routePath` only on `page` slots
-- is installed into Paperclip from an absolute local path during development
+- 仅声明支持的 capabilities
+- 不使用 `ctx.assets`
+- 不导入主机 UI 组件 stub
+- 保持 UI 自包含
+- 仅在 `page` 插槽上使用 `routePath`
+- 在开发期间从绝对本地路径安装到 Paperclip
 
-## 4. If the plugin should appear in the app
+## 4. 如果插件应该出现在应用中
 
-For bundled example/discoverable behavior, update the relevant host wiring:
+对于捆绑示例/可发现行为，更新相关的主机接线：
 
-- bundled example list in `server/src/routes/plugins.ts`
-- any docs that list in-repo examples
+- `server/src/routes/plugins.ts` 中的捆绑示例列表
+- 列出仓库内示例的任何文档
 
-Only do this if the user wants the plugin surfaced as a bundled example.
+仅当用户希望将插件作为捆绑示例展示时才能执行此操作。
 
-## 5. Verification
+## 5. 验证
 
-Always run:
+始终运行：
 
 ```bash
 pnpm --filter <plugin-package> typecheck
@@ -89,13 +88,13 @@ pnpm --filter <plugin-package> test
 pnpm --filter <plugin-package> build
 ```
 
-If you changed SDK/host/plugin runtime code too, also run broader repo checks as appropriate.
+如果你也更改了 SDK/主机/插件运行时代码，也要运行更广泛的仓库检查。
 
-## 6. Documentation expectations
+## 6. 文档期望
 
-When authoring or updating plugin docs:
+在创作或更新插件文档时：
 
-- distinguish current implementation from future spec ideas
-- be explicit about the trusted-code model
-- do not promise host UI components or asset APIs
-- prefer npm-package deployment guidance over repo-local workflows for production
+- 区分当前实现和未来规范想法
+- 明确说明可信代码模型
+- 不承诺主机 UI 组件或资产 API
+- 对于生产环境，优先使用 npm 包部署指导而不是仓库本地工作流

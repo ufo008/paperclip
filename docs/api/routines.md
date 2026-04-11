@@ -1,27 +1,27 @@
 ---
 title: Routines
-summary: Recurring task scheduling, triggers, and run history
+summary: 重复任务调度、触发器和运行历史
 ---
 
-Routines are recurring tasks that fire on a schedule, webhook, or API call and create a heartbeat run for the assigned agent.
+Routines 是重复任务，按计划、webhook 或 API 调用触发，并为分配的智能体创建心跳运行。
 
-## List Routines
+## 列出 Routines
 
 ```
 GET /api/companies/{companyId}/routines
 ```
 
-Returns all routines in the company.
+返回公司中的所有 routines。
 
-## Get Routine
+## 获取 Routine
 
 ```
 GET /api/routines/{routineId}
 ```
 
-Returns routine details including triggers.
+返回包括触发器的 routine 详情。
 
-## Create Routine
+## 创建 Routine
 
 ```
 POST /api/companies/{companyId}/routines
@@ -38,39 +38,39 @@ POST /api/companies/{companyId}/routines
 }
 ```
 
-**Agents can only create routines assigned to themselves.** Board operators can assign to any agent.
+**智能体只能创建分配给自己的 routines。** 董事会操作员可以分配给任何智能体。
 
-Fields:
+字段：
 
-| Field | Required | Description |
+| 字段 | 必需 | 描述 |
 |-------|----------|-------------|
-| `title` | yes | Routine name |
-| `description` | no | Human-readable description of the routine |
-| `assigneeAgentId` | yes | Agent who receives each run |
-| `projectId` | yes | Project this routine belongs to |
-| `goalId` | no | Goal to link runs to |
-| `parentIssueId` | no | Parent issue for created run issues |
-| `priority` | no | `critical`, `high`, `medium` (default), `low` |
-| `status` | no | `active` (default), `paused`, `archived` |
-| `concurrencyPolicy` | no | Behaviour when a run fires while a previous one is still active |
-| `catchUpPolicy` | no | Behaviour for missed scheduled runs |
+| `title` | yes | Routine 名称 |
+| `description` | no | Routine 的人类可读描述 |
+| `assigneeAgentId` | yes | 接收每次运行的智能体 |
+| `projectId` | yes | 该 routine 所属的项目 |
+| `goalId` | no | 链接运行的目标 |
+| `parentIssueId` | no | 创建的运行工单的父工单 |
+| `priority` | no | `critical`、`high`、`medium`（默认）、`low` |
+| `status` | no | `active`（默认）、`paused`、`archived` |
+| `concurrencyPolicy` | no | 当运行触发而前一个仍在活跃时的行为 |
+| `catchUpPolicy` | no | 错过的计划运行的行为 |
 
-**Concurrency policies:**
+**并发策略：**
 
-| Value | Behaviour |
+| 值 | 行为 |
 |-------|-----------|
-| `coalesce_if_active` (default) | Incoming run is immediately finalised as `coalesced` and linked to the active run — no new issue is created |
-| `skip_if_active` | Incoming run is immediately finalised as `skipped` and linked to the active run — no new issue is created |
-| `always_enqueue` | Always create a new run regardless of active runs |
+| `coalesce_if_active`（默认）| 传入的运行立即完成为 `coalesced` 并链接到活跃运行——不创建新工单 |
+| `skip_if_active` | 传入的运行立即完成为 `skipped` 并链接到活跃运行——不创建新工单 |
+| `always_enqueue` | 始终创建新运行，无论活跃运行如何 |
 
-**Catch-up policies:**
+**追赶策略：**
 
-| Value | Behaviour |
+| 值 | 行为 |
 |-------|-----------|
-| `skip_missed` (default) | Missed scheduled runs are dropped |
-| `enqueue_missed_with_cap` | Missed runs are enqueued up to an internal cap |
+| `skip_missed`（默认）| 错过的计划运行被丢弃 |
+| `enqueue_missed_with_cap` | 错过的运行入队直到内部上限 |
 
-## Update Routine
+## 更新 Routine
 
 ```
 PATCH /api/routines/{routineId}
@@ -79,17 +79,17 @@ PATCH /api/routines/{routineId}
 }
 ```
 
-All fields from create are updatable. **Agents can only update routines assigned to themselves and cannot reassign a routine to another agent.**
+创建中的所有字段都可更新。**智能体只能更新分配给自己的 routines，不能将 routine 重新分配给另一个智能体。**
 
-## Add Trigger
+## 添加触发器
 
 ```
 POST /api/routines/{routineId}/triggers
 ```
 
-Three trigger kinds:
+三种触发器类型：
 
-**Schedule** — fires on a cron expression:
+**计划**——按 cron 表达式触发：
 
 ```
 {
@@ -99,7 +99,7 @@ Three trigger kinds:
 }
 ```
 
-**Webhook** — fires on an inbound HTTP POST to a generated URL:
+**Webhook**——对生成的 URL 发送入站 HTTP POST 时触发：
 
 ```
 {
@@ -109,9 +109,9 @@ Three trigger kinds:
 }
 ```
 
-Signing modes: `bearer` (default), `hmac_sha256`. Replay window range: 30–86400 seconds (default 300).
+签名模式：`bearer`（默认）、`hmac_sha256`。重放窗口范围：30–86400 秒（默认 300）。
 
-**API** — fires only when called explicitly via [Manual Run](#manual-run):
+**API**——仅通过 [手动运行](#手动运行) 显式调用时触发：
 
 ```
 {
@@ -119,9 +119,9 @@ Signing modes: `bearer` (default), `hmac_sha256`. Replay window range: 30–8640
 }
 ```
 
-A routine can have multiple triggers of different kinds.
+一个 routine 可以有多个不同类型的触发器。
 
-## Update Trigger
+## 更新触发器
 
 ```
 PATCH /api/routine-triggers/{triggerId}
@@ -131,21 +131,21 @@ PATCH /api/routine-triggers/{triggerId}
 }
 ```
 
-## Delete Trigger
+## 删除触发器
 
 ```
 DELETE /api/routine-triggers/{triggerId}
 ```
 
-## Rotate Trigger Secret
+## 轮换触发器密钥
 
 ```
 POST /api/routine-triggers/{triggerId}/rotate-secret
 ```
 
-Generates a new signing secret for webhook triggers. The previous secret is immediately invalidated.
+为 webhook 触发器生成新的签名密钥。之前的密钥立即失效。
 
-## Manual Run
+## 手动运行
 
 ```
 POST /api/routines/{routineId}/run
@@ -157,45 +157,45 @@ POST /api/routines/{routineId}/run
 }
 ```
 
-Fires a run immediately, bypassing the schedule. Concurrency policy still applies.
+立即触发运行，绕过计划。并发策略仍然适用。
 
-`triggerId` is optional. When supplied, the server validates the trigger belongs to this routine (`403`) and is enabled (`409`), then records the run against that trigger and updates its `lastFiredAt`. Omit it for a generic manual run with no trigger attribution.
+`triggerId` 是可选的。当提供时，服务器验证触发器属于此 routine（`403`）并已启用（`409`），然后记录针对该触发器的运行并更新其 `lastFiredAt`。对于没有触发器属性的通用手动运行，忽略它。
 
-## Fire Public Trigger
+## 触发公共触发器
 
 ```
 POST /api/routine-triggers/public/{publicId}/fire
 ```
 
-Fires a webhook trigger from an external system. Requires a valid `Authorization` or `X-Paperclip-Signature` + `X-Paperclip-Timestamp` header pair matching the trigger's signing mode.
+从外部系统触发 webhook 触发器。需要有效的 `Authorization` 或 `X-Paperclip-Signature` + `X-Paperclip-Timestamp` 头对，匹配触发器的签名模式。
 
-## List Runs
+## 列出运行
 
 ```
 GET /api/routines/{routineId}/runs?limit=50
 ```
 
-Returns recent run history for the routine. Defaults to 50 most recent runs.
+返回 routine 的最近运行历史。默认为最近 50 次运行。
 
-## Agent Access Rules
+## 智能体访问规则
 
-Agents can read all routines in their company but can only create and manage routines assigned to themselves:
+智能体可以读取其公司中的所有 routines，但只能创建和管理分配给自己的 routines：
 
-| Operation | Agent | Board |
+| 操作 | 智能体 | 董事会 |
 |-----------|-------|-------|
-| List / Get | ✅ any routine | ✅ |
-| Create | ✅ own only | ✅ |
-| Update / activate | ✅ own only | ✅ |
-| Add / update / delete triggers | ✅ own only | ✅ |
-| Rotate trigger secret | ✅ own only | ✅ |
-| Manual run | ✅ own only | ✅ |
-| Reassign to another agent | ❌ | ✅ |
+| 列出/获取 | ✅ 任何 routine | ✅ |
+| 创建 | ✅ 只能自己的 | ✅ |
+| 更新/激活 | ✅ 只能自己的 | ✅ |
+| 添加/更新/删除触发器 | ✅ 只能自己的 | ✅ |
+| 轮换触发器密钥 | ✅ 只能自己的 | ✅ |
+| 手动运行 | ✅ 只能自己的 | ✅ |
+| 重新分配给另一个智能体 | ❌ | ✅ |
 
-## Routine Lifecycle
+## Routine 生命周期
 
 ```
 active -> paused -> active
        -> archived
 ```
 
-Archived routines do not fire and cannot be reactivated.
+归档的 routines 不会触发，也不能重新激活。

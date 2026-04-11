@@ -1,46 +1,46 @@
 # Agent OS Technical Report for Paperclip
 
-Date: 2026-04-08
-Analyzed upstream: `rivet-dev/agent-os` at commit `0063cdccd1dcb1c8e211670cd05482d70d26a5c4` (`0063cdc`), dated 2026-04-06
+日期：2026-04-08
+分析的上游：`rivet-dev/agent-os` at commit `0063cdccd1dcb1c8e211670cd05482d70d26a5c4` (`0063cdc`)，日期为 2026-04-06
 
 ## Executive summary
 
-`agent-os` is not a competitor to Paperclip's core product. It is an execution substrate: an embedded, VM-like runtime for agents, tools, filesystems, and session orchestration. Paperclip is a control plane: company scoping, task hierarchy, approvals, budgets, activity logs, workspaces, and governance.
+`agent-os` 不是 Paperclip 核心产品的竞争对手。它是一个执行底层：用于代理、工具、文件系统和会话编排的嵌入式类 VM 运行时。Paperclip 是一个控制平面：公司范围、任务层级、审批、预算、活动日志、工作区和管理。
 
-The strongest takeaway is not "copy agent-os wholesale." The strongest takeaway is that Paperclip could selectively use its runtime ideas to improve local agent execution safety, reproducibility, and portability while keeping all company/task/governance logic in Paperclip.
+最重要的收获不是"全盘复制 agent-os"。最重要的收获是 Paperclip 可以有选择地使用其运行时理念来提高本地代理执行的安全性、可重复性和可移植性，同时将所有公司/任务/治理逻辑保留在 Paperclip 中。
 
-My recommendation is:
+我的建议是：
 
-1. Do not merge agent-os concepts into the Paperclip core product model.
-2. Do evaluate an optional `agentos_local` execution adapter or internal runtime experiment.
-3. Borrow a few design patterns aggressively:
-   - layered/snapshotted execution filesystems
-   - explicit capability-based runtime permissions
-   - a better host-tools bridge for controlled tool execution
-   - a normalized session capability model for agent adapters
-4. Do not import its workflow/cron/queue abstractions into Paperclip core until they are reconciled with Paperclip's issue/comment/governance model.
+1. 不要将 agent-os 概念合并到 Paperclip 核心产品模型中。
+2. 应该评估可选的 `agentos_local` 执行适配器或内部运行时实验。
+3. 积极借鉴一些设计模式：
+   - 分层/快照化执行文件系统
+   - 基于显式能力的运行时权限
+   - 用于受控工具执行的更好主机工具桥接
+   - 用于代理适配器的标准化会话能力模型
+4. 在将 agent-os 的工作流/cron/队列抽象与 Paperclip 的 issue/comment/治理模型协调之前，不要将它们导入 Paperclip 核心。
 
 ## What agent-os actually is
 
-From the repo layout and implementation, `agent-os` is a mixed TypeScript/Rust system that provides:
+从代码库布局和实现来看，`agent-os` 是一个混合 TypeScript/Rust 系统，提供：
 
-- an `AgentOs` TypeScript API for creating isolated agent VMs
-- a Rust kernel/sidecar that virtualizes filesystem, processes, PTYs, pipes, permissions, and networking
-- an ACP-based session model for agent runtimes such as Pi, OpenCode, and Claude-style adapters
-- a registry of WASM command packages and mount plugins
-- optional host toolkits, cron scheduling, and filesystem mounts
+- 用于创建隔离代理 VM 的 `AgentOs` TypeScript API
+- 一个 Rust 内核/边车，可虚拟化文件系统、进程、PTY、管道、权限和网络
+- 用于 Pi、OpenCode 和类 Claude 适配器等代理运行时的基于 ACP 的会话模型
+- WASM 命令包和挂载插件的注册表
+- 可选的主机工具包、cron 调度和文件系统挂载
 
-The repo is substantial already:
+该代码库已经相当庞大：
 
-- monorepo with `packages/`, `crates/`, and `registry/`
-- roughly 1,200 files just across `packages/`, `crates/`, and `registry/`
-- mixed implementation model: TypeScript public API plus Rust kernel/sidecar internals
+- 包含 `packages/`、`crates/` 和 `registry/` 的 monorepo
+- 仅在 `packages/`、`crates/` 和 `registry/` 中就有约 1,200 个文件
+- 混合实现模型：TypeScript 公共 API 加上 Rust 内核/边车内部实现
 
 ## Architecture notes
 
 ### 1. Public runtime surface
 
-The main API lives in `packages/core/src/agent-os.ts` and exports an `AgentOs` class with methods such as:
+主要 API 位于 `packages/core/src/agent-os.ts`，导出一个 `AgentOs` 类，包含以下方法：
 
 - `create()`
 - `createSession()`
@@ -48,350 +48,350 @@ The main API lives in `packages/core/src/agent-os.ts` and exports an `AgentOs` c
 - `exec()`
 - `spawn()`
 - `snapshotRootFilesystem()`
-- cron scheduling helpers
+- cron 调度辅助函数
 
-This is an execution API, not a coordination API.
+这是一个执行 API，而不是协调 API。
 
 ### 2. Virtualized kernel model
 
-The kernel is implemented in Rust under `crates/kernel/src/`. It models:
+内核在 Rust 的 `crates/kernel/src/` 中实现，建模：
 
-- virtual filesystem
-- process table
-- PTYs and pipes
-- resource accounting
-- permissioned filesystem access
-- network permission checks
+- 虚拟文件系统
+- 进程表
+- PTY 和管道
+- 资源计算
+- 权限化文件系统访问
+- 网络权限检查
 
-That gives `agent-os` a much stronger isolation story than Paperclip's current "launch a host CLI in a workspace" local adapter approach.
+这使得 `agent-os` 比 Paperclip 当前"在工作区中启动主机 CLI"的本地适配器方法具有更强的隔离性。
 
 ### 3. Layered filesystem and snapshots
 
-The filesystem design is one of the most reusable ideas. `agent-os` uses:
+文件系统设计是最可重用的想法之一。`agent-os` 使用：
 
-- a bundled base filesystem
-- a writable overlay
-- optional mounted filesystems
-- snapshot export/import for reusing root states
+- 捆绑的基础文件系统
+- 可写覆盖层
+- 可选挂载文件系统
+- 用于重用根状态的快照导出/导入
 
-This is cleaner than treating every execution workspace as a mutable checkout plus ad hoc cleanup. It enables reproducible starting states and cheap isolation.
+这比为每个执行工作区创建可变检出加上临时清理更清晰。它支持可重复的起始状态和廉价的隔离。
 
 ### 4. Capability-based permissions
 
-The kernel-level permission vocabulary is strong and concrete:
+内核级权限词汇表强大且具体：
 
-- filesystem operations
-- network operations
-- child-process execution
-- environment access
+- 文件系统操作
+- 网络操作
+- 子进程执行
+- 环境访问
 
-The Rust kernel defaults are deny-oriented, but the high-level JS API currently serializes permissive defaults unless the caller provides a policy. That is an important nuance: the primitive is security-minded, but the product surface is still convenience-first.
+Rust 内核默认为拒绝导向，但高级 JS API 当前序列化宽松默认值，除非调用者提供策略。这是一个重要的细微差别：原语是安全导向的，但产品表面仍然是便利性优先。
 
 ### 5. Host-tools bridge
 
-`agent-os` exposes host-side tools via a toolkit abstraction (`hostTool`, `toolKit`) and a local RPC bridge. This is a strong pattern because it gives the agent explicit, typed tools rather than ambient shell access to everything on the host.
+`agent-os` 通过工具包抽象（`hostTool`、`toolKit`）和本地 RPC 桥接暴露主机端工具。这是一个很强的模式，因为它为代理提供了显式的类型化工具，而不是对主机上所有内容的动态 shell 访问。
 
 ### 6. ACP session abstraction
 
-The session model is more uniform than most agent wrappers. It includes:
+会话模型比大多数代理包装器更统一。它包括：
 
-- capabilities
-- mode/config options
-- permission requests
-- sequenced session events
-- JSON-RPC transport through ACP adapters
+- 能力
+- 模式/配置选项
+- 权限请求
+- 序列化的会话事件
+- 通过 ACP 适配器的 JSON-RPC 传输
 
-This is directly relevant to Paperclip because our adapter layer still normalizes each CLI agent in a fairly bespoke way.
+这与 Paperclip 直接相关，因为我们的适配器层仍然以相当定制的方式标准化每个 CLI 代理。
 
 ## Paperclip anchor points
 
-The most relevant current Paperclip surfaces for any future `agent-os` integration are:
+任何未来 `agent-os` 集成最相关的当前 Paperclip 表面：
 
 - `packages/adapter-utils/src/types.ts`
-  - shared adapter contract, session metadata, runtime service reporting, environment tests, and optional `detectModel()`
+  - 共享适配器契约、会话元数据、运行时服务报告、环境测试和可选的 `detectModel()`
 - `server/src/services/heartbeat.ts`
-  - heartbeat execution, adapter invocation, cost capture, workspace realization, and issue-comment summaries
+  - 心跳执行、适配器调用、成本捕获、工作区实现和 issue-comment 摘要
 - `server/src/services/execution-workspaces.ts`
-  - execution workspace lifecycle and git readiness/cleanup logic
+  - 执行工作区生命周期和 git 就绪/清理逻辑
 - `server/src/services/plugin-loader.ts`
-  - dynamic plugin activation, host capability boundaries, and runtime extension loading
-- local adapters such as `packages/adapters/codex-local/src/server/execute.ts` and peers
-  - current host-CLI execution model that an `agent-os` runtime experiment would complement or replace for selected agents
+  - 动态插件激活、主机能力边界和运行时扩展加载
+- `packages/adapters/codex-local/src/server/execute.ts` 等本地适配器
+  - 当前主机 CLI 执行模型，`agent-os` 运行时实验可以补充或替换所选代理的模型
 
 ## What Paperclip can learn from it
 
 ### 1. A safer local execution substrate
 
-Paperclip's local adapters currently run host CLIs in managed workspaces and rely on adapter-specific behavior plus process-level controls. That is pragmatic, but weakly isolated.
+Paperclip 的本地适配器目前在工作区中运行主机 CLI，并依赖适配器特定行为加上进程级控制。这是务实的，但隔离性较弱。
 
-`agent-os` shows a path toward:
+`agent-os` 展示了一条通向以下目标的路径：
 
-- running local agent tooling in a constrained runtime
-- applying explicit network/filesystem/env policies
-- reducing accidental host leakage
-- making adapter behavior more portable across machines
+- 在约束运行时中运行本地代理工具
+- 应用显式的网络/文件系统/环境策略
+- 减少意外的主机泄漏
+- 使适配器行为在不同机器之间更具可移植性
 
-Best use in Paperclip:
+Paperclip 中的最佳用途：
 
-- as an optional runtime beneath local adapters
-- or as a new adapter family for agents that can run inside ACP-compatible `agent-os` sessions
+- 作为本地适配器下的可选运行时
+- 或作为可以在 ACP 兼容 `agent-os` 会话中运行的代理的新适配器系列
 
-This fits Paperclip because it improves execution safety without changing the control-plane model.
+这适合 Paperclip，因为它提高了执行安全性而无需更改控制平面模型。
 
 ### 2. Snapshotted execution roots instead of only mutable workspaces
 
-Paperclip already has strong execution-workspace concepts, but they are repo/worktree-centric. `agent-os` adds a stronger "start from known lower layers, write into a disposable upper layer" model.
+Paperclip 已经有强大的执行工作区概念，但它们是基于 repo/worktree 的。`agent-os` 添加了更强的"从已知底层开始，在一次性上层写入"模型。
 
-That could improve:
+这可以改善：
 
-- reproducible issue starts
-- disposable task sandboxes
-- faster reset/cleanup
-- "resume from snapshot" behavior for recurring routines
-- safe preview environments for risky agent operations
+- 可重复的 issue 起始
+- 可丢弃的任务沙箱
+- 更快的重置/清理
+- 用于重复例程的"从快照恢复"行为
+- 用于危险代理操作的安全预览环境
 
-This is especially interesting for tasks that do not need a full git worktree.
+这对于不需要完整 git 工作树的任务特别有趣。
 
 ### 3. A capability vocabulary for runtime governance
 
-Paperclip has governance at the company/task level:
+Paperclip 在公司/任务级别有治理：
 
-- approvals
-- budgets
-- activity logs
-- actor permissions
-- company scoping
+- 审批
+- 预算
+- 活动日志
+- 执行者权限
+- 公司范围
 
-It has less structure at the runtime capability level. `agent-os` offers a clear vocabulary that Paperclip could adopt even without adopting the runtime itself:
+它在运行时能力级别结构较少。`agent-os` 提供了一个 Paperclip 可以采用的可词汇表，即使不采用运行时本身：
 
-- `fs.read`, `fs.write`, `fs.mount_sensitive`
-- `network.fetch`, `network.http`, `network.listen`, `network.dns`
-- child process execution
-- env access
+- `fs.read`、`fs.write`、`fs.mount_sensitive`
+- `network.fetch`、`network.http`、`network.listen`、`network.dns`
+- 子进程执行
+- 环境访问
 
-That vocabulary would improve:
+该词汇表可以改善：
 
-- adapter configuration schemas
-- policy UIs
-- execution review surfaces
-- future approval gates for governed actions
+- 适配器配置 schema
+- 策略 UI
+- 执行审查表面
+- 用于治理操作的未来审批门禁
 
 ### 4. Typed host tools instead of shelling out for everything
 
-Paperclip's plugin system and adapters already have the beginnings of a controlled extension surface. `agent-os` reinforces the value of exposing capabilities as typed tools rather than raw shell access.
+Paperclip 的插件系统和适配器已经有了受控扩展表面的开端。`agent-os` 强化了将能力公开为类型化工具而不是原始 shell 访问的价值。
 
-Concrete Paperclip uses:
+具体的 Paperclip 用途：
 
-- board-approved toolkits for sensitive operations
-- company-scoped service tools
-- plugin-defined tools with explicit schemas
-- safer execution for common actions like git metadata inspection, preview lookups, deployment status checks, or document generation
+- 用于敏感操作的公司批准工具包
+- 公司范围的服务工具
+- 具有显式 schema 的插件定义工具
+- 用于常见操作（如 git 元数据检查、预览查找、部署状态检查或文档生成）的更安全执行
 
-This aligns well with Paperclip's governance story.
+这与 Paperclip 的治理故事很好地契合。
 
 ### 5. Better adapter normalization around sessions and capabilities
 
-Paperclip's adapter contract already supports execution results, session params, environment tests, skill syncing, quota windows, and optional `detectModel()`. But much of the per-agent behavior is still adapter-specific.
+Paperclip 的适配器契约已经支持执行结果、会话参数、环境测试、技能同步、配额窗口和可选的 `detectModel()`。但很多每代理行为仍然是适配器特定的。
 
-`agent-os` suggests a cleaner normalization target:
+`agent-os` 建议了一个更清晰标准化目标：
 
-- a standard capability map
-- a consistent event stream model
-- explicit mode/config surfaces
-- explicit permission request semantics
+- 标准能力映射
+- 一致的事件流模型
+- 显式的模式/配置表面
+- 显式的权限请求语义
 
-Paperclip does not need ACP everywhere, but it would benefit from a more formal internal session capability model inspired by this.
+Paperclip 不需要到处使用 ACP，但会从受此启发更正式的内部会话能力模型中受益。
 
 ### 6. On-demand heavy sandbox escalation
 
-One of the best architectural choices in `agent-os` is that it does not pretend every workload fits the lightweight runtime. It has a sandbox extension for workloads that need a fuller environment.
+`agent-os` 中最好的架构选择之一是它并不假装每个工作负载都适合轻量级运行时。它有一个用于需要更完整环境的工作负载的沙箱扩展。
 
-Paperclip can adopt that philosophy directly:
+Paperclip 可以直接采用这种理念：
 
-- lightweight execution by default
-- escalate to full worktree / container / remote sandbox only when needed
-- keep the escalation explicit in the issue/run model
+- 默认使用轻量级执行
+- 仅在需要时升级到完整 worktree / 容器 / 远程沙箱
+- 在 issue/run 模型中保持升级是显式的
 
-That is better than forcing all tasks into the heaviest environment up front.
+这比一开始就强制所有任务进入最重环境更好。
 
 ## What does not fit Paperclip well
 
 ### 1. Its built-in orchestration primitives overlap the wrong layer
 
-`agent-os` includes cron/session/workflow style primitives inside the runtime package. Paperclip already has higher-level orchestration concepts:
+`agent-os` 在运行时包中包含 cron/会话/工作流风格的原语。Paperclip 已经有更高级别的编排概念：
 
 - issues/comments
-- heartbeat runs
-- approvals
-- company/org structure
-- execution workspaces
-- budget enforcement
+- 心跳运行
+- 审批
+- 公司/组织结构
+- 执行工作区
+- 预算执行
 
-If Paperclip copied `agent-os` cron/workflow/queue ideas directly into core, we would likely duplicate orchestration across two layers. That would blur ownership and make debugging harder.
+如果 Paperclip 直接将 `agent-os` cron/工作流/队列想法复制到核心，我们可能会在两个层中重复编排。这会使所有权模糊，使调试更难。
 
-Paperclip should keep orchestration authoritative at the control-plane layer.
+Paperclip 应在控制平面层保持编排权威。
 
 ### 2. It is not company-scoped or governance-native
 
-`agent-os` is runtime-first, not company-first. It has no native concepts for:
+`agent-os` 是运行时优先，而不是公司优先。它没有本地的概念用于：
 
-- company boundaries
-- board/operator actor types
-- audit logs for business actions
-- issue hierarchy
-- approval routing
-- budget hard-stop behavior
+- 公司边界
+- board/operator 执行者类型
+- 业务操作的审计日志
+- issue 层级
+- 审批路由
+- 预算硬性停止行为
 
-Those are Paperclip's differentiators. They should not be displaced by runtime abstractions.
+这些是 Paperclip 的差异化因素。它们不应被运行时抽象所取代。
 
 ### 3. It introduces meaningful implementation complexity
 
-Adopting `agent-os` deeply would add:
+深度采用 `agent-os` 会增加：
 
-- Rust build/runtime complexity
-- sidecar lifecycle management
-- new failure modes across JS/Rust boundaries
-- more packaging and platform compatibility work
-- another abstraction layer for debugging already-complex local adapters
+- Rust 构建/运行时复杂性
+- 边车生命周期管理
+- JS/Rust 边界上的新故障模式
+- 更多的打包和平台兼容性工作
+- 用于已经复杂的本地适配器调试的另一个抽象层
 
-This is justified only if we want stronger local isolation or portability. It is not justified as a general refactor.
+只有在我们要更强的本地隔离或可移植性时才合理。作为通用重构则不合理。
 
 ### 4. Its security model is not a drop-in governance solution
 
-The permission model is good, but it is low-level. Paperclip would still need to answer:
+权限模型很好，但它很低级。Paperclip 仍然需要回答：
 
-- who can authorize a capability
-- how approval decisions are logged
-- how policies are scoped by company/project/issue/agent
-- how runtime permissions interact with budgets and task status
+- 谁可以授权能力
+- 审批决策如何记录
+- 策略如何按公司/项目/issue/代理范围
+- 运行时权限如何与预算和任务状态交互
 
-In other words, `agent-os` can supply enforcement primitives, not the control policy system itself.
+换句话说，`agent-os` 可以提供执行原语，而不是控制策略系统本身。
 
 ### 5. The agent compatibility story is still selective
 
-The repo is explicit that some runtimes are planned, partial, or still being adapted. In practice this means:
+代码库明确指出某些运行时是计划的、部分实现的或仍在适配中的。实际上这意味着：
 
-- good ideas for ACP-native or compatible agents
-- less certainty for every CLI agent we support today
-- real integration work for Codex/Cursor/Gemini-style Paperclip adapters
+- ACP 原生或兼容代理的好想法
+- 对我们今天支持的每个 CLI 代理的确定性较低
+- 用于 Codex/Cursor/Gemini 风格 Paperclip 适配器的真正集成工作
 
-So the main near-term value is not universal replacement. It is selective use where compatibility is strong.
+因此，主要的近期价值不是通用替换。而是在兼容性较强的地方有选择地使用。
 
 ## Concrete recommendations for Paperclip
 
 ### Recommendation A: prototype an optional `agentos_local` adapter
 
-This is the highest-value experiment.
+这是最高价值的实验。
 
-Goal:
+目标：
 
-- run one supported agent type inside `agent-os`
-- keep Paperclip heartbeat/task/workspace/budget logic unchanged
-- evaluate startup time, isolation, transcript quality, and operational complexity
+- 通过 `agent-os` 运行时运行一个支持的代理类型
+- 保持 Paperclip 的现有心跳/任务/工作区/预算逻辑不变
+- 评估启动时间、隔离性、记录质量 和运营复杂性
 
-Good first target:
+好的首个目标：
 
-- `pi_local` or `opencode_local`
+- `pi_local` 或 `opencode_local`
 
-Why not start with Codex:
+为什么不从 Codex 开始：
 
-- Paperclip's Codex adapter is already important and carries repo-specific behavior
-- `agent-os`'s Codex story is present in the registry/docs, but the safest path is to validate the runtime on a less central adapter first
+- Paperclip 的 Codex 适配器已经很重要，并且带有 repo 特定行为
+- `agent-os` 的 Codex 故事在 registry/docs 中存在，但最安全的路径是先在较不核心的适配器上验证运行时
 
-Success criteria:
+成功标准：
 
-- heartbeat can invoke the adapter reliably
-- session resume works across heartbeats
-- Paperclip still records logs, summaries, cost metadata, and issue comments normally
-- runtime permissions can be configured without breaking common tasks
+- 心跳可以可靠地调用适配器
+- 会话在心跳之间恢复
+- Paperclip 仍然正常记录日志、摘要、成本元数据和 issue 注释
+- 运行时权限可以配置而不会破坏常见任务
 
 ### Recommendation B: adopt capability vocabulary into adapter configs
 
-Even without using `agent-os`, Paperclip should consider standardizing adapter/runtime permissions around a vocabulary like:
+即使不使用 `agent-os`，Paperclip 也应考虑围绕以下词汇表标准化适配器/运行时权限：
 
-- filesystem
-- network
-- subprocess/tool execution
-- environment access
+- 文件系统
+- 网络
+- 子进程/工具执行
+- 环境访问
 
-This would improve:
+这可以改善：
 
-- schema-driven adapter UIs
-- future approvals
-- observability
-- policy portability across adapters
+- schema 驱动的适配器 UI
+- 未来审批
+- 可观察性
+- 跨适配器的策略可移植性
 
 ### Recommendation C: explore snapshot-backed execution workspaces
 
-Paperclip should evaluate whether some execution workspaces can be backed by:
+Paperclip 应评估某些执行工作区是否可以由以下支持：
 
-- a reusable lower snapshot
-- a disposable upper layer
-- optional mounts for project data or artifacts
+- 可重用的下层快照
+- 可丢弃的上层
+- 用于项目数据或工件的可选挂载
 
-This is most valuable for:
+这对以下情况最有价值：
 
-- non-repo tasks
-- repeatable routines
-- preview/test environments
-- isolation-heavy local execution
+- 非 repo 任务
+- 可重复的例程
+- 预览/测试环境
+- 隔离密集型本地执行
 
-It is less urgent for full repo editing flows that already benefit from git worktrees.
+对于已经受益于 git worktree 的完整 repo 编辑流程，它不那么紧急。
 
 ### Recommendation D: strengthen typed tool surfaces
 
-Paperclip plugins and adapters should continue moving toward explicit typed tools over ad hoc shell access. `agent-os` confirms that this is the right direction.
+Paperclip 插件和适配器应继续向显式类型化工具发展，而不是临时 shell 访问。`agent-os` 确认这是正确的方向。
 
-This is a good fit for:
+这适合：
 
-- plugin tools
-- workspace runtime services
-- governed operations that need approval or auditability
+- 插件工具
+- 工作区运行时服务
+- 需要审批或可审计性的治理操作
 
 ### Recommendation E: do not import runtime-level workflows into Paperclip core
 
-Paperclip should not copy `agent-os` cron/workflow/queue concepts into core orchestration yet.
+Paperclip 不应将 `agent-os` cron/工作流/队列概念复制到核心编排中。
 
-If we want them later, they must map cleanly onto:
+如果以后想要，它们必须干净地映射到：
 
 - issues
 - comments
-- heartbeats
-- approvals
-- budgets
-- activity logs
+- 心跳
+- 审批
+- 预算
+- 活动日志
 
-Without that mapping, they would create a second orchestration system inside the product.
+如果没有这种映射，它们会在产品中创建第二个编排系统。
 
 ## A practical integration map
 
 ### Best near-term fits
 
-- optional local adapter runtime
-- runtime capability schema
-- typed host-tool ideas for plugins/adapters
-- snapshot ideas for disposable execution roots
+- 可选本地适配器运行时
+- 运行时能力 schema
+- 用于插件/适配器的类型化主机工具理念
+- 用于可丢弃执行根的快照理念
 
 ### Medium-term fits
 
-- stronger session capability normalization across adapters
-- policy-aware runtime permission UI
-- selective ACP-inspired event normalization
+- 跨适配器更强的会话能力标准化
+- 策略感知运行时权限 UI
+- 选择性 ACP 启发的事件标准化
 
 ### Poor fits right now
 
-- moving Paperclip orchestration into agent-os workflows
-- replacing company/task/governance models with runtime constructs
-- making Rust sidecars a mandatory dependency for all local execution
+- 将 Paperclip 编排移动到 agent-os 工作流
+- 用运行时构造替换公司/任务/治理模型
+- 使 Rust 边车成为所有本地执行的强制依赖
 
 ## Bottom line
 
-`agent-os` is useful to Paperclip as an execution technology reference, not as a product model.
+`agent-os` 作为执行技术参考对 Paperclip 有用，而不是作为产品模型。
 
-Paperclip should treat it the same way it treats sandboxes or agent CLIs:
+Paperclip 应该像对待沙箱或代理 CLI 一样对待它：
 
-- execution substrate underneath the control plane
-- optional where the tradeoff is worth it
-- never the source of truth for company/task/governance state
+- 控制平面下的执行底层
+- 在权衡值得的地方是可选的
+- 永远不是公司/任务/治理状态的真实来源
 
-If we do one thing from this report, it should be a narrowly scoped `agentos_local` experiment plus a design pass on capability-based runtime permissions. Those two ideas have the best upside and the lowest architectural risk.
+如果我们从这份报告做一件事，应该是狭窄范围的 `agentos_local` 实验，加上基于能力的运行时权限的设计通过。这两个想法具有最好的优势和最低的架构风险。

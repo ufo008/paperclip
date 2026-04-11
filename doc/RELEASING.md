@@ -1,71 +1,71 @@
-# Releasing Paperclip
+# Paperclip 发布指南
 
-Maintainer runbook for shipping Paperclip across npm, GitHub, and the website-facing changelog surface.
+面向维护者的操作手册，用于将 Paperclip 发布到 npm、GitHub 和面向网站的 changelog 平台。
 
-The release model is now commit-driven:
+发布模式现已改为 commit 驱动：
 
-1. Every push to `master` publishes a canary automatically.
-2. Stable releases are manually promoted from a chosen tested commit or canary tag.
-3. Stable release notes live in `releases/vYYYY.MDD.P.md`.
-4. Only stable releases get GitHub Releases.
+1. 每次 push 到 `master`都会自动发布 canary 版本。
+2. Stable 版本从选定的经过测试的 commit 或 canary tag 手动提升。
+3. Stable 版本的发布说明位于 `releases/vYYYY.MDD.P.md`。
+4. 只有 stable 版本会创建 GitHub Releases。
 
-## Versioning Model
+## 版本号模型
 
-Paperclip uses calendar versions that still fit semver syntax:
+Paperclip 使用符合 semver 语法的日历版本：
 
 - stable: `YYYY.MDD.P`
 - canary: `YYYY.MDD.P-canary.N`
 
-Examples:
+示例：
 
-- first stable on March 18, 2026: `2026.318.0`
-- second stable on March 18, 2026: `2026.318.1`
-- fourth canary for the `2026.318.1` line: `2026.318.1-canary.3`
+- 2026年3月18日第一个 stable: `2026.318.0`
+- 2026年3月18日第二个 stable: `2026.318.1`
+- `2026.318.1` 系列的第四个 canary: `2026.318.1-canary.3`
 
-Important constraints:
+重要约束：
 
-- the middle numeric slot is `MDD`, where `M` is the UTC month and `DD` is the zero-padded UTC day
-- use `2026.303.0` for March 3, not `2026.33.0`
-- do not use leading zeroes such as `2026.0318.0`
-- do not use four numeric segments such as `2026.3.18.1`
-- the semver-safe canary form is `2026.318.0-canary.1`
+- 中间数字槽为 `MDD`，其中 `M` 是 UTC 月份，`DD` 是补零的 UTC 日期
+- 3月3日使用 `2026.303.0`，而不是 `2026.33.0`
+- 不要使用前导零，如 `2026.0318.0`
+- 不要使用四个数字段，如 `2026.3.18.1`
+- semver 安全的 canary 形式为 `2026.318.0-canary.1`
 
-## Release Surfaces
+## 发布平台
 
-Every stable release has four separate surfaces:
+每个 stable 版本有四个独立的平台：
 
-1. **Verification** — the exact git SHA passes typecheck, tests, and build
-2. **npm** — `paperclipai` and public workspace packages are published
-3. **GitHub** — the stable release gets a git tag and GitHub Release
-4. **Website / announcements** — the stable changelog is published externally and announced
+1. **Verification** — 确切的 git SHA 通过 typecheck、tests 和 build
+2. **npm** — `paperclipai` 和公共 workspace 包被发布
+3. **GitHub** — stable 版本获得一个 git tag 和 GitHub Release
+4. **Website / announcements** — stable changelog 被公开发布并通知
 
-A stable release is done only when all four surfaces are handled.
+只有当四个平台都处理完毕时，stable 发布才完成。
 
-Canaries only cover the first two surfaces plus an internal traceability tag.
+Canaries 只覆盖前两个平台加一个内部可追溯性 tag。
 
-## Core Invariants
+## 核心不变式
 
-- canaries publish from `master`
-- stables publish from an explicitly chosen source ref
-- tags point at the original source commit, not a generated release commit
-- stable notes are always `releases/vYYYY.MDD.P.md`
-- canaries never create GitHub Releases
-- canaries never require changelog generation
+- canaries 从 `master` 发布
+- stables 从明确选择的源 ref 发布
+- tags 指向原始 source commit，而不是生成的 release commit
+- stable notes 始终为 `releases/vYYYY.MDD.P.md`
+- canaries 永不创建 GitHub Releases
+- canaries 永不需要生成 changelog
 
 ## TL;DR
 
 ### Canary
 
-Every push to `master` runs the canary path inside [`.github/workflows/release.yml`](../.github/workflows/release.yml).
+每次 push 到 `master` 都会运行 [`.github/workflows/release.yml`](../.github/workflows/release.yml) 中的 canary 流程。
 
-It:
+它会：
 
-- verifies the pushed commit
-- computes the canary version for the current UTC date
-- publishes under npm dist-tag `canary`
-- creates a git tag `canary/vYYYY.MDD.P-canary.N`
+- 验证 push 的 commit
+- 计算当前 UTC 日期的 canary 版本
+- 发布到 npm dist-tag `canary`
+- 创建 git tag `canary/vYYYY.MDD.P-canary.N`
 
-Users install canaries with:
+用户安装 canary：
 
 ```bash
 npx paperclipai@canary onboard
@@ -75,58 +75,58 @@ npx paperclipai@canary onboard --data-dir "$(mktemp -d /tmp/paperclip-canary.XXX
 
 ### Stable
 
-Use [`.github/workflows/release.yml`](../.github/workflows/release.yml) from the Actions tab with the manual `workflow_dispatch` inputs.
+从 Actions 标签页使用 [`.github/workflows/release.yml`](../.github/workflows/release.yml)，使用手动的 `workflow_dispatch` 输入。
 
-[Run the action here](https://github.com/paperclipai/paperclip/actions/workflows/release.yml)
+[在此运行 action](https://github.com/paperclipai/paperclip/actions/workflows/release.yml)
 
-Inputs:
+输入：
 
 - `source_ref`
-  - commit SHA, branch, or tag
+  - commit SHA、branch 或 tag
 - `stable_date`
-  - optional UTC date override in `YYYY-MM-DD`
-  - enter a date like `2026-03-18`, not a version like `2026.318.0`
+  - 可选的 UTC 日期覆盖，格式为 `YYYY-MM-DD`
+  - 输入如 `2026-03-18` 这样的日期，而不是 `2026.318.0` 这样的版本号
 - `dry_run`
-  - preview only when true
+  - 为 true 时仅预览
 
-Before running stable:
+运行 stable 之前：
 
-1. pick the canary commit or tag you trust
-2. resolve the target stable version with `./scripts/release.sh stable --date "$(date +%F)" --print-version`
-3. create or update `releases/vYYYY.MDD.P.md` on that source ref
-4. run the stable workflow from that source ref
+1. 选择你信任的 canary commit 或 tag
+2. 使用 `./scripts/release.sh stable --date "$(date +%F)" --print-version` 解析目标 stable 版本
+3. 在该源 ref 上创建或更新 `releases/vYYYY.MDD.P.md`
+4. 从该源 ref 运行 stable workflow
 
-Example:
+示例：
 
 - `source_ref`: `master`
 - `stable_date`: `2026-03-18`
-- resulting stable version: `2026.318.0`
+- 生成的 stable 版本: `2026.318.0`
 
-The workflow:
+该 workflow：
 
-- re-verifies the exact source ref
-- computes the next stable patch slot for the chosen UTC date
-- publishes `YYYY.MDD.P` under npm dist-tag `latest`
-- creates git tag `vYYYY.MDD.P`
-- creates or updates the GitHub Release from `releases/vYYYY.MDD.P.md`
+- 重新验证确切的源 ref
+- 为选定的 UTC 日期计算下一个 stable patch 槽位
+- 将 `YYYY.MDD.P` 发布到 npm dist-tag `latest`
+- 创建 git tag `vYYYY.MDD.P`
+- 根据 `releases/vYYYY.MDD.P.md` 创建或更新 GitHub Release
 
-## Local Commands
+## 本地命令
 
-### Preview a canary locally
+### 本地预览 canary
 
 ```bash
 ./scripts/release.sh canary --dry-run
 ```
 
-### Preview a stable locally
+### 本地预览 stable
 
 ```bash
 ./scripts/release.sh stable --dry-run
 ```
 
-### Publish a stable locally
+### 本地发布 stable
 
-This is mainly for emergency/manual use. The normal path is the GitHub workflow.
+这主要用于紧急/手动使用。正常路径是 GitHub workflow。
 
 ```bash
 ./scripts/release.sh stable
@@ -134,114 +134,114 @@ git push public-gh refs/tags/vYYYY.MDD.P
 PUBLISH_REMOTE=public-gh ./scripts/create-github-release.sh YYYY.MDD.P
 ```
 
-## Stable Changelog Workflow
+## Stable Changelog 工作流
 
-Stable changelog files live at:
+Stable changelog 文件位于：
 
 - `releases/vYYYY.MDD.P.md`
 
-Canaries do not get changelog files.
+Canaries 不生成 changelog 文件。
 
-Recommended local generation flow:
+推荐的本地生成流程：
 
 ```bash
 VERSION="$(./scripts/release.sh stable --date 2026-03-18 --print-version)"
 claude --print --output-format stream-json --verbose --dangerously-skip-permissions --model claude-opus-4-6 "Use the release-changelog skill to draft or update releases/v${VERSION}.md for Paperclip. Read doc/RELEASING.md and .agents/skills/release-changelog/SKILL.md, then generate the stable changelog for v${VERSION} from commits since the last stable tag. Do not create a canary changelog."
 ```
 
-The repo intentionally does not run this through GitHub Actions because:
+仓库有意不通过 GitHub Actions 运行此流程，因为：
 
-- canaries are too frequent
-- stable notes are the only public narrative surface that needs LLM help
-- maintainer LLM tokens should not live in Actions
+- canaries 太过频繁
+- stable notes 是唯一需要 LLM 帮助的公共叙述平台
+- 维护者的 LLM tokens 不应存在于 Actions 中
 
-## Smoke Testing
+## 烟雾测试
 
-For a canary:
+对于 canary：
 
 ```bash
 PAPERCLIPAI_VERSION=canary ./scripts/docker-onboard-smoke.sh
 ```
 
-For the current stable:
+对于当前 stable：
 
 ```bash
 PAPERCLIPAI_VERSION=latest ./scripts/docker-onboard-smoke.sh
 ```
 
-Useful isolated variants:
+有用的隔离变体：
 
 ```bash
 HOST_PORT=3232 DATA_DIR=./data/release-smoke-canary PAPERCLIPAI_VERSION=canary ./scripts/docker-onboard-smoke.sh
 HOST_PORT=3233 DATA_DIR=./data/release-smoke-stable PAPERCLIPAI_VERSION=latest ./scripts/docker-onboard-smoke.sh
 ```
 
-Automated browser smoke is also available:
+自动浏览器烟雾测试也可用：
 
 ```bash
 gh workflow run release-smoke.yml -f paperclip_version=canary
 gh workflow run release-smoke.yml -f paperclip_version=latest
 ```
 
-Minimum checks:
+最低检查：
 
-- `npx paperclipai@canary onboard` installs
-- onboarding completes without crashes
-- authenticated login works with the smoke credentials
-- the browser lands in onboarding on a fresh instance
-- company creation succeeds
-- the first CEO agent is created
-- the first CEO heartbeat run is triggered
+- `npx paperclipai@canary onboard` 安装成功
+- onboarding 完成无崩溃
+- 使用烟雾测试凭证进行身份验证登录成功
+- 浏览器在全新实例上进入 onboarding
+- 公司创建成功
+- 第一个 CEO agent 被创建
+- 第一个 CEO heartbeat run 被触发
 
-## Rollback
+## 回滚
 
-Rollback does not unpublish versions.
+回滚不会取消发布版本。
 
-It only moves the `latest` dist-tag back to a previous stable:
+它只是将 `latest` dist-tag 移回之前的 stable：
 
 ```bash
 ./scripts/rollback-latest.sh 2026.318.0 --dry-run
 ./scripts/rollback-latest.sh 2026.318.0
 ```
 
-Then fix forward with a new stable patch slot or release date.
+然后使用新的 stable patch 槽位或发布日期进行修复。
 
-## Failure Playbooks
+## 故障处理手册
 
-### If the canary publishes but smoke testing fails
+### 如果 canary 发布成功但烟雾测试失败
 
-Do not run stable.
+不要运行 stable。
 
-Instead:
+而是：
 
-1. fix the issue on `master`
-2. merge the fix
-3. wait for the next automatic canary
-4. rerun smoke testing
+1. 在 `master` 上修复问题
+2. 合并修复
+3. 等待下一个自动 canary
+4. 重新运行烟雾测试
 
-### If stable npm publish succeeds but tag push or GitHub release creation fails
+### 如果 stable npm 发布成功但 tag push 或 GitHub release 创建失败
 
-This is a partial release. npm is already live.
+这是部分发布。npm 已经上线。
 
-Do this immediately:
+立即执行：
 
-1. push the missing tag
-2. rerun `PUBLISH_REMOTE=public-gh ./scripts/create-github-release.sh YYYY.MDD.P`
-3. verify the GitHub Release notes point at `releases/vYYYY.MDD.P.md`
+1. push 缺失的 tag
+2. 重新运行 `PUBLISH_REMOTE=public-gh ./scripts/create-github-release.sh YYYY.MDD.P`
+3. 验证 GitHub Release notes 指向 `releases/vYYYY.MDD.P.md`
 
-Do not republish the same version.
+不要重新发布相同版本。
 
-### If `latest` is broken after stable publish
+### 如果 stable 发布后 `latest` 损坏
 
-Roll back the dist-tag:
+回滚 dist-tag：
 
 ```bash
 ./scripts/rollback-latest.sh YYYY.MDD.P
 ```
 
-Then fix forward with a new stable release.
+然后使用新的 stable 发布进行修复。
 
-## Related Files
+## 相关文件
 
 - [`scripts/release.sh`](../scripts/release.sh)
 - [`scripts/release-package-map.mjs`](../scripts/release-package-map.mjs)

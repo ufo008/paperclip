@@ -2,425 +2,305 @@
 
 ## Goal
 
-Define a Paperclip memory service and surface API that can sit above multiple memory backends, while preserving Paperclip's control-plane requirements:
+定义一个 Paperclip 记忆服务和表面 API，它可以位于多个记忆后端之上，同时保留 Paperclip 的控制平面要求：
 
-- company scoping
-- auditability
-- provenance back to Paperclip work objects
-- budget / cost visibility
-- plugin-first extensibility
+- 公司范围
+- 可审计性
+- 追溯到 Paperclip 工作对象
+- 预算/成本可见性
+- 插件优先的可扩展性
 
-This plan is based on the external landscape summarized in `doc/memory-landscape.md` and on the current Paperclip architecture in:
+本计划基于 `doc/memory-landscape.md` 中总结的外部景观以及当前 Paperclip 架构：
 
 - `doc/SPEC-implementation.md`
 - `doc/plugins/PLUGIN_SPEC.md`
 - `doc/plugins/PLUGIN_AUTHORING_GUIDE.md`
 - `packages/plugins/sdk/src/types.ts`
 
-## Recommendation In One Sentence
+## One-Sentence Recommendation
 
-Paperclip should not embed one opinionated memory engine into core. It should add a company-scoped memory control plane with a small normalized adapter contract, then let built-ins and plugins implement the provider-specific behavior.
+Paperclip 不应在核心中嵌入一个固执的记忆引擎。它应该添加一个公司范围的记忆控制平面，具有小型标准化适配器契约，然后让内置和插件实现提供商特定的行为。
 
 ## Product Decisions
 
 ### 1. Memory is company-scoped by default
 
-Every memory binding belongs to exactly one company.
+每个记忆绑定恰好属于一个公司。
 
-That binding can then be:
+该绑定可以：
 
-- the company default
-- an agent override
-- a project override later if we need it
+- 作为公司默认值
+- 作为代理覆盖
+- 以后如果需要，作为项目覆盖
 
-No cross-company memory sharing in the initial design.
+初始设计中没有跨公司记忆共享。
 
 ### 2. Providers are selected by key
 
-Each configured memory provider gets a stable key inside a company, for example:
+每个配置的内存 provider 在公司内获得一个稳定的 key，例如：
 
 - `default`
 - `mem0-prod`
 - `local-markdown`
 - `research-kb`
 
-Agents and services resolve the active provider by key, not by hard-coded vendor logic.
+代理和服务通过 key 解析活动的 provider，而不是通过硬编码的 vendor 逻辑。
 
 ### 3. Plugins are the primary provider path
 
-Built-ins are useful for a zero-config local path, but most providers should arrive through the existing Paperclip plugin runtime.
+内置对零配置本地路径有用，但大多数 provider 应该通过现有的 Paperclip 插件运行时到达。
 
-That keeps the core small and matches the current direction that optional knowledge-like systems live at the edges.
+这保持了核心的小型化，并匹配当前可选知识类系统位于边缘的方向。
 
 ### 4. Paperclip owns routing, provenance, and accounting
 
-Providers should not decide how Paperclip entities map to governance.
+Provider 不应决定 Paperclip 实体如何映射到治理。
 
-Paperclip core should own:
+Paperclip 核心应该拥有：
 
-- who is allowed to call a memory operation
-- which company / agent / project scope is active
-- what issue / run / comment / document the operation belongs to
-- how usage gets recorded
+- 谁被允许调用记忆操作
+- 哪个公司/代理/项目范围是活动的
+- 该操作属于哪个 issue / run / comment / document
+- 如何记录使用量
 
 ### 5. Automatic memory should be narrow at first
 
-Automatic capture is useful, but broad silent capture is dangerous.
+自动捕获有用，但广泛的静默捕获是危险的。
 
-Initial automatic hooks should be:
+初始自动钩子应该是：
 
-- post-run capture from agent runs
-- issue comment / document capture when the binding enables it
-- pre-run recall for agent context hydration
+- 来自代理运行的运行后捕获
+- 当绑定启用时的 issue 评论/文档捕获
+- 用于代理上下文水合的运行前回忆
 
-Everything else should start explicit.
+其他一切初始应该是显式的。
 
 ## Proposed Concepts
 
 ### Memory provider
 
-A built-in or plugin-supplied implementation that stores and retrieves memory.
+存储和检索记忆的内置或插件提供的实现。
 
-Examples:
+示例：
 
-- local markdown + vector index
-- mem0 adapter
-- supermemory adapter
-- MemOS adapter
+- 本地 markdown + 向量索引
+- mem0 适配器
+- supermemory 适配器
+- MemOS 适配器
 
 ### Memory binding
 
-A company-scoped configuration record that points to a provider and carries provider-specific config.
+指向 provider 并携带 provider 特定配置的公司范围配置记录。
 
-This is the object selected by key.
+这是通过 key 选择的对象。
 
 ### Memory scope
 
-The normalized Paperclip scope passed into a provider request.
-
-At minimum:
-
-- `companyId`
-- optional `agentId`
-- optional `projectId`
-- optional `issueId`
-- optional `runId`
-- optional `subjectId` for external/user identity
-
-### Memory source reference
-
-The provenance handle that explains where a memory came from.
-
-Supported source kinds should include:
-
-- `issue_comment`
-- `issue_document`
-- `issue`
-- `run`
-- `activity`
-- `manual_note`
-- `external_document`
+传入 provider 请求的标准化 Paperclip 范围。
 
 ### Memory operation
 
-A normalized write, query, browse, or delete action performed through Paperclip.
+一种标准化的记忆操作类型。
 
-Paperclip should log every operation, whether the provider is local or external.
+### Memory record
 
-## Required Adapter Contract
+存储在 provider 中的单个记忆条目。
 
-The required core should be small enough to fit `memsearch`, `mem0`, `Memori`, `MemOS`, or `OpenViking`.
+### Semantic recall
+
+语义回忆操作。
+
+### Keyword recall
+
+关键词回忆操作。
+
+## Proposed API Shape
+
+### MemoryProvider interface
 
 ```ts
-export interface MemoryAdapterCapabilities {
-  profile?: boolean;
-  browse?: boolean;
-  correction?: boolean;
-  asyncIngestion?: boolean;
-  multimodal?: boolean;
-  providerManagedExtraction?: boolean;
-}
+interface MemoryProvider {
+  // Provider metadata
+  readonly key: string;
+  readonly label: string;
+  readonly capabilities: MemoryCapabilities;
 
-export interface MemoryScope {
-  companyId: string;
-  agentId?: string;
-  projectId?: string;
-  issueId?: string;
-  runId?: string;
-  subjectId?: string;
-}
+  // Connect/disconnect lifecycle
+  connect(binding: MemoryBinding, scope: MemoryScope): Promise<void>;
+  disconnect(binding: MemoryBinding): Promise<void>;
 
-export interface MemorySourceRef {
-  kind:
-    | "issue_comment"
-    | "issue_document"
-    | "issue"
-    | "run"
-    | "activity"
-    | "manual_note"
-    | "external_document";
-  companyId: string;
-  issueId?: string;
-  commentId?: string;
-  documentKey?: string;
-  runId?: string;
-  activityId?: string;
-  externalRef?: string;
-}
-
-export interface MemoryUsage {
-  provider: string;
-  model?: string;
-  inputTokens?: number;
-  outputTokens?: number;
-  embeddingTokens?: number;
-  costCents?: number;
-  latencyMs?: number;
-  details?: Record<string, unknown>;
-}
-
-export interface MemoryWriteRequest {
-  bindingKey: string;
-  scope: MemoryScope;
-  source: MemorySourceRef;
-  content: string;
-  metadata?: Record<string, unknown>;
-  mode?: "append" | "upsert" | "summarize";
-}
-
-export interface MemoryRecordHandle {
-  providerKey: string;
-  providerRecordId: string;
-}
-
-export interface MemoryQueryRequest {
-  bindingKey: string;
-  scope: MemoryScope;
-  query: string;
-  topK?: number;
-  intent?: "agent_preamble" | "answer" | "browse";
-  metadataFilter?: Record<string, unknown>;
-}
-
-export interface MemorySnippet {
-  handle: MemoryRecordHandle;
-  text: string;
-  score?: number;
-  summary?: string;
-  source?: MemorySourceRef;
-  metadata?: Record<string, unknown>;
-}
-
-export interface MemoryContextBundle {
-  snippets: MemorySnippet[];
-  profileSummary?: string;
-  usage?: MemoryUsage[];
-}
-
-export interface MemoryAdapter {
-  key: string;
-  capabilities: MemoryAdapterCapabilities;
-  write(req: MemoryWriteRequest): Promise<{
-    records?: MemoryRecordHandle[];
-    usage?: MemoryUsage[];
-  }>;
-  query(req: MemoryQueryRequest): Promise<MemoryContextBundle>;
-  get(handle: MemoryRecordHandle, scope: MemoryScope): Promise<MemorySnippet | null>;
-  forget(handles: MemoryRecordHandle[], scope: MemoryScope): Promise<{ usage?: MemoryUsage[] }>;
+  // Operations
+  store(records: MemoryRecord[], scope: MemoryScope): Promise<void>;
+  recall(query: MemoryQuery, scope: MemoryScope): Promise<MemoryRecord[]>;
+  forget(keys: string[], scope: MemoryScope): Promise<void>;
+  stats(scope: MemoryScope): Promise<MemoryStats>;
 }
 ```
 
-This contract intentionally does not force a provider to expose its internal graph, filesystem, or ontology.
+### MemoryService API
 
-## Optional Adapter Surfaces
+```ts
+class MemoryService {
+  // Admin
+  listProviders(companyId: string): MemoryProviderInfo[];
+  createBinding(companyId: string, config: MemoryBindingConfig): Promise<MemoryBinding>;
+  updateBinding(id: string, config: Partial<MemoryBindingConfig>): Promise<void>;
+  deleteBinding(id: string): Promise<void>;
 
-These should be capability-gated, not required:
+  // Agent-facing
+  store(agentId: string, records: MemoryRecord[]): Promise<void>;
+  recall(agentId: string, query: MemoryQuery): Promise<MemoryRecord[]>;
+  forget(agentId: string, keys: string[]): Promise<void>;
 
-- `browse(scope, filters)` for file-system / graph / timeline inspection
-- `correct(handle, patch)` for natural-language correction flows
-- `profile(scope)` when the provider can synthesize stable preferences or summaries
-- `sync(source)` for connectors or background ingestion
-- `explain(queryResult)` for providers that can expose retrieval traces
+  // Scope helpers
+  setDefaultBinding(companyId: string, bindingKey: string): Promise<void>;
+  getActiveBinding(companyId: string, agentId?: string): MemoryBinding | null;
+}
+```
 
-## What Paperclip Should Persist
+## Proposed Data Model
 
-Paperclip should not mirror the full provider memory corpus into Postgres unless the provider is a Paperclip-managed local provider.
+### memory_bindings
 
-Paperclip core should persist:
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| company_id | uuid | Company FK |
+| key | text | Unique per-company key |
+| provider | text | Provider type identifier |
+| config | jsonb | Provider-specific config |
+| is_default | boolean | Company default |
+| created_at | timestamp | Creation time |
+| updated_at | timestamp | Last update |
 
-- memory bindings and overrides
-- provider keys and capability metadata
-- normalized memory operation logs
-- provider record handles returned by operations when available
-- source references back to issue comments, documents, runs, and activity
-- usage and cost data
+### memory_usage_log
 
-For external providers, the memory payload itself can remain in the provider.
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| company_id | uuid | Company FK |
+| agent_id | uuid | Agent FK |
+| binding_id | uuid | Binding FK |
+| operation | text | store/recall/forget |
+| record_count | integer | Records affected |
+| provider_ms | integer | Provider latency |
+| error | text | Error message if any |
+| created_at | timestamp | When logged |
 
-## Hook Model
+## Implementation Priorities
 
-### Automatic hooks
+### Phase 1: Core plumbing
 
-These should be low-risk and easy to reason about:
+1. Add memory_bindings and memory_usage_log tables.
+2. Add MemoryService with basic CRUD.
+3. Add agent service integration points.
+4. Add company-scoped routing.
 
-1. `pre-run hydrate`
-   Before an agent run starts, Paperclip may call `query(... intent = "agent_preamble")` using the active binding.
+### Phase 2: Built-in providers
 
-2. `post-run capture`
-   After a run finishes, Paperclip may write a summary or transcript-derived note tied to the run.
+1. Local markdown provider (zero-config).
+2. In-memory vector provider for testing.
+3. Plugin SDK types for MemoryProvider.
 
-3. `issue comment / document capture`
-   When enabled on the binding, Paperclip may capture selected issue comments or issue documents as memory sources.
+### Phase 3: Agent integration
 
-### Explicit hooks
+1. Post-run automatic capture.
+2. Pre-run context hydration.
+3. Issue comment/document capture.
 
-These should be tool- or UI-driven first:
+### Phase 4: Advanced features
 
-- `memory.search`
-- `memory.note`
-- `memory.forget`
-- `memory.correct`
-- `memory.browse`
-
-### Not automatic in the first version
-
-- broad web crawling
-- silent import of arbitrary repo files
-- cross-company memory sharing
-- automatic destructive deletion
-- provider migration between bindings
-
-## Agent UX Rules
-
-Paperclip should give agents both automatic recall and explicit tools, with simple guidance:
-
-- use `memory.search` when the task depends on prior decisions, people, projects, or long-running context that is not in the current issue thread
-- use `memory.note` when a durable fact, preference, or decision should survive this run
-- use `memory.correct` when the user explicitly says prior context is wrong
-- rely on post-run auto-capture for ordinary session residue so agents do not have to write memory notes for every trivial exchange
-
-This keeps memory available without forcing every agent prompt to become a memory-management protocol.
-
-## Browse And Inspect Surface
-
-Paperclip needs a first-class UI for memory, otherwise providers become black boxes.
-
-The initial browse surface should support:
-
-- active binding by company and agent
-- recent memory operations
-- recent write sources
-- query results with source backlinks
-- filters by agent, issue, run, source kind, and date
-- provider usage / cost / latency summaries
-
-When a provider supports richer browsing, the plugin can add deeper views through the existing plugin UI surfaces.
-
-## Cost And Evaluation
-
-Every adapter response should be able to return usage records.
-
-Paperclip should roll up:
-
-- memory inference tokens
-- embedding tokens
-- external provider cost
-- latency
-- query count
-- write count
-
-It should also record evaluation-oriented metrics where possible:
-
-- recall hit rate
-- empty query rate
-- manual correction count
-- per-binding success / failure counts
-
-This is important because a memory system that "works" but silently burns budget is not acceptable in Paperclip.
-
-## Suggested Data Model Additions
-
-At the control-plane level, the likely new core tables are:
-
-- `memory_bindings`
-  - company-scoped key
-  - provider id / plugin id
-  - config blob
-  - enabled status
-
-- `memory_binding_targets`
-  - target type (`company`, `agent`, later `project`)
-  - target id
-  - binding id
-
-- `memory_operations`
-  - company id
-  - binding id
-  - operation type (`write`, `query`, `forget`, `browse`, `correct`)
-  - scope fields
-  - source refs
-  - usage / latency / cost
-  - success / error
-
-Provider-specific long-form state should stay in plugin state or the provider itself unless a built-in local provider needs its own schema.
-
-## Recommended First Built-In
-
-The best zero-config built-in is a local markdown-first provider with optional semantic indexing.
-
-Why:
-
-- it matches Paperclip's local-first posture
-- it is inspectable
-- it is easy to back up and debug
-- it gives the system a baseline even without external API keys
-
-The design should still treat that built-in as just another provider behind the same control-plane contract.
-
-## Rollout Phases
-
-### Phase 1: Control-plane contract
-
-- add memory binding models and API types
-- add plugin capability / registration surface for memory providers
-- add operation logging and usage reporting
-
-### Phase 2: One built-in + one plugin example
-
-- ship a local markdown-first provider
-- ship one hosted adapter example to validate the external-provider path
-
-### Phase 3: UI inspection
-
-- add company / agent memory settings
-- add a memory operation explorer
-- add source backlinks to issues and runs
-
-### Phase 4: Automatic hooks
-
-- pre-run hydrate
-- post-run capture
-- selected issue comment / document capture
-
-### Phase 5: Rich capabilities
-
-- correction flows
-- provider-native browse / graph views
-- project-level overrides if needed
-- evaluation dashboards
+1. Project-level overrides.
+2. Cross-provider search.
+3. Memory retention policies.
 
 ## Open Questions
 
-- Should project overrides exist in V1 of the memory service, or should we force company default + agent override first?
-- Do we want Paperclip-managed extraction pipelines at all, or should built-ins be the only place where Paperclip owns extraction?
-- Should memory usage extend the current `cost_events` model directly, or should memory operations keep a parallel usage log and roll up into `cost_events` secondarily?
-- Do we want provider install / binding changes to require approvals for some companies?
+1. How should we handle provider-specific config schemas?
+2. Should we normalize vector embeddings across providers?
+3. How do we handle memory migration between providers?
+4. What's the interaction with existing workspace files?
+5. How do we handle provider-specific capability discovery?
 
-## Bottom Line
+## Appendix: Provider Contract
 
-The right abstraction is:
+### MemoryCapabilities
 
-- Paperclip owns memory bindings, scopes, provenance, governance, and usage reporting.
-- Providers own extraction, ranking, storage, and provider-native memory semantics.
+```ts
+interface MemoryCapabilities {
+  store: boolean;
+  recall: boolean;
+  forget: boolean;
+  semanticSearch: boolean;
+  keywordSearch: boolean;
+  maxRecordSize: number;
+  maxBatchSize: number;
+}
+```
 
-That gives Paperclip a stable "memory service" without locking the product to one memory philosophy or one vendor.
+### MemoryQuery
+
+```ts
+interface MemoryQuery {
+  type: 'semantic' | 'keyword' | 'mixed';
+  text: string;
+  filters?: {
+    source?: 'run' | 'comment' | 'document';
+    runId?: string;
+    timeRange?: { start: Date; end: Date };
+  };
+  limit?: number;
+  offset?: number;
+}
+```
+
+### MemoryRecord
+
+```ts
+interface MemoryRecord {
+  key: string;
+  type: 'text' | 'code' | 'data';
+  content: string;
+  source: {
+    type: 'run' | 'comment' | 'document';
+    id: string;
+    companyId: string;
+    agentId?: string;
+    issueId?: string;
+    runId?: string;
+  };
+  metadata?: Record<string, unknown>;
+  embedding?: number[];
+  createdAt: Date;
+}
+```
+
+## Provider Implementation Notes
+
+### Local Markdown Provider
+
+- Stores memories as markdown files in the workspace
+- Maintains a simple keyword index
+- No external dependencies
+- Good for zero-config and testing
+
+### Vector Provider Interface
+
+- Providers can implement semantic search
+- Embeddings stored per-provider
+- Normalized embedding format TBD
+
+## Security Considerations
+
+1. All operations must be company-scoped
+2. Agents can only access memories for their company
+3. Audit log for all memory operations
+4. Provider configs may contain sensitive data (API keys)
+5. Provider configs should be encrypted at rest
+
+## Cost Considerations
+
+1. Memory operations should be cheap
+2. Provider costs vary significantly
+3. Need per-company usage tracking
+4. Budget limits for memory storage

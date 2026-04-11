@@ -2,7 +2,7 @@
 
 ## Context
 
-Paperclip's current release flow is documented in `doc/RELEASING.md` and implemented through:
+Paperclip 当前的发布流程记录在 `doc/RELEASING.md` 中，并通过以下方式实施：
 
 - `.github/workflows/release.yml`
 - `scripts/release-lib.sh`
@@ -11,473 +11,473 @@ Paperclip's current release flow is documented in `doc/RELEASING.md` and impleme
 - `scripts/release.sh`
 - `scripts/create-github-release.sh`
 
-Today the model is:
+今天的模型是：
 
-1. pick `patch`, `minor`, or `major`
-2. create `release/X.Y.Z`
-3. draft `releases/vX.Y.Z.md`
-4. publish one or more canaries from that release branch
-5. publish stable from that same branch
-6. push tag + create GitHub Release
-7. merge the release branch back to `master`
+1. 选择 `patch`、`minor` 或 `major`
+2. 创建 `release/X.Y.Z`
+3. 起草 `releases/vX.Y.Z.md`
+4. 从该发布分支发布一个或多个 canary
+5. 从同一分支发布 stable
+6. 推送 tag + 创建 GitHub Release
+7. 将发布分支合并回 `master`
 
-That is workable, but it creates friction in exactly the places that should be cheap:
+这是可行的，但它在应该便宜的地方造成了摩擦：
 
-- deciding `patch` vs `minor` vs `major`
-- cutting and carrying release branches
-- manually publishing canaries
-- thinking about changelog generation for canaries
-- handling npm credentials safely in a public repo
+- 决定 `patch` vs `minor` vs `major`
+- 切割和携带发布分支
+- 手动发布 canary
+- 思考 canary 的变更日志生成
+- 在公共 repo 中安全处理 npm 凭证
 
-The target state from this discussion is simpler:
+此讨论的目标状态更简单：
 
-- every push to `master` publishes a canary automatically
-- stable releases are promoted deliberately from a vetted commit
-- versioning is date-driven instead of semantics-driven
-- stable publishing is secure even in a public open-source repository
-- changelog generation happens only for real stable releases
+- 每次推送到 `master` 自动发布 canary
+- stable 发布从经过审查的提交 deliberate 地提升
+- 版本控制是日期驱动的而不是语义驱动的
+- stable 发布即使在公共开源 repo 中也是安全的
+- 变更日志生成仅针对真正的 stable 发布
 
 ## Recommendation In One Sentence
 
-Move Paperclip to semver-compatible calendar versioning, auto-publish canaries from `master`, promote stable from a chosen tested commit, and use npm trusted publishing plus GitHub environments so no long-lived npm or LLM token needs to live in Actions.
+将 Paperclip 移至 semver 兼容的日历版本控制，从 `master` 自动发布 canary，从选定的经过测试的提交提升 stable，并使用 npm 信任发布加上 GitHub environments，这样就不需要长期存在的 npm 或 LLM token 留在 Actions 中。
 
 ## Core Decisions
 
 ### 1. Use calendar versions, but keep semver syntax
 
-The repo and npm tooling still assume semver-shaped version strings in many places. That does not mean Paperclip must keep semver as a product policy. It does mean the version format should remain semver-valid.
+repo 和 npm 工具在许多地方仍然假设 semver 形状的版本字符串。这并不意味着 Paperclip 必须将 semver 保持为产品策略。这确实意味着版本格式应该保持 semver 有效。
 
-Recommended format:
+推荐格式：
 
-- stable: `YYYY.MDD.P`
-- canary: `YYYY.MDD.P-canary.N`
+- stable：`YYYY.MDD.P`
+- canary：`YYYY.MDD.P-canary.N`
 
-Examples:
+示例：
 
-- first stable on March 17, 2026: `2026.317.0`
-- third canary on the `2026.317.0` line: `2026.317.0-canary.2`
+- 2026 年 3 月 17 日第一个 stable：`2026.317.0`
+- `2026.317.0` 线的第三个 canary：`2026.317.0-canary.2`
 
-Why this shape:
+为什么这个形状：
 
-- it removes `patch/minor/major` decisions
-- it is valid semver syntax
-- it stays compatible with npm, dist-tags, and existing semver validators
-- it is close to the format you actually want
+- 它消除了 `patch/minor/major` 决策
+- 它是有效的 semver 语法
+- 它与 npm、dist-tags 和现有 semver 验证器兼容
+- 它接近你实际想要的格式
 
-Important constraints:
+重要约束：
 
-- the middle numeric slot should be `MDD`, where `M` is the month and `DD` is the zero-padded day
-- `2026.03.17` is not the format to use
-  - numeric semver identifiers do not allow leading zeroes
-- `2026.3.17.1` is not the format to use
-  - semver has three numeric components, not four
-- the practical semver-safe equivalent is `2026.317.0-canary.8`
+- 中间数字槽应该是 `MDD`，其中 `M` 是月份，`DD` 是零填充的日期
+- `2026.03.17` 不是要使用的格式
+  - 数字 semver 标识符不允许前导零
+- `2026.3.17.1` 不是要使用的格式
+  - semver 有三个数字组件，不是四个
+- 实用的 semver 安全等价物是 `2026.317.0-canary.8`
 
-This is effectively CalVer on semver rails.
+这实际上是 SemVer on rails 的 CalVer。
 
 ### 2. Accept that CalVer changes the compatibility contract
 
-This is not semver in spirit anymore. It is semver in syntax only.
+这不再是 spirit 中的 semver。它只是语法上的 semver。
 
-That tradeoff is probably acceptable for Paperclip, but it should be explicit:
+这种权衡可能对 Paperclip 是可接受的，但应该是明确的：
 
-- consumers no longer infer compatibility from `major/minor/patch`
-- release notes become the compatibility signal
-- downstream users should prefer exact pins or deliberate upgrades
+- 消费者不再从 `major/minor/patch` 推断兼容性
+- 发布说明成为兼容性信号
+- 下游用户应该更喜欢精确 pins 或 deliberate 升级
 
-This is especially relevant for public library packages like `@paperclipai/shared`, `@paperclipai/db`, and the adapter packages.
+这对于公共库包如 `@paperclipai/shared`、`@paperclipai/db` 和适配器包特别相关。
 
 ### 3. Drop release branches for normal publishing
 
-If every merge to `master` publishes a canary, the current `release/X.Y.Z` train model becomes more ceremony than value.
+如果每次合并到 `master` 都发布 canary，当前的 `release/X.Y.Z` 火车模型变得比价值更重要。
 
-Recommended replacement:
+推荐的替换：
 
-- `master` is the only canary train
-- every push to `master` can publish a canary
-- stable is published from a chosen commit or canary tag on `master`
+- `master` 是唯一的 canary 火车
+- 每次推送到 `master` 可以发布 canary
+- stable 从 `master` 上的选定提交或 canary tag 发布
 
-This matches the workflow you actually want:
+这匹配你实际想要的工作流程：
 
-- merge continuously
-- let npm always have a fresh canary
-- choose a known-good canary later and promote that commit to stable
+- 持续合并
+- 让 npm 总是有新鲜的 canary
+- 稍后选择一个已知良好的 canary 并将该提交提升到 stable
 
 ### 4. Promote by source ref, not by "renaming" a canary
 
-This is the most important mechanical constraint.
+这是最重要的机械约束。
 
-npm can move dist-tags, but it does not let you rename an already-published version. That means:
+npm 可以移动 dist-tags，但它不允许你重命名已发布的版本。这意味着：
 
-- you can move `latest` to `paperclipai@1.2.3`
-- you cannot turn `paperclipai@2026.317.0-canary.8` into `paperclipai@2026.317.0`
+- 你可以将 `latest` 移动到 `paperclipai@1.2.3`
+- 你不能将 `paperclipai@2026.317.0-canary.8` 变成 `paperclipai@2026.317.0`
 
-So "promote canary to stable" really means:
+所以"将 canary 提升到 stable"真正意味着：
 
-1. choose the commit or canary tag you trust
-2. rebuild from that exact commit
-3. publish it again with the stable version string
+1. 选择你信任的提交或 canary tag
+2. 从那个精确提交重建
+3. 用 stable 版本字符串再次发布
 
-Because of that, the stable workflow should take a source ref, not just a bump type.
+因此，stable 工作流程应该接受 source ref，而不仅仅是一个 bump 类型。
 
-Recommended stable input:
+推荐的 stable 输入：
 
 - `source_ref`
-  - commit SHA, or
-  - a canary git tag such as `canary/v2026.317.1-canary.8`
+  - 提交 SHA，或
+  - 一个 canary git tag 如 `canary/v2026.317.1-canary.8`
 
 ### 5. Only stable releases get release notes, tags, and GitHub Releases
 
-Canaries should stay lightweight:
+Canary 应该保持轻量级：
 
-- publish to npm under `canary`
-- optionally create a lightweight or annotated git tag
-- do not create GitHub Releases
-- do not require `releases/v*.md`
-- do not spend LLM tokens
+- 在 npm 下发布，dist-tag 为 `canary`
+- 可选地创建一个轻量级或注释的 git tag
+- 不创建 GitHub Releases
+- 不需要 `releases/v*.md`
+- 不花费 LLM tokens
 
-Stable releases should remain the public narrative surface:
+Stable 发布应该保持公共叙事表面：
 
 - git tag `v2026.317.0`
 - GitHub Release `v2026.317.0`
-- stable changelog file `releases/v2026.317.0.md`
+- stable 变更日志文件 `releases/v2026.317.0.md`
 
 ## Security Model
 
 ### Recommendation
 
-Use npm trusted publishing with GitHub Actions OIDC, then disable token-based publishing access for the packages.
+使用 npm 信任发布与 GitHub Actions OIDC，然后禁用包的基于 token 的发布访问。
 
-Why:
+为什么：
 
-- no long-lived `NPM_TOKEN` in repo or org secrets
-- no personal npm token in Actions
-- short-lived credentials minted only for the authorized workflow
-- automatic npm provenance for public packages in public repos
+- repo 或 org secrets 中没有长期 `NPM_TOKEN`
+- Actions 中没有个人 npm token
+- 仅针对授权工作流程铸造的短期凭证
+- 公共包在公共 repo 中的自动 npm 溯源
 
-This is the cleanest answer to the open-repo security concern.
+这是对 open-repo 安全担忧的最干净答案。
 
 ### Concrete controls
 
 #### 1. Use one release workflow file
 
-Use one workflow filename for both canary and stable publishing:
+为 canary 和 stable 发布使用一个工作流程文件名：
 
 - `.github/workflows/release.yml`
 
-Why:
+为什么：
 
-- npm trusted publishing is configured per workflow filename
-- npm currently allows one trusted publisher configuration per package
-- GitHub environments can still provide separate canary/stable approval rules inside the same workflow
+- npm 信任发布按工作流程文件名配置
+- npm 当前允许每个包一个信任发布者配置
+- GitHub environments 仍然可以在同一工作流程内提供单独的 canary/stable 审批规则
 
 #### 2. Use separate GitHub environments
 
-Recommended environments:
+推荐的 environments：
 
 - `npm-canary`
 - `npm-stable`
 
-Recommended policy:
+推荐策略：
 
 - `npm-canary`
-  - allowed branch: `master`
-  - no human reviewer required
+  - 允许分支：`master`
+  - 不需要人工审阅者
 - `npm-stable`
-  - allowed branch: `master`
-  - required reviewer enabled
-  - prevent self-review enabled
-  - admin bypass disabled
+  - 允许分支：`master`
+  - 启用需要审阅者
+  - 启用防止自我审阅
+  - 禁用管理员绕过
 
-Stable should require an explicit second human gate even if the workflow is manually dispatched.
+Stable 即使在工作流程手动 dispatch 时也需要明确的第二个人类 gate。
 
 #### 3. Lock down workflow edits
 
-Add or tighten `CODEOWNERS` coverage for:
+为以下添加或收紧 `CODEOWNERS` 覆盖：
 
 - `.github/workflows/*`
 - `scripts/release*`
 - `doc/RELEASING.md`
 
-This matters because trusted publishing authorizes a workflow file. The biggest remaining risk is not secret exfiltration from forks. It is a maintainer-approved change to the release workflow itself.
+这很重要，因为信任发布授权一个工作流程文件。最大的剩余风险不是 fork 的秘密泄露。是维护者批准的对发布工作流程本身的更改。
 
 #### 4. Remove traditional npm token access after OIDC works
 
-After trusted publishing is verified:
+验证信任发布后：
 
-- set package publishing access to require 2FA and disallow tokens
-- revoke any legacy automation tokens
+- 将包发布访问设置为需要 2FA 并禁止 tokens
+- 撤销任何传统自动化 tokens
 
-That eliminates the "someone stole the npm token" class of failure.
+这消除了"有人偷了 npm token"的故障类别。
 
 ### What not to do
 
-- do not put your personal Claude or npm token in GitHub Actions
-- do not run release logic from `pull_request_target`
-- do not make stable publishing depend on a repo secret if OIDC can handle it
-- do not create canary GitHub Releases
+- 不要将你的个人 Claude 或 npm token 放入 GitHub Actions
+- 不要从 `pull_request_target` 运行发布逻辑
+- 如果 OIDC 可以处理，不要让 stable 发布依赖于 repo secret
+- 不要创建 canary GitHub Releases
 
 ## Changelog Strategy
 
 ### Recommendation
 
-Generate stable changelogs only, and keep LLM-assisted changelog generation out of CI for now.
+仅生成 stable 变更日志，现在将 LLM 辅助的变更日志生成排除在 CI 之外。
 
-Reasoning:
+理由：
 
-- canaries happen too often
-- canaries do not need polished public notes
-- putting a personal Claude token into Actions is not worth the risk
-- stable release cadence is low enough that a human-in-the-loop step is acceptable
+- canary 发生得太频繁
+- canary 不需要精炼的公共说明
+- 将个人 Claude token 放入 Actions 不值得风险
+- stable 发布节奏足够低，以至于人工循环步骤是可以接受的
 
-Recommended stable path:
+推荐的 stable 路径：
 
-1. pick a canary commit or tag
-2. run changelog generation locally from a trusted machine
-3. commit `releases/vYYYY.MDD.P.md`
-4. run stable promotion
+1. 选择一个 canary 提交或 tag
+2. 从可信机器上本地运行变更日志生成
+3. 提交 `releases/vYYYY.MDD.P.md`
+4. 运行 stable 提升
 
-If the notes are not ready yet, a fallback is acceptable:
+如果说明还没准备好，回退是可以接受的：
 
-- publish stable
-- create a minimal GitHub Release
-- update `releases/vYYYY.MDD.P.md` immediately afterward
+- 发布 stable
+- 创建一个最小的 GitHub Release
+- 之后立即更新 `releases/vYYYY.MDD.P.md`
 
-But the better steady-state is to have the stable notes committed before stable publish.
+但更好的稳定状态是在 stable 发布之前提交 stable 说明。
 
 ### Future option
 
-If you later want CI-assisted changelog drafting, do it with:
+如果你以后想要 CI 辅助的变更日志起草，用以下方式做：
 
-- a dedicated service account
-- a token scoped only for changelog generation
-- a manual workflow
-- a dedicated environment with required reviewers
+- 一个专用服务账户
+- 仅限于变更日志生成的 token
+- 一个手动工作流程
+- 一个有需要审阅者的专用 environment
 
-That is phase-two hardening work, not a phase-one requirement.
+那是第二阶段加固工作，不是第一阶段要求。
 
 ## Proposed Future Workflow
 
 ### Canary workflow
 
-Trigger:
+触发：
 
-- `push` on `master`
+- `master` 上的 `push`
 
-Steps:
+步骤：
 
-1. checkout the merged `master` commit
-2. run verification on that exact commit
-3. compute canary version for current UTC date
-4. version public packages to `YYYY.MDD.P-canary.N`
-5. publish to npm with dist-tag `canary`
-6. create a canary git tag for traceability
+1. 检出合并的 `master` 提交
+2. 在那个精确提交上运行验证
+3. 计算当前 UTC 日期的 canary 版本
+4. 将公共包版本设置为 `YYYY.MDD.P-canary.N`
+5. 用 dist-tag `canary` 发布到 npm
+6. 为可追溯性创建一个 canary git tag
 
-Recommended canary tag format:
+推荐的 canary tag 格式：
 
 - `canary/v2026.317.1-canary.4`
 
-Outputs:
+输出：
 
-- npm canary published
-- git tag created
-- no GitHub Release
-- no changelog file required
+- npm canary 已发布
+- git tag 已创建
+- 无 GitHub Release
+- 不需要变更日志文件
 
 ### Stable workflow
 
-Trigger:
+触发：
 
 - `workflow_dispatch`
 
-Inputs:
+输入：
 
 - `source_ref`
-- optional `stable_date`
+- 可选的 `stable_date`
 - `dry_run`
 
-Steps:
+步骤：
 
-1. checkout `source_ref`
-2. run verification on that exact commit
-3. compute the next stable patch slot for the UTC date or provided override
-4. fail if `vYYYY.MDD.P` already exists
-5. require `releases/vYYYY.MDD.P.md`
-6. version public packages to `YYYY.MDD.P`
-7. publish to npm under `latest`
-8. create git tag `vYYYY.MDD.P`
-9. push tag
-10. create GitHub Release from `releases/vYYYY.MDD.P.md`
+1. 检出 `source_ref`
+2. 在那个精确提交上运行验证
+3. 计算 UTC 日期或提供覆盖的下一个 stable patch 槽
+4. 如果 `vYYYY.MDD.P` 已存在则失败
+5. 需要 `releases/vYYYY.MDD.P.md`
+6. 将公共包版本设置为 `YYYY.MDD.P`
+7. 在 `latest` 下发布到 npm
+8. 创建 git tag `vYYYY.MDD.P`
+9. 推送 tag
+10. 从 `releases/vYYYY.MDD.P.md` 创建 GitHub Release
 
-Outputs:
+输出：
 
-- stable npm release
+- stable npm 发布
 - stable git tag
 - GitHub Release
-- clean public changelog surface
+- 干净的公共变更日志表面
 
 ## Implementation Guidance
 
 ### 1. Replace bump-type version math with explicit version computation
 
-The current release scripts depend on:
+当前发布脚本依赖：
 
 - `patch`
 - `minor`
 - `major`
 
-That logic should be replaced with:
+该逻辑应该替换为：
 
 - `compute_canary_version_for_date`
 - `compute_stable_version_for_date`
 
-For example:
+例如：
 
 - `next_stable_version(2026-03-17) -> 2026.317.0`
 - `next_canary_for_utc_date(2026-03-17) -> 2026.317.0-canary.0`
 
 ### 2. Stop requiring `release/X.Y.Z`
 
-These current invariants should be removed from the happy path:
+这些当前不变量应从快乐路径中移除：
 
-- "must run from branch `release/X.Y.Z`"
-- "stable and canary for `X.Y.Z` come from the same release branch"
+- "必须从分支 `release/X.Y.Z` 运行"
+- "`X.Y.Z` 的 stable 和 canary 来自同一发布分支"
 - `release-start.sh`
 
-Replace them with:
+替换为：
 
-- canary must run from `master`
-- stable may run from a pinned `source_ref`
+- canary 必须从 `master` 运行
+- stable 可以从固定的 `source_ref` 运行
 
 ### 3. Keep Changesets only if it stays helpful
 
-The current system uses Changesets to:
+当前系统使用 Changesets 来：
 
-- rewrite package versions
-- maintain package-level `CHANGELOG.md` files
-- publish packages
+- 重写包版本
+- 维护包级 `CHANGELOG.md` 文件
+- 发布包
 
-With CalVer, Changesets may still be useful for publish orchestration, but it should no longer own version selection.
+使用 CalVer，Changesets 可能对发布编排仍然有用，但不应该再拥有版本选择。
 
-Recommended implementation order:
+推荐实施顺序：
 
-1. keep `changeset publish` if it works with explicitly-set versions
-2. replace version computation with a small explicit versioning script
-3. if Changesets keeps fighting the model, remove it from release publishing entirely
+1. 如果与显式设置的版本一起工作则保留 `changeset publish`
+2. 用小的显式版本控制脚本替换版本计算
+3. 如果 Changesets 继续对抗模型，从发布中完全移除它
 
-Paperclip's release problem is now "publish the whole fixed package set at one explicit version", not "derive the next semantic bump from human intent".
+Paperclip 的发布问题现在是"以一个显式版本发布整个固定包集合"，而不是"从人类意图派生下一个语义 bump"。
 
 ### 4. Add a dedicated versioning script
 
-Recommended new script:
+推荐的新脚本：
 
 - `scripts/set-release-version.mjs`
 
-Responsibilities:
+职责：
 
-- set the version in all public publishable packages
-- update any internal exact-version references needed for publishing
-- update CLI version strings
-- avoid broad string replacement across unrelated files
+- 在所有公共可发布包中设置版本
+- 更新发布所需的任何内部精确版本引用
+- 更新 CLI 版本字符串
+- 避免在无关文件上进行广泛字符串替换
 
-This is safer than keeping a bump-oriented changeset flow and then forcing it into a date-based scheme.
+这比保持面向 bump 的 changeset 流程然后强制它进入基于日期的方案更安全。
 
 ### 5. Keep rollback based on dist-tags
 
-`rollback-latest.sh` should stay, but it should stop assuming a semver meaning beyond syntax.
+`rollback-latest.sh` 应该保留，但它应该停止假设超出语法的 semver 含义。
 
-It should continue to:
+它应该继续：
 
-- repoint `latest` to a prior stable version
-- never unpublish
+- 将 `latest` 重新指向之前的 stable 版本
+- 从不取消发布
 
 ## Tradeoffs and Risks
 
 ### 1. The stable patch slot is now part of the version contract
 
-With `YYYY.MDD.P`, same-day hotfixes are supported, but the stable patch slot is now part of the visible version format.
+使用 `YYYY.MDD.P`，同日热修复支持，但 stable patch 槽现在是可见版本格式的一部分。
 
-That is the right tradeoff because:
+这是正确的权衡因为：
 
-1. npm still gets semver-valid versions
-2. same-day hotfixes stay possible
-3. chronological ordering still works as long as the day is zero-padded inside `MDD`
+1. npm 仍然获得 semver 有效版本
+2. 同日热修复保持可能
+3. 只要日期在 `MDD` 内零填充，日历顺序仍然有效
 
 ### 2. Public package consumers lose semver intent signaling
 
-This is the main downside of CalVer.
+这是 CalVer 的主要缺点。
 
-If that becomes a problem, one alternative is:
+如果这成为问题，一个替代方案是：
 
-- use CalVer for the CLI package only
-- keep semver for library packages
+- 仅对 CLI 包使用 CalVer
+- 对库包保持 semver
 
-That is more complex operationally, so I would not start there unless package consumers actually need it.
+这在操作上更复杂，所以我不应该从这里开始，除非包消费者实际需要它。
 
 ### 3. Auto-canary means more publish traffic
 
-Publishing on every `master` merge means:
+每次 `master` 合并时发布意味着：
 
-- more npm versions
-- more git tags
-- more registry noise
+- 更多 npm 版本
+- 更多 git tags
+- 更多注册表噪音
 
-That is acceptable if canaries stay clearly separate:
+如果 canary 保持明确分离，这是可接受的：
 
 - npm dist-tag `canary`
-- no GitHub Release
-- no external announcement
+- 无 GitHub Release
+- 无外部公告
 
 ## Rollout Plan
 
 ### Phase 1: Security foundation
 
-1. Create `release.yml`
-2. Configure npm trusted publishers for all public packages
-3. Create `npm-canary` and `npm-stable` environments
-4. Add `CODEOWNERS` protection for release files
-5. Verify OIDC publishing works
-6. Disable token-based publishing access and revoke old tokens
+1. 创建 `release.yml`
+2. 为所有公共包配置 npm 信任发布者
+3. 创建 `npm-canary` 和 `npm-stable` environments
+4. 为发布文件添加 `CODEOWNERS` 保护
+5. 验证 OIDC 发布有效
+6. 禁用基于 token 的发布访问并撤销旧 tokens
 
 ### Phase 2: Canary automation
 
-1. Add canary workflow on `push` to `master`
-2. Add explicit calendar-version computation
-3. Add canary git tagging
-4. Remove changelog requirement from canaries
-5. Update `doc/RELEASING.md`
+1. 在 `master` 的 `push` 上添加 canary 工作流程
+2. 添加显式日历版本计算
+3. 添加 canary git 标记
+4. 从 canary 中移除变更日志要求
+5. 更新 `doc/RELEASING.md`
 
 ### Phase 3: Stable promotion
 
-1. Add manual stable workflow with `source_ref`
-2. Require stable notes file
-3. Publish stable + tag + GitHub Release
-4. Update rollback docs and scripts
-5. Retire release-branch assumptions
+1. 用 `source_ref` 添加手动 stable 工作流程
+2. 需要 stable 说明文件
+3. 发布 stable + tag + GitHub Release
+4. 更新回滚文档和脚本
+5. 退役发布分支假设
 
 ### Phase 4: Cleanup
 
-1. Remove `release-start.sh` from the primary path
-2. Remove `patch/minor/major` from maintainer docs
-3. Decide whether to keep or remove Changesets from publishing
-4. Document the CalVer compatibility contract publicly
+1. 从主要路径移除 `release-start.sh`
+2. 从维护者文档中移除 `patch/minor/major`
+3. 决定是否从发布中保留或移除 Changesets
+4. 公开记录 CalVer 兼容性契约
 
 ## Concrete Recommendation
 
-Paperclip should adopt this model:
+Paperclip 应该采用此模型：
 
-- stable versions: `YYYY.MDD.P`
-- canary versions: `YYYY.MDD.P-canary.N`
-- canaries auto-published on every push to `master`
-- stables manually promoted from a chosen tested commit or canary tag
-- no release branches in the default path
-- no canary changelog files
-- no canary GitHub Releases
-- no Claude token in GitHub Actions
-- no npm automation token in GitHub Actions
-- npm trusted publishing plus GitHub environments for release security
+- stable 版本：`YYYY.MMDD.P`
+- canary 版本：`YYYY.MMDD.P-canary.N`
+- canary 在每次推送到 `master` 时自动发布
+- stable 从选定的经过测试的提交或 canary tag 手动提升
+- 默认路径中无发布分支
+- 无 canary 变更日志文件
+- 无 canary GitHub Releases
+- GitHub Actions 中无 Claude token
+- GitHub Actions 中无 npm 自动化 token
+- npm 信任发布加上 GitHub environments 用于发布安全
 
-That gets rid of the annoying part of semver without fighting npm, makes canaries cheap, keeps stables deliberate, and materially improves the security posture of the public repository.
+这消除了 semver 的烦人部分而不与 npm 对抗，使 canary 便宜，使 stable deliberate，并实质性改善了公共 repository 的安全姿态。
 
 ## External References
 

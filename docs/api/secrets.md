@@ -3,17 +3,17 @@ title: Secrets
 summary: Secrets CRUD
 ---
 
-Manage encrypted secrets that agents reference in their environment configuration.
+管理智能体在其环境配置中引用的加密 secrets。
 
-## List Secrets
+## 列出 Secrets
 
 ```
 GET /api/companies/{companyId}/secrets
 ```
 
-Returns secret metadata (not decrypted values).
+返回 secret 元数据（非解密值）。
 
-## Create Secret
+## 创建 Secret
 
 ```
 POST /api/companies/{companyId}/secrets
@@ -23,9 +23,9 @@ POST /api/companies/{companyId}/secrets
 }
 ```
 
-The value is encrypted at rest. Only the secret ID and metadata are returned.
+值在存储时加密。仅返回 secret ID 和元数据。
 
-## Update Secret
+## 更新 Secret
 
 ```
 PATCH /api/secrets/{secretId}
@@ -34,11 +34,11 @@ PATCH /api/secrets/{secretId}
 }
 ```
 
-Creates a new version of the secret. Agents referencing `"version": "latest"` automatically get the new value on next heartbeat.
+创建新版本的 secret。引用 `"version": "latest"` 的智能体在下个心跳时自动获取新值。
 
-## Using Secrets in Agent Config
+## 在智能体配置中使用 Secrets
 
-Reference secrets in agent adapter config instead of inline values:
+在智能体适配器配置中引用 secrets 而不是内联值：
 
 ```json
 {
@@ -52,4 +52,4 @@ Reference secrets in agent adapter config instead of inline values:
 }
 ```
 
-The server resolves and decrypts secret references at runtime, injecting the real value into the agent process environment.
+服务器在运行时解析和解密 secret 引用，将真实值注入智能体进程环境。

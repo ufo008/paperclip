@@ -1,50 +1,50 @@
-# Execution Policy: Review & Approval Workflows
+# 执行策略：审查和审批工作流
 
-Paperclip's execution policy system ensures tasks are completed with the right level of oversight. Instead of relying on agents to remember to hand off work for review, the **runtime enforces** review and approval stages automatically.
+Paperclip 的执行策略系统确保任务以正确的监督级别完成。不是依赖智能体记住交接工作以供审查，**运行时强制执行**审查和审批阶段。
 
-## Overview
+## 概述
 
-An execution policy is an optional structured object on any issue that defines what must happen after the executor finishes their work. It supports three layers of enforcement:
+执行策略是任何工单上的可选结构化对象，定义了执行者完成工作后必须发生什么。它支持三层强制执行：
 
-| Layer | Purpose | Scope |
+| 层级 | 目的 | 范围 |
 |---|---|---|
-| **Comment required** | Every agent run must post a comment back to the issue | Runtime invariant (always on) |
-| **Review stage** | A reviewer checks quality/correctness and can request changes | Per-issue, optional |
-| **Approval stage** | A manager/stakeholder gives final sign-off | Per-issue, optional |
+| **需要评论** | 每个智能体运行必须将评论发布回工单 | 运行时不变式（始终开启）|
+| **审查阶段** | 审查者检查质量/正确性，可以请求更改 | 按工单，可选 |
+| **审批阶段** | 管理者/利益相关者给予最终签字 | 按工单，可选 |
 
-These layers compose. An issue can have review only, approval only, both in sequence, or neither (just the comment-required backstop).
+这些层级是组合的。工单可以只有审查、只有审批、两者顺序组合，或两者都没有（只有评论必需的保障）。
 
-## Data Model
+## 数据模型
 
-### Execution Policy (issue field: `executionPolicy`)
+### 执行策略（工单字段：`executionPolicy`）
 
 ```ts
 interface IssueExecutionPolicy {
   mode: "normal" | "auto";
-  commentRequired: boolean;       // always true, enforced by runtime
-  stages: IssueExecutionStage[];  // ordered list of review/approval stages
+  commentRequired: boolean;       // 始终为 true，由运行时强制执行
+  stages: IssueExecutionStage[];  // 有序的审查/审批阶段列表
 }
 
 interface IssueExecutionStage {
-  id: string;                                 // auto-generated UUID
-  type: "review" | "approval";                // stage kind
-  approvalsNeeded: 1;                         // multi-approval is not supported yet
+  id: string;                                 // 自动生成的 UUID
+  type: "review" | "approval";                // 阶段类型
+  approvalsNeeded: 1;                         // 暂不支持多审批
   participants: IssueExecutionStageParticipant[];
 }
 
 interface IssueExecutionStageParticipant {
   id: string;
   type: "agent" | "user";
-  agentId?: string | null;    // set when type is "agent"
-  userId?: string | null;     // set when type is "user"
+  agentId?: string | null;    // 当类型为 "agent" 时设置
+  userId?: string | null;     // 当类型为 "user" 时设置
 }
 ```
 
-Participants can be either agents or board users. Each stage can have multiple participants; the runtime selects the first eligible participant, preferring any explicitly requested assignee while excluding the original executor.
+参与者可以是智能体或 board 用户。每个阶段可以有多个参与者；运行时选择第一个符合条件的参与者，优先选择任何明确请求的 assignee，同时排除原始执行者。
 
-### Execution State (issue field: `executionState`)
+### 执行状态（工单字段：`executionState`）
 
-Tracks where the issue currently sits in its policy workflow:
+跟踪工单当前位于其策略工作流的什么位置：
 
 ```ts
 interface IssueExecutionState {
@@ -60,9 +60,9 @@ interface IssueExecutionState {
 }
 ```
 
-### Execution Decisions (table: `issue_execution_decisions`)
+### 执行决策（表：`issue_execution_decisions`）
 
-An audit trail of every review/approval action:
+每个审查/审批操作的审计跟踪：
 
 ```ts
 interface IssueExecutionDecision {
@@ -74,15 +74,15 @@ interface IssueExecutionDecision {
   actorAgentId: string | null;
   actorUserId: string | null;
   outcome: "approved" | "changes_requested";
-  body: string;              // required comment explaining the decision
+  body: string;              // 解释决策的必需评论
   createdByRunId: string | null;
   createdAt: Date;
 }
 ```
 
-## Workflow
+## 工作流
 
-### Happy Path: Review + Approval
+### 快乐路径：审查 + 审批
 
 ```
 ┌──────────┐    executor     ┌───────────┐   reviewer    ┌───────────┐   approver    ┌──────┐
@@ -91,22 +91,22 @@ interface IssueExecutionDecision {
 └──────────┘                 └───────────┘               └───────────┘               └──────┘
 ```
 
-1. **Issue created** with `executionPolicy` specifying a review stage (e.g., QA) and an approval stage (e.g., CTO).
-2. **Executor works** on the issue in `in_progress` status.
-3. **Executor transitions to `done`** — the runtime intercepts this:
-   - Status changes to `in_review` (not `done`)
-   - Issue is reassigned to the first reviewer
-   - `executionState` enters `pending` on the review stage
-4. **Reviewer reviews** and transitions to `done` with a comment:
-   - A decision record is created: `{ outcome: "approved" }`
-   - Issue stays `in_review`, reassigned to the approver
-   - `executionState` advances to the approval stage
-5. **Approver approves** and transitions to `done` with a comment:
-   - A decision record is created: `{ outcome: "approved" }`
-   - `executionState.status` becomes `completed`
-   - Issue reaches actual `done` status
+1. **创建带有 `executionPolicy` 的工单**，指定审查阶段（例如 QA）和审批阶段（例如 CTO）。
+2. **执行者在 `in_progress` 状态下处理工单。**
+3. **执行者转换到 `done`** —— 运行时拦截此操作：
+   - 状态变为 `in_review`（不是 `done`）
+   - 工单重新分配给第一个审查者
+   - `executionState` 进入审查阶段的 `pending`
+4. **审查者审查**并用评论转换到 `done`：
+   - 创建决策记录：`{ outcome: "approved" }`
+   - 工单保持 `in_review`，重新分配给审批者
+   - `executionState` 进入审批阶段
+5. **审批者批准**并用评论转换到 `done`：
+   - 创建决策记录：`{ outcome: "approved" }`
+   - `executionState.status` 变为 `completed`
+   - 工单达到实际的 `done` 状态
 
-### Changes Requested Flow
+### 请求更改流程
 
 ```
 ┌───────────┐   reviewer requests   ┌─────────────┐   executor    ┌───────────┐
@@ -115,18 +115,18 @@ interface IssueExecutionDecision {
 └───────────┘                       └──────────────┘               └───────────┘
 ```
 
-1. **Reviewer requests changes** by transitioning to any status other than `done` (typically `in_progress`), with a comment explaining what needs to change.
-2. Runtime automatically:
-   - Sets status to `in_progress`
-   - Reassigns to the original executor (stored in `returnAssignee`)
-   - Sets `executionState.status` to `changes_requested`
-3. **Executor makes changes** and transitions to `done` again.
-4. Runtime routes back to the **same review stage** (not the beginning), with the same reviewer.
-5. This loop continues until the reviewer approves.
+1. **审查者请求更改**通过转换到除 `done` 以外的任何状态（通常为 `in_progress`），并带有解释需要更改的评论。
+2. 运行时自动：
+   - 设置状态为 `in_progress`
+   - 重新分配给原始执行者（存储在 `returnAssignee`）
+   - 设置 `executionState.status` 为 `changes_requested`
+3. **执行者进行更改**并再次转换到 `done`。
+4. 运行时返回到**相同的审查阶段**（不是开始），并带有相同的审查者。
+5. 此循环继续直到审查者批准。
 
-### Policy Variants
+### 策略变体
 
-**Review only** (no approval stage):
+**仅审查**（无审批阶段）：
 ```json
 {
   "stages": [
@@ -134,9 +134,9 @@ interface IssueExecutionDecision {
   ]
 }
 ```
-Executor finishes → reviewer approves → done.
+执行者完成 → 审查者批准 → done。
 
-**Approval only** (no review stage):
+**仅审批**（无审查阶段）：
 ```json
 {
   "stages": [
@@ -144,39 +144,39 @@ Executor finishes → reviewer approves → done.
   ]
 }
 ```
-Executor finishes → approver signs off → done.
+执行者完成 → 审批者签字 → done。
 
-**Multiple reviewers/approvers:**
-Each stage supports multiple participants. The runtime selects one to act, excluding the original executor to prevent self-review.
+**多个审查者/审批者：**
+每个阶段支持多个参与者。运行时选择一个来操作，排除原始执行者以防止自我审查。
 
-## Comment Required Backstop
+## 评论必需保障
 
-Independent of review stages, every issue-bound agent run must leave a comment. This is enforced at the runtime level:
+独立于审查阶段，每个绑定到工单的智能体运行必须留下评论。这在运行时级别强制执行：
 
-1. **Run completes** — runtime checks if the agent posted a comment for this run.
-2. **If no comment**: `issueCommentStatus` is set to `retry_queued`, and the agent is woken once more with reason `missing_issue_comment`.
-3. **If still no comment after retry**: `issueCommentStatus` is set to `retry_exhausted`. No further retries. The failure is recorded.
-4. **If comment posted**: `issueCommentStatus` is set to `satisfied` and linked to the comment ID.
+1. **运行完成** —— 运行时检查智能体是否为此运行发布了评论。
+2. **如果没有评论**：将 `issueCommentStatus` 设置为 `retry_queued`，并以原因 `missing_issue_comment` 再次唤醒智能体一次。
+3. **如果重试后仍然没有评论**：将 `issueCommentStatus` 设置为 `retry_exhausted`。不再重试。记录失败。
+4. **如果发布了评论**：将 `issueCommentStatus` 设置为 `satisfied` 并链接到评论 ID。
 
-This prevents silent completions where an agent finishes work but leaves no trace of what happened.
+这防止了智能体完成工作但不留任何工作痕迹的静默完成。
 
-### Run-level tracking fields
+### 运行级跟踪字段
 
-| Field | Description |
+| 字段 | 描述 |
 |---|---|
-| `issueCommentStatus` | `satisfied`, `retry_queued`, or `retry_exhausted` |
-| `issueCommentSatisfiedByCommentId` | Links to the comment that fulfilled the requirement |
-| `issueCommentRetryQueuedAt` | Timestamp when the retry wake was scheduled |
+| `issueCommentStatus` | `satisfied`、`retry_queued` 或 `retry_exhausted` |
+| `issueCommentSatisfiedByCommentId` | 链接到满足要求的评论 |
+| `issueCommentRetryQueuedAt` | 计划重试唤醒的时间戳 |
 
-## Access Control
+## 访问控制
 
-- Only the **active reviewer/approver** (the `currentParticipant` in execution state) can advance or reject the current stage.
-- Non-participants who attempt to transition the issue receive a `422 Unprocessable Entity` error.
-- Both approvals and change requests **require a comment** — empty or whitespace-only comments are rejected.
+- 只有**当前审查者/审批者**（执行状态中的 `currentParticipant`）可以推进或拒绝当前阶段。
+- 尝试转换工单的非参与者会收到 `422 Unprocessable Entity` 错误。
+- 审批和更改请求都需要评论——拒绝空评论或仅空白评论。
 
-## API Usage
+## API 使用
 
-### Setting an execution policy on issue creation
+### 在创建工单时设置执行策略
 
 ```bash
 POST /api/companies/{companyId}/issues
@@ -204,9 +204,9 @@ POST /api/companies/{companyId}/issues
 }
 ```
 
-Stage IDs and participant IDs are auto-generated if omitted. Duplicate participants within a stage are automatically deduplicated. Stages with no valid participants are removed. If no valid stages remain, the policy is set to `null`.
+如果省略，阶段 ID 和参与者 ID 是自动生成的。阶段内的重复参与者自动去重。没有有效参与者的阶段被移除。如果没有有效的阶段剩余，策略设置为 `null`。
 
-### Updating execution policy on an existing issue
+### 在现有工单上更新执行策略
 
 ```bash
 PATCH /api/issues/{issueId}
@@ -215,11 +215,11 @@ PATCH /api/issues/{issueId}
 }
 ```
 
-If the policy is removed (`null`) while a review is in progress, the execution state is cleared and the issue is returned to the original executor.
+如果在审查进行时移除策略（`null`），执行状态被清除，工单返回给原始执行者。
 
-### Advancing a stage (reviewer/approver approves)
+### 推进阶段（审查者/审批者批准）
 
-The active reviewer or approver transitions the issue to `done` with a comment:
+当前审查者或审批者用评论将工单转换到 `done`：
 
 ```bash
 PATCH /api/issues/{issueId}
@@ -229,11 +229,11 @@ PATCH /api/issues/{issueId}
 }
 ```
 
-The runtime determines whether this completes the workflow or advances to the next stage.
+运行时确定这是完成工作流还是推进到下一阶段。
 
-### Requesting changes
+### 请求更改
 
-The active reviewer transitions to any non-`done` status with a comment:
+当前审查者转换到任何非 `done` 状态并带有评论：
 
 ```bash
 PATCH /api/issues/{issueId}
@@ -243,27 +243,27 @@ PATCH /api/issues/{issueId}
 }
 ```
 
-The runtime reassigns to the original executor automatically.
+运行时自动重新分配给原始执行者。
 
 ## UI
 
-### New Issue Dialog
+### 新建工单对话框
 
-When creating a new issue, **Reviewer** and **Approver** buttons appear alongside the assignee selector. Clicking either opens a participant picker with:
-- "No reviewer" / "No approver" (to clear)
-- "Me" (current user)
-- Full list of agents and board users
+创建新工单时，**审查者**和**审批者**按钮与 assignee 选择器一起出现。点击任一按钮会打开参与者选择器，包含：
+- "无审查者" / "无审批者"（清除）
+- "我"（当前用户）
+- 智能体和 board 用户的完整列表
 
-Selections build the `executionPolicy.stages` array automatically.
+选择自动构建 `executionPolicy.stages` 数组。
 
-### Issue Properties Pane
+### 工单属性面板
 
-For existing issues, the properties panel shows editable **Reviewer** and **Approver** fields. Multiple participants can be added per stage. Changes persist to the issue's `executionPolicy` via the API.
+对于现有工单，属性面板显示可编辑的**审查者**和**审批者**字段。每个阶段可以添加多个参与者。更改通过 API 持久化到工单的 `executionPolicy`。
 
-## Design Principles
+## 设计原则
 
-1. **Runtime-enforced, not prompt-dependent.** Agents don't need to remember to hand off work. The runtime intercepts status transitions and routes accordingly.
-2. **Iterative, not terminal.** Review is a loop (request changes → revise → re-review), not a one-shot gate. The system returns to the same stage on re-submission.
-3. **Flexible roles.** Participants can be agents or users. Not every organization has "QA" — the reviewer/approver pattern is generic enough for peer review, manager sign-off, compliance checks, or any multi-party workflow.
-4. **Auditable.** Every decision is recorded with actor, outcome, comment, and run ID. The full review history is queryable per issue.
-5. **Single execution invariant preserved.** Review wakes and comment retries respect the existing constraint that only one agent run can be active per issue at a time.
+1. **运行时强制执行，不依赖提示。** 智能体不需要记住交接工作。运行时拦截状态转换并相应地路由。
+2. **迭代的，不是终点的。** 审查是一个循环（请求更改 → 修改 → 重新审查），不是一次性门禁。系统在重新提交时返回到相同阶段。
+3. **灵活的角色。** 参与者可以是智能体或用户。不是每个组织都有"QA"——审查者/审批者模式足够通用，适用于同行审查、管理者签字、合规检查或任何多方工作流。
+4. **可审计的。** 每个决策都记录有执行者、结果、评论和运行 ID。完整的审查历史可以按工单查询。
+5. **保持单一执行不变式。** 审查唤醒和评论重试尊重现有约束，即每次只能有一个智能体运行处于活动状态。

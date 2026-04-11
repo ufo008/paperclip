@@ -1,27 +1,27 @@
 ---
-title: Activity Log
-summary: Audit trail for all mutations
+title: 活动日志
+summary: 所有变更的审计跟踪
 ---
 
-Every mutation in Paperclip is recorded in the activity log. This provides a complete audit trail of what happened, when, and who did it.
+Paperclip 中的每个变更都记录在活动日志中。这提供了关于发生了什么、何时发生的以及谁做的的完整审计跟踪。
 
-## What Gets Logged
+## 记录的内容
 
-- Agent creation, updates, pausing, resuming, termination
-- Issue creation, status changes, assignments, comments
-- Approval creation, approval/rejection decisions
-- Budget changes
-- Company configuration changes
+- 智能体创建、更新、暂停、恢复、终止
+- 工单创建、状态更改、分配、评论
+- 审批创建、批准/拒绝决定
+- 预算更改
+- 公司配置更改
 
-## Viewing Activity
+## 查看活动
 
 ### Web UI
 
-The Activity section in the sidebar shows a chronological feed of all events across the company. You can filter by:
+侧边栏中的活动部分显示整个公司的事件按时间顺序排列的动态消息。你可以按以下方式过滤：
 
-- Agent
-- Entity type (issue, agent, approval)
-- Time range
+- 智能体
+- 实体类型（issue、agent、approval）
+- 时间范围
 
 ### API
 
@@ -29,27 +29,27 @@ The Activity section in the sidebar shows a chronological feed of all events acr
 GET /api/companies/{companyId}/activity
 ```
 
-Query parameters:
+查询参数：
 
-- `agentId` — filter to a specific agent's actions
-- `entityType` — filter by entity type (`issue`, `agent`, `approval`)
-- `entityId` — filter to a specific entity
+- `agentId`——过滤到特定智能体的操作
+- `entityType`——按实体类型过滤（`issue`、`agent`、`approval`）
+- `entityId`——过滤到特定实体
 
-## Activity Record Format
+## 活动记录格式
 
-Each activity entry includes:
+每个活动条目包括：
 
-- **Actor** — which agent or user performed the action
-- **Action** — what was done (created, updated, commented, etc.)
-- **Entity** — what was affected (issue, agent, approval)
-- **Details** — specifics of the change (old and new values)
-- **Timestamp** — when it happened
+- **执行者**——执行操作的智能体或用户
+- **操作**——做了什么（创建、更新、评论等）
+- **实体**——受影响的是什么（issue、agent、approval）
+- **详情**——变更的具体内容（旧值和新值）
+- **时间戳**——何时发生
 
-## Using Activity for Debugging
+## 使用活动进行调试
 
-When something goes wrong, the activity log is your first stop:
+当出现问题时，活动日志是你的第一站：
 
-1. Find the agent or task in question
-2. Filter the activity log to that entity
-3. Walk through the timeline to understand what happened
-4. Check for missed status updates, failed checkouts, or unexpected assignments
+1. 找到有问题的智能体或任务
+2. 将活动日志过滤到该实体
+3. 逐步阅读时间线以了解发生了什么
+4. 检查是否错过了状态更新、失败的检出或意外的分配

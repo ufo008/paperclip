@@ -1,77 +1,77 @@
 ---
-title: Tailscale Private Access
-summary: Run Paperclip with Tailscale-friendly host binding and connect from other devices
+title: Tailscale 私有访问
+summary: 使用 Tailscale 友好主机绑定运行 Paperclip 并从其他设备连接
 ---
 
-Use this when you want to access Paperclip over Tailscale (or a private LAN/VPN) instead of only `localhost`.
+当你希望通过 Tailscale（或私有 LAN/VPN）访问 Paperclip 而不仅仅是 `localhost` 时，使用此方法。
 
-## 1. Start Paperclip in private authenticated mode
+## 1. 以私有认证模式启动 Paperclip
 
 ```sh
 pnpm dev --tailscale-auth
 ```
 
-This configures:
+这配置了：
 
 - `PAPERCLIP_DEPLOYMENT_MODE=authenticated`
 - `PAPERCLIP_DEPLOYMENT_EXPOSURE=private`
 - `PAPERCLIP_AUTH_BASE_URL_MODE=auto`
-- `HOST=0.0.0.0` (bind on all interfaces)
+- `HOST=0.0.0.0`（绑定到所有接口）
 
-Equivalent flag:
+等效标志：
 
 ```sh
 pnpm dev --authenticated-private
 ```
 
-## 2. Find your reachable Tailscale address
+## 2. 找到你可访问的 Tailscale 地址
 
-From the machine running Paperclip:
+从运行 Paperclip 的机器：
 
 ```sh
 tailscale ip -4
 ```
 
-You can also use your Tailscale MagicDNS hostname (for example `my-macbook.tailnet.ts.net`).
+你也可以使用你的 Tailscale MagicDNS 主机名（例如 `my-macbook.tailnet.ts.net`）。
 
-## 3. Open Paperclip from another device
+## 3. 从另一台设备打开 Paperclip
 
-Use the Tailscale IP or MagicDNS host with the Paperclip port:
+使用 Tailscale IP 或 MagicDNS 主机以及 Paperclip 端口：
 
 ```txt
 http://<tailscale-host-or-ip>:3100
 ```
 
-Example:
+示例：
 
 ```txt
 http://my-macbook.tailnet.ts.net:3100
 ```
 
-## 4. Allow custom private hostnames when needed
+## 4. 在需要时允许自定义私有主机名
 
-If you access Paperclip with a custom private hostname, add it to the allowlist:
+如果你使用自定义私有主机名访问 Paperclip，将其添加到允许列表：
 
 ```sh
 pnpm paperclipai allowed-hostname my-macbook.tailnet.ts.net
 ```
 
-## 5. Verify the server is reachable
+## 5. 验证服务器可访问
 
-From a remote Tailscale-connected device:
+从远程 Tailscale 连接的设备：
 
 ```sh
 curl http://<tailscale-host-or-ip>:3100/api/health
 ```
 
-Expected result:
+预期结果：
 
 ```json
 {"status":"ok"}
 ```
 
-## Troubleshooting
+## 故障排除
 
-- Login or redirect errors on a private hostname: add it with `paperclipai allowed-hostname`.
-- App only works on `localhost`: make sure you started with `--tailscale-auth` (or set `HOST=0.0.0.0` in private mode).
-- Can connect locally but not remotely: verify both devices are on the same Tailscale network and port `3100` is reachable.
+- 在私有主机名上登录或重定向错误：使用 `paperclipai allowed-hostname` 添加它。
+- 应用只能在 `localhost` 上工作：确保你使用 `--tailscale-auth` 启动（或者在私有模式下设置 `HOST=0.0.0.0`）。
+- 可以在本地连接但不能远程连接：验证两台设备都在同一 Tailscale 网络上且端口 `3100` 可访问。
