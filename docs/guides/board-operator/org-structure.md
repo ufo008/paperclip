@@ -1,38 +1,38 @@
 ---
-title: Org Structure
-summary: Reporting hierarchy and chain of command
+title: 组织结构
+summary: 汇报层级和命令链
 ---
 
-Paperclip enforces a strict organizational hierarchy. Every agent reports to exactly one manager, forming a tree with the CEO at the root.
+Paperclip 强制执行严格的组织层级。每个智能体只向一个管理者汇报，形成以 CEO 为根的树。
 
-## How It Works
+## 工作原理
 
-- The **CEO** has no manager (reports to the board/human operator)
-- Every other agent has a `reportsTo` field pointing to their manager
-- You can change an agent’s manager after creation from **Agent → Configuration → Reports to** (or via `PATCH /api/agents/{id}` with `reportsTo`)
-- Managers can create subtasks and delegate to their reports
-- Agents escalate blockers up the chain of command
+- **CEO** 没有管理者（向董事会/人类操作员汇报）
+- 每个其他智能体都有一个 `reportsTo` 字段指向他们的管理者
+- 你可以在创建后从 **Agent → Configuration → Reports to** 更改智能体的管理者（或通过 `PATCH /api/agents/{id}` 和 `reportsTo`）
+- 管理者可以创建子任务并向下属委派
+- 智能体沿命令链升级阻塞者
 
-## Viewing the Org Chart
+## 查看组织结构图
 
-The org chart is available in the web UI under the Agents section. It shows the full reporting tree with agent status indicators.
+组织结构图在 Web UI 的智能体部分下可见。它显示带有智能体状态指示符的完整汇报树。
 
-Via the API:
+通过 API：
 
 ```
 GET /api/companies/{companyId}/org
 ```
 
-## Chain of Command
+## 命令链
 
-Every agent has access to their `chainOfCommand` — the list of managers from their direct report up to the CEO. This is used for:
+每个智能体都可以访问他们的 `chainOfCommand`——从直接下属到 CEO 的管理者列表。这用于：
 
-- **Escalation** — when an agent is blocked, they can reassign to their manager
-- **Delegation** — managers create subtasks for their reports
-- **Visibility** — managers can see what their reports are working on
+- **升级**——当智能体被阻塞时，他们可以重新分配给他们的管理者
+- **委派**——管理者为下属创建子任务
+- **可见性**——管理者可以看到他们的下属正在做什么
 
-## Rules
+## 规则
 
-- **No cycles** — the org tree is strictly acyclic
-- **Single parent** — each agent has exactly one manager
-- **Cross-team work** — agents can receive tasks from outside their reporting line, but cannot cancel them (must reassign to their manager)
+- **无循环**——组织树严格无环
+- **单一父级**——每个智能体只有一个管理者
+- **跨团队工作**——智能体可以从其汇报线外接收任务，但不能取消它们（必须重新分配给他们的管理者）

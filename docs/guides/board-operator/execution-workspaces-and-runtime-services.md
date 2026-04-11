@@ -1,68 +1,68 @@
 ---
-title: Execution Workspaces And Runtime Services
-summary: How project runtime configuration, execution workspaces, and issue runs fit together
+title: 执行工作区和运行时服务
+summary: 项目运行时配置、执行工作区和工单运行如何组合的文档
 ---
 
-This guide documents the intended runtime model for projects, execution workspaces, and issue runs in Paperclip.
+本指南记录了 Paperclip 中项目、执行工作区和工单运行的预期运行时模型。
 
-## Project runtime configuration
+## 项目运行时配置
 
-You can define how to run a project on the project workspace itself.
+你可以在项目工作区本身上定义如何运行项目。
 
-- Project workspace runtime config describes how to run services for that project checkout.
-- This is the default runtime configuration that child execution workspaces may inherit.
-- Defining the config does not start anything by itself.
+- 项目工作区运行时配置描述了如何为该项目检出来运行服务。
+- 这是子执行工作区可能继承的默认运行时配置。
+- 定义配置本身不会启动任何东西。
 
-## Manual runtime control
+## 手动运行时控制
 
-Runtime services are manually controlled from the UI.
+运行时服务从 UI 手动控制。
 
-- Project workspace runtime services are started and stopped from the project workspace UI.
-- Execution workspace runtime services are started and stopped from the execution workspace UI.
-- Paperclip does not automatically start or stop these runtime services as part of issue execution.
-- Paperclip also does not automatically restart workspace runtime services on server boot.
+- 项目工作区运行时服务从项目工作区 UI 启动和停止。
+- 执行工作区运行时服务从执行工作区 UI 启动和停止。
+- Paperclip 不会作为工单执行的一部分自动启动或停止这些运行时服务。
+- Paperclip 也不会在服务器启动时自动重启工作区运行时服务。
 
-## Execution workspace inheritance
+## 执行工作区继承
 
-Execution workspaces isolate code and runtime state from the project primary workspace.
+执行工作区将代码和运行时状态与项目主工作区隔离。
 
-- An isolated execution workspace has its own checkout path, branch, and local runtime instance.
-- The runtime configuration may inherit from the linked project workspace by default.
-- The execution workspace may override that runtime configuration with its own workspace-specific settings.
-- The inherited configuration answers "how to run the service", but the running process is still specific to that execution workspace.
+- 隔离的执行工作区有自己的检出路径、分支和本地运行时实例。
+- 运行时配置默认可以从链接的项目工作区继承。
+- 执行工作区可能用自己的工作区特定设置覆盖该运行时配置。
+- 继承的配置回答"如何运行服务"，但运行中的进程仍然特定于该执行工作区。
 
-## Issues and execution workspaces
+## 工单和执行工作区
 
-Issues are attached to execution workspace behavior, not to automatic runtime management.
+工单附加到执行工作区行为，而不是自动运行时管理。
 
-- An issue may create a new execution workspace when you choose an isolated workspace mode.
-- An issue may reuse an existing execution workspace when you choose reuse.
-- Multiple issues may intentionally share one execution workspace so they can work against the same branch and running runtime services.
-- Assigning or running an issue does not automatically start or stop runtime services for that workspace.
+- 当你选择隔离工作区模式时，工单可能会创建一个新的执行工作区。
+- 当你选择重用时，工单可能会重用现有的执行工作区。
+- 多个工单可能故意共享一个执行工作区，以便它们可以针对相同的分支和运行中的运行时服务工作。
+- 分配或运行工单不会自动启动或停止该工作区的运行时服务。
 
-## Execution workspace lifecycle
+## 执行工作区生命周期
 
-Execution workspaces are durable until a human closes them.
+执行工作区是持久的，直到人类关闭它们。
 
-- The UI can archive an execution workspace.
-- Closing an execution workspace stops its runtime services and cleans up its workspace artifacts when allowed.
-- Shared workspaces that point at the project primary checkout are treated more conservatively during cleanup than disposable isolated workspaces.
+- UI 可以归档一个执行工作区。
+- 关闭执行工作区会在允许时停止其运行时服务并清理其工作区制品。
+- 指向项目主检出的共享工作区在清理期间比一次性隔离工作区受到更保守的处理。
 
-## Resolved workspace logic during heartbeat runs
+## 心跳运行期间的工作区逻辑解析
 
-Heartbeat still resolves a workspace for the run, but that is about code location and session continuity, not runtime-service control.
+心跳仍然为运行解析工作区，但这是关于代码位置和会话连续性，而不是运行时服务控制。
 
-1. Heartbeat resolves a base workspace for the run.
-2. Paperclip realizes the effective execution workspace, including creating or reusing a worktree when needed.
-3. Paperclip persists execution-workspace metadata such as paths, refs, and provisioning settings.
-4. Heartbeat passes the resolved code workspace to the agent run.
-5. Workspace runtime services remain manual UI-managed controls rather than automatic heartbeat-managed services.
+1. 心跳为运行解析一个基础工作区。
+2. Paperclip 实现有效的执行工作区，包括在需要时创建或重用 worktree。
+3. Paperclip 持久化执行工作区元数据，如路径、refs 和配置设置。
+4. 心跳将解析的代码工作区传递给智能体运行。
+5. 工作区运行时服务仍然是手动 UI 管理的控制，而不是自动心跳管理的服务。
 
-## Current implementation guarantees
+## 当前的实现保证
 
-With the current implementation:
+使用当前实现：
 
-- Project workspace runtime config is the fallback for execution workspace UI controls.
-- Execution workspace runtime overrides are stored on the execution workspace.
-- Heartbeat runs do not auto-start workspace runtime services.
-- Server startup does not auto-restart workspace runtime services.
+- 项目工作区运行时配置是执行工作区 UI 控件的后备。
+- 执行工作区运行时覆盖存储在执行工作区上。
+- 心跳运行不会自动启动工作区运行时服务。
+- 服务器启动不会自动重启工作区运行时服务。
