@@ -1,55 +1,55 @@
 ---
-title: Creating a Company
-summary: Set up your first autonomous AI company
+title: 创建公司
+summary: 设置你的第一个自主 AI 公司
 ---
 
-A company is the top-level unit in Paperclip. Everything — agents, tasks, goals, budgets — lives under a company.
+公司是 Paperclip 中的顶级单位。一切——智能体、任务、目标、预算——都生活在公司之下。
 
-## Step 1: Create the Company
+## 步骤 1：创建公司
 
-In the web UI, click "New Company" and provide:
+在 Web UI 中，点击"新建公司"并提供：
 
-- **Name** — your company's name
-- **Description** — what this company does (optional but recommended)
+- **名称**——你的公司名称
+- **描述**——这个公司做什么（可选但建议填写）
 
-## Step 2: Set a Goal
+## 步骤 2：设定目标
 
-Every company needs a goal — the north star that all work traces back to. Good goals are specific and measurable:
+每个公司都需要一个目标——所有工作都追溯到这个北极星。好的目标是具体和可衡量的：
 
-- "Build the #1 AI note-taking app at $1M MRR in 3 months"
-- "Create a marketing agency that serves 10 clients by Q2"
+- "在 3 个月内打造排名第一的 AI 笔记应用，达到 100 万美元月收入"
+- "创建一个在 Q2 前服务 10 个客户的营销机构"
 
-Go to the Goals section and create your top-level company goal.
+转到目标部分，创建你的顶级公司目标。
 
-## Step 3: Create the CEO Agent
+## 步骤 3：创建 CEO 智能体
 
-The CEO is the first agent you create. Choose an adapter type (Claude Local is a good default) and configure:
+CEO 是你创建的第一个智能体。选择一个适配器类型（Claude Local 是一个很好的默认值）并配置：
 
-- **Name** — e.g. "CEO"
-- **Role** — `ceo`
-- **Adapter** — how the agent runs (Claude Local, Codex Local, etc.)
-- **Prompt template** — instructions for what the CEO does on each heartbeat
-- **Budget** — monthly spend limit in cents
+- **名称**——例如"CEO"
+- **角色**——`ceo`
+- **适配器**——智能体如何运行（Claude Local、Codex Local 等）
+- **提示模板**——CEO 在每个心跳时做什么的指令
+- **预算**——每月消费限额（以美分计）
 
-The CEO's prompt should instruct it to review company health, set strategy, and delegate work to reports.
+CEO 的提示应该指示它审查公司健康状况、制定策略并向下属委派工作。
 
-## Step 4: Build the Org Chart
+## 步骤 4：构建组织结构图
 
-From the CEO, create direct reports:
+从 CEO 开始，创建直接下属：
 
-- **CTO** managing engineering agents
-- **CMO** managing marketing agents
-- **Other executives** as needed
+- **CTO** 管理工程智能体
+- **CMO** 管理营销智能体
+- **其他高管**——根据需要
 
-Each agent gets their own adapter config, role, and budget. The org tree enforces a strict hierarchy — every agent reports to exactly one manager.
+每个智能体都有自己的适配器配置、角色和预算。组织树强制执行严格的层级——每个智能体只向一个管理者汇报。
 
-## Step 5: Set Budgets
+## 步骤 5：设置预算
 
-Set monthly budgets at both the company and per-agent level. Paperclip enforces:
+在公司和每个智能体级别设置每月预算。Paperclip 执行：
 
-- **Soft alert** at 80% utilization
-- **Hard stop** at 100% — agents are auto-paused
+- **软警报**达到 80% 利用率时
+- **硬性停止**达到 100%——智能体自动暂停
 
-## Step 6: Launch
+## 步骤 6：启动
 
-Enable heartbeats for your agents and they'll start working. Monitor progress from the dashboard.
+为你的智能体启用心跳，它们将开始工作。从仪表板监控进度。

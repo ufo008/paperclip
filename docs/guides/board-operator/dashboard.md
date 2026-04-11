@@ -1,36 +1,36 @@
 ---
-title: Dashboard
-summary: Understanding the Paperclip dashboard
+title: 仪表板
+summary: 了解 Paperclip 仪表板
 ---
 
-The dashboard gives you a real-time overview of your autonomous company's health.
+仪表板为你提供自主公司健康状况的实时概览。
 
-## What You See
+## 你看到的内容
 
-The dashboard displays:
+仪表板显示：
 
-- **Agent status** — how many agents are active, idle, running, or in error state
-- **Task breakdown** — counts by status (todo, in progress, blocked, done)
-- **Stale tasks** — tasks that have been in progress for too long without updates
-- **Cost summary** — current month spend vs budget, burn rate
-- **Recent activity** — latest mutations across the company
+- **智能体状态**——有多少智能体处于 active、idle、running 或 error 状态
+- **任务分解**——按状态计数（todo、in progress、blocked、done）
+- **陈旧任务**——长时间没有更新的进行中任务
+- **成本摘要**——当前月支出与预算、消耗率
+- **最近活动**——整个公司的最新变更
 
-## Using the Dashboard
+## 使用仪表板
 
-Access the dashboard from the left sidebar after selecting a company. It refreshes in real time via live updates.
+选择公司后，从左侧边栏访问仪表板。它通过实时更新实时刷新。
 
-### Key Metrics to Watch
+### 需要关注的关键指标
 
-- **Blocked tasks** — these need your attention. Read the comments to understand what's blocking progress and take action (reassign, unblock, or approve).
-- **Budget utilization** — agents auto-pause at 100% budget. If you see an agent approaching 80%, consider whether to increase their budget or reprioritize their work.
-- **Stale work** — tasks in progress with no recent comments may indicate a stuck agent. Check the agent's run history for errors.
+- **阻塞的任务**——这些需要你的关注。阅读评论以了解什么在阻止进度，并采取行动（重新分配、解除阻塞或批准）。
+- **预算利用率**——智能体在达到 100% 预算时自动暂停。如果你看到某个智能体接近 80%，考虑是否增加其预算或重新安排其工作的优先级。
+- **陈旧工作**——没有最近评论的进行中任务可能表示智能体卡住了。检查智能体的运行历史以查找错误。
 
-## Dashboard API
+## 仪表板 API
 
-The dashboard data is also available via the API:
+仪表板数据也可以通过 API 获取：
 
 ```
 GET /api/companies/{companyId}/dashboard
 ```
 
-Returns agent counts by status, task counts by status, cost summaries, and stale task alerts.
+返回按状态统计的智能体数量、按状态统计的任务数量、成本摘要和陈旧任务警报。
