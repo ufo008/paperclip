@@ -1,146 +1,148 @@
-# Paperclip — Product Definition
+# Paperclip — 产品定义
 
-## What It Is
+## 是什么
 
-Paperclip is the control plane for autonomous AI companies. One instance of Paperclip can run multiple companies. A **company** is a first-order object.
+Paperclip 是自主 AI 公司的控制平面。一个 Paperclip 实例可以运行多个公司。**公司**是一级对象。
 
-## Core Concepts
+## 核心概念
 
-### Company
+### 公司
 
-A company has:
+一个公司拥有：
 
-- A **goal** — the reason it exists ("Create the #1 AI note-taking app that does $1M MRR within 3 months")
-- **Employees** — every employee is an AI agent
-- **Org structure** — who reports to whom
-- **Revenue & expenses** — tracked at the company level
-- **Task hierarchy** — all work traces back to the company goal
+- **目标** — 存在的理由（"创建一款在 3 个月内实现 100 万美元 MRR 的第一 AI 笔记应用"）
+- **员工** — 每位员工都是一个 AI Agent
+- **组织结构** — 谁向谁汇报
+- **收入与支出** — 在公司层面追踪
+- **任务层级** — 所有工作都可以追溯到公司目标
 
-### Employees & Agents
+### 员工与 Agent
 
-Every employee is an agent. When you create a company, you start by defining the CEO, then build out from there.
+每位员工都是一个 Agent。创建公司时，首先定义 CEO，然后从那里扩展。
 
-Each employee has:
+每位员工拥有：
 
-- **Adapter type + config** — how this agent runs and what defines its identity/behavior. This is adapter-specific (e.g., an OpenClaw agent might use SOUL.md and HEARTBEAT.md files; a Claude Code agent might use CLAUDE.md; a bare script might use CLI args). Paperclip doesn't prescribe the format — the adapter does.
-- **Role & reporting** — their title, who they report to, who reports to them
-- **Capabilities description** — a short paragraph on what this agent does and when they're relevant (helps other agents discover who can help with what)
+- **适配器类型 + 配置** — 这个 Agent 如何运行，以及什么定义了它的身份/行为。这是适配器特定的（例如，OpenClaw Agent 可能使用 SOUL.md 和 HEARTBEAT.md 文件；Claude Code Agent 可能使用 CLAUDE.md；裸脚本可能使用 CLI 参数）。Paperclip 不规定格式 — 由适配器决定。
+- **角色与汇报** — 他们的头衔、他们向谁汇报、谁向他们汇报
+- **能力描述** — 关于这个 Agent 做什么以及何时相关的一段简短描述（帮助其他 Agent 发现谁能帮忙做什么）
 
-Example: A CEO agent's adapter config tells it to "review what your executives are doing, check company metrics, reprioritize if needed, assign new strategic initiatives" on each heartbeat. An engineer's config tells it to "check assigned tasks, pick the highest priority, and work it."
+示例：CEO Agent 的适配器配置告诉它每次心跳时"审查高管们正在做什么，检查公司指标，必要时重新排序，分配新的战略举措"。工程师的配置告诉它"检查被分配的任务，选择最高优先级的，然后开始工作"。
 
-Then you define who reports to the CEO: a CTO managing programmers, a CMO managing the marketing team, and so on. Every agent in the tree gets their own adapter configuration.
+然后定义谁向 CEO 汇报：管理程序员的 CTO、管理营销团队的 CMO，等等。树中的每个 Agent 都有自己的适配器配置。
 
-### Agent Execution
+### Agent 执行
 
-There are two fundamental modes for running an agent's heartbeat:
+运行 Agent 心跳有两种基本模式：
 
-1. **Run a command** — Paperclip kicks off a process (shell command, Python script, etc.) and tracks it. The heartbeat is "execute this and monitor it."
-2. **Fire and forget a request** — Paperclip sends a webhook/API call to an externally running agent. The heartbeat is "notify this agent to wake up." (OpenClaw hooks work this way.)
+1. **运行命令** — Paperclip 启动一个进程（shell 命令、Python 脚本等）并追踪它。心跳是"执行此操作并监控它。"
+2. **发送请求后不管** — Paperclip 向外部运行的 Agent 发送 webhook/API 调用。心跳是"通知这个 Agent 醒来。"（OpenClaw hooks 以这种方式工作。）
 
-We provide sensible defaults — a default agent that shells out to Claude Code or Codex with your configuration, remembers session IDs, runs basic scripts. But you can plug in anything.
+我们提供合理的默认值 — 一个默认 Agent，通过你的配置调用 Claude Code 或 Codex，记住会话 ID，运行基本脚本。但你可以插入任何东西。
 
-### Task Management
+### 任务管理
 
-Task management is hierarchical. At any moment, every piece of work must trace back to the company's top-level goal through a chain of parent tasks:
+任务管理是分层的。在任何时刻，每项工作都必须通过父任务的链条追溯到公司的顶层目标：
 
 ```
-I am researching the Facebook ads Granola uses (current task)
-  because → I need to create Facebook ads for our software (parent)
-    because → I need to grow new signups by 100 users (parent)
-      because → I need to get revenue to $2,000 this week (parent)
-        because → ...
-          because → We're building the #1 AI note-taking app to $1M MRR in 3 months
+我正在研究 Granola 使用的 Facebook 广告（当前任务）
+  因为 → 我需要为我们软件创建 Facebook 广告（父任务）
+    因为 → 我需要将新注册用户增长 100 人（父任务）
+      因为 → 我需要本周实现 2000 美元收入（父任务）
+        因为 → ...
+          因为 → 我们正在构建一款 3 个月内实现 100 万美元 MRR 的第一 AI 笔记应用
 ```
 
-Tasks have parentage. Every task exists in service of a parent task, all the way up to the company goal. This is what keeps autonomous agents aligned — they can always answer "why am I doing this?"
+任务有亲缘关系。每个任务都服务于一个父任务，一直追溯到公司目标。这就是保持自主 Agent 对齐的方式 — 它们总是能回答"我为什么在做这个？"
 
-More detailed task structure TBD.
+更详细的任务结构 TBD。
 
-## Principles
+## 原则
 
-1. **Unopinionated about how you run your agents.** Your agents could be OpenClaw bots, Python scripts, Node scripts, Claude Code sessions, Codex instances — we don't care. Paperclip defines the control plane for communication and provides utility infrastructure for heartbeats. It does not mandate an agent runtime.
+1. **对你如何运行 Agent 不做任何规定。** 你的 Agent 可以是 OpenClaw 机器人、Python 脚本、Node 脚本、Claude Code 会话、Codex 实例 — 我们不在乎。Paperclip 定义了通信的控制平面，并为心跳提供实用基础设施。它不强制规定 Agent 运行时。
 
-2. **Company is the unit of organization.** Everything lives under a company. One Paperclip instance, many companies.
+2. **公司是组织单位。** 一切都在公司下。一个 Paperclip 实例，多个公司。
 
-3. **Adapter config defines the agent.** Every agent has an adapter type and configuration that controls its identity and behavior. The minimum contract is just "be callable."
+3. **适配器配置定义 Agent。** 每个 Agent 都有一个适配器类型和配置，控制其身份和行为。最低契约只是"可调用"。
 
-4. **All work traces to the goal.** Hierarchical task management means nothing exists in isolation. If you can't explain why a task matters to the company goal, it shouldn't exist.
+4. **所有工作追溯到目标。** 分层任务管理意味着没有什么是孤立存在的。如果你无法解释为什么一个任务对公司目标重要，它就不应该存在。
 
-5. **Control plane, not execution plane.** Paperclip orchestrates. Agents run wherever they run and phone home.
+5. **控制平面，而非执行平面。** Paperclip 负责编排。Agent 在它们运行的地方运行，然后打电话回家。
 
-## User Flow (Dream Scenario)
+## 用户流程（理想场景）
 
-1. Open Paperclip, create a new company
-2. Define the company's goal: "Create the #1 AI note-taking app, $1M MRR in 3 months"
-3. Create the CEO
-   - Choose an adapter (e.g., process adapter for Claude Code, HTTP adapter for OpenClaw)
-   - Configure the adapter (agent identity, loop behavior, execution settings)
-   - CEO proposes strategic breakdown → board approves
-4. Define the CEO's reports: CTO, CMO, CFO, etc.
-   - Each gets their own adapter config and role definition
-5. Define their reports: engineers under CTO, marketers under CMO, etc.
-6. Set budgets, define initial strategic tasks
-7. Hit go — agents start their heartbeats and the company runs
+1. 打开 Paperclip，创建一个新公司
+2. 定义公司目标："创建一款 AI 笔记应用，3 个月内实现 100 万美元 MRR"
+3. 创建 CEO
+   - 选择一个适配器（例如，用于 Claude Code 的进程适配器，用于 OpenClaw 的 HTTP 适配器）
+   - 配置适配器（Agent 身份、循环行为、执行设置）
+   - CEO 提出战略分解 → 董事会批准
+4. 定义 CEO 的汇报对象：CTO、CMO、CFO 等
+   - 每个人都有自己的适配器配置和角色定义
+5. 定义他们的汇报对象：CTO 下的工程师、CMO 下的营销人员等
+6. 设置预算，定义初始战略任务
+7. 开始 — Agent 开始心跳，公司开始运行
 
-## Guidelines
+## 指南
 
-There are two runtime modes Paperclip must support:
+Paperclip 必须支持两种运行时模式：
 
-- `local_trusted` (default): single-user local trusted deployment with no login friction
-- `authenticated`: login-required mode that supports both private-network and public deployment exposure policies
+- `local_trusted`（默认）：单用户本地可信部署，无需登录摩擦
+- `authenticated`：需要登录的模式，支持私有网络和公共部署暴露策略
 
-Canonical mode design and command expectations live in `doc/DEPLOYMENT-MODES.md`.
+规范模式设计和命令期望位于 `doc/DEPLOYMENT-MODES.md`。
 
-## Further Detail
+## 进一步细节
 
-See [SPEC.md](./SPEC.md) for the full technical specification and [TASKS.md](./TASKS.md) for the task management data model.
+参见 [SPEC.md](./SPEC.md) 了解完整技术规范，[TASKS.md](./TASKS.md) 了解任务管理数据模型。
 
 ---
 
-Paperclip’s core identity is a **control plane for autonomous AI companies**, centered on **companies, org charts, goals, issues/comments, heartbeats, budgets, approvals, and board governance**. The public docs are also explicit about the current boundaries: **tasks/comments are the built-in communication model**, Paperclip is **not a chatbot**, and it is **not a code review tool**. The roadmap already points toward **easier onboarding, cloud agents, easier agent configuration, plugins, better docs, and ClipMart/ClipHub-style reusable companies/templates**.
+Paperclip 的核心身份是**自主 AI 公司的控制平面**，围绕**公司、组织图、目标、问题/评论、心跳、预算、审批和董事会治理**展开。公开文档也明确说明了当前边界：**任务/评论是内置的通信模型**，Paperclip **不是聊天机器人**，它**也不是代码审查工具**。路线图已经指向**更简单的入职、云 Agent、更简单的 Agent 配置、插件、更好的文档以及 ClipMart/ClipHub 风格的可重用公司/模板**。
 
-## What Paperclip should do vs. not do
+## Paperclip 应该做什么 vs 不应该做什么
 
-**Do**
+**应该做**
 
-- Stay **board-level and company-level**. Users should manage goals, orgs, budgets, approvals, and outputs.
-- Make the first five minutes feel magical: install, answer a few questions, see a CEO do something real.
-- Keep work anchored to **issues/comments/projects/goals**, even if the surface feels conversational.
-- Treat **agency / internal team / startup** as the same underlying abstraction with different templates and labels.
-- Make outputs first-class: files, docs, reports, previews, links, screenshots.
-- Provide **hooks into engineering workflows**: worktrees, preview servers, PR links, external review tools.
-- Use **plugins** for edge cases like rich chat, knowledge bases, doc editors, custom tracing.
+- 保持在**董事会层面和公司层面**。用户应该管理目标、组织、预算、审批和输出。
+- 让前五分钟感觉神奇：安装，回答几个问题，看到 CEO 做一件真实的事。
+- 保持工作锚定在**问题/评论/项目/目标**，即使表面感觉像对话一样。
+- 将**代理机构/内部团队/初创公司**视为相同的底层抽象，只是模板和标签不同。
+- 让输出成为一流：文件、文档、报告、预览、链接、截图。
+- 提供**接入工程工作流的钩子**：工作树、预览服务器、PR 链接、外部审查工具。
+- 使用**插件**处理边缘情况，如富聊天、知识库、文档编辑器、自定义追踪。
 
-**Do not**
+**不应该做**
 
-- Do not make the core product a general chat app. The current product definition is explicitly task/comment-centric and “not a chatbot,” and that boundary is valuable.
-- Do not build a complete Jira/GitHub replacement. The repo/docs already position Paperclip as organization orchestration, not focused on pull-request review.
-- Do not build enterprise-grade RBAC first. The current V1 spec still treats multi-board governance and fine-grained human permissions as out of scope, so the first multi-user version should be coarse and company-scoped.
-- Do not lead with raw bash logs and transcripts. Default view should be human-readable intent/progress, with raw detail beneath.
-- Do not force users to understand provider/API-key plumbing unless absolutely necessary. There are active onboarding/auth issues already; friction here is clearly real.
+- 不要把核心产品做成通用聊天应用。当前产品定义明确以任务/评论为中心，且"不是聊天机器人"，这个边界是有价值的。
+- 不要构建完整的 Jira/GitHub 替代品。repo/docs 已经将 Paperclip 定位为组织编排，而不是专注于 pull-request 审查。
+- 不要首先构建企业级 RBAC。当前 V1 规范仍将多董事会治理和细粒度人类权限视为超出范围，因此第一个多用户版本应该是粗粒度和公司范围的。
+- 不要用原始 bash 日志和 transcript 领先。默认视图应该是人类可读的意图/进度，原始细节隐藏在下面。
+- 不要强迫用户理解 provider/API-key 机制，除非绝对必要。已经有活跃的入职/认证问题；这里的摩擦是真实存在的。
 
-## Specific design goals
+## 具体设计目标
 
-1. **Time-to-first-success under 5 minutes**
-   A fresh user should go from install to “my CEO completed a first task” in one sitting.
+1. **首次成功时间在 5 分钟以内**
+   新用户应该从安装到"我的 CEO 完成了第一个任务"一气呵成。
 
-2. **Board-level abstraction always wins**
-   The default UI should answer: what is the company doing, who is doing it, why does it matter, what did it cost, and what needs my approval.
+2. **董事会级抽象始终优先**
+   默认 UI 应该回答：公司正在做什么，谁在做，为什么重要，花费了什么，需要我审批什么。
 
-3. **Conversation stays attached to work objects**
-   “Chat with CEO” should still resolve to strategy threads, decisions, tasks, or approvals.
+3. **对话始终附加到工作对象**
+   "与 CEO 聊天"仍然应该归结为战略讨论、决策、任务或审批。
 
-4. **Progressive disclosure**
-   Top layer: human-readable summary. Middle layer: checklist/steps/artifacts. Bottom layer: raw logs/tool calls/transcript.
+4. **渐进式披露**
+   顶层：人类可读的摘要。中间层：清单/步骤/产物。底层：原始日志/工具调用/transcript。
 
-5. **Output-first**
-   Work is not done until the user can see the result: file, document, preview link, screenshot, plan, or PR.
+5. **输出优先**
+   工作在用户能看到结果之前不算完成：文件、文档、预览链接、截图、计划或 PR。
 
-6. **Local-first, cloud-ready**
-   The mental model should not change between local solo use and shared/private or public/cloud deployment.
+6. **本地优先，云就绪**
+   心理模型在本地单人使用和共享/私有或公共/云部署之间不应改变。
 
-7. **Safe autonomy**
-   Auto mode is allowed; hidden token burn is not.
+7. **安全自主**
+   自动模式是允许的；隐藏的 token 消耗不是。
 
-8. **Thin core, rich edges**
-   Put optional chat, knowledge, and special surfaces into plugins/extensions rather than bloating the control plane.
+8. **薄核心，丰富的边缘**
+   将可选聊天、知识和特殊表面放入插件/扩展，而不是让控制平面膨胀。
+
+（文件结束 — 共 146 行）
