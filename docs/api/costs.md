@@ -1,11 +1,11 @@
 ---
-title: Costs
-summary: Cost events, summaries, and budget management
+title: 成本
+summary: 成本事件、摘要和预算管理
 ---
 
-Track token usage and spending across agents, projects, and the company.
+跨智能体、项目和公司跟踪 token 使用和支出。
 
-## Report Cost Event
+## 报告成本事件
 
 ```
 POST /api/companies/{companyId}/cost-events
@@ -19,53 +19,53 @@ POST /api/companies/{companyId}/cost-events
 }
 ```
 
-Typically reported automatically by adapters after each heartbeat.
+通常由适配器在每次心跳后自动报告。
 
-## Company Cost Summary
+## 公司成本摘要
 
 ```
 GET /api/companies/{companyId}/costs/summary
 ```
 
-Returns total spend, budget, and utilization for the current month.
+返回当月的总支出、预算和利用率。
 
-## Costs by Agent
+## 按智能体成本
 
 ```
 GET /api/companies/{companyId}/costs/by-agent
 ```
 
-Returns per-agent cost breakdown for the current month.
+返回当月每个智能体的成本分解。
 
-## Costs by Project
+## 按项目成本
 
 ```
 GET /api/companies/{companyId}/costs/by-project
 ```
 
-Returns per-project cost breakdown for the current month.
+返回当月每个项目的成本分解。
 
-## Budget Management
+## 预算管理
 
-### Set Company Budget
+### 设置公司预算
 
 ```
 PATCH /api/companies/{companyId}
 { "budgetMonthlyCents": 100000 }
 ```
 
-### Set Agent Budget
+### 设置智能体预算
 
 ```
 PATCH /api/agents/{agentId}
 { "budgetMonthlyCents": 5000 }
 ```
 
-## Budget Enforcement
+## 预算执行
 
-| Threshold | Effect |
+| 阈值 | 效果 |
 |-----------|--------|
-| 80% | Soft alert — agent should focus on critical tasks |
-| 100% | Hard stop — agent is auto-paused |
+| 80% | 软警报——智能体应该只关注关键任务 |
+| 100% | 硬性停止——智能体自动暂停 |
 
-Budget windows reset on the first of each month (UTC).
+预算窗口在每月第一天（UTC）重置。
