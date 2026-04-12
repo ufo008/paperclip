@@ -418,7 +418,16 @@
     "atMinute": "于分钟",
     "on": "于",
     "onDay": "于日期",
-    "cronFieldsHint": "五个字段：分钟 小时 日 月 周"
+    "cronFieldsHint": "五个字段：分钟 小时 日 月 周",
+    "am": "上午",
+    "pm": "下午",
+    "mon": "周一",
+    "tue": "周二",
+    "wed": "周三",
+    "thu": "周四",
+    "fri": "周五",
+    "sat": "周六",
+    "sun": "周日"
   },
   "routineVariables": {
     "variables": "变量",

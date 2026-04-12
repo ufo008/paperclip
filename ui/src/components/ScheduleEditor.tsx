@@ -163,6 +163,23 @@ export function ScheduleEditor({
   const [dayOfMonth, setDayOfMonth] = useState(parsed.dayOfMonth);
   const [customCron, setCustomCron] = useState(preset === "custom" ? value : "");
 
+  const hours = useMemo(() =>
+    Array.from({ length: 24 }, (_, i) => ({
+      value: String(i),
+      label: i === 0 ? `12 ${t('scheduleEditor.am')}` : i < 12 ? `${i} ${t('scheduleEditor.am')}` : i === 12 ? `12 ${t('scheduleEditor.pm')}` : `${i - 12} ${t('scheduleEditor.pm')}`,
+    })),
+  [t]);
+
+  const daysOfWeek = useMemo(() => [
+    { value: "1", label: t('scheduleEditor.mon') },
+    { value: "2", label: t('scheduleEditor.tue') },
+    { value: "3", label: t('scheduleEditor.wed') },
+    { value: "4", label: t('scheduleEditor.thu') },
+    { value: "5", label: t('scheduleEditor.fri') },
+    { value: "6", label: t('scheduleEditor.sat') },
+    { value: "0", label: t('scheduleEditor.sun') },
+  ], [t]);
+
   // Sync from external value changes
   useEffect(() => {
     const p = parseCronToPreset(value);
@@ -240,7 +257,7 @@ export function ScheduleEditor({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {HOURS.map((h) => (
+                  {hours.map((h) => (
                     <SelectItem key={h.value} value={h.value}>
                       {h.label}
                     </SelectItem>
@@ -297,7 +314,7 @@ export function ScheduleEditor({
             <>
               <span className="text-sm text-muted-foreground">{t('scheduleEditor.on')}</span>
               <div className="flex gap-1">
-                {DAYS_OF_WEEK.map((d) => (
+                {daysOfWeek.map((d) => (
                   <Button
                     key={d.value}
                     type="button"
