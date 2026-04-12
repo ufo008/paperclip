@@ -163,7 +163,11 @@
     "low": "低",
     "projectDefault": "项目默认",
     "newIsolatedWorkspace": "新建隔离工作区",
-    "reuseExistingWorkspace": "复用现有工作区"
+    "reuseExistingWorkspace": "复用现有工作区",
+    "noWorkspace": "无工作区",
+    "noParent": "无父工单",
+    "unassigned": "未分配",
+    "user": "用户"
   },
   "agents": {
     "title": "智能体",
