@@ -86,8 +86,8 @@ export function NewAgentDialog() {
     closeNewAgent();
     openNewIssue({
       assigneeAgentId: ceoAgent?.id,
-      title: "Create a new agent",
-      description: "(type in what kind of agent you want here)",
+      title: t("agents.createNewAgent"),
+      description: t("agents.createNewAgentDescription"),
     });
   }
 
@@ -117,7 +117,7 @@ export function NewAgentDialog() {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-          <span className="text-sm text-muted-foreground">Add a new agent</span>
+          <span className="text-sm text-muted-foreground">{t("agents.addNewAgent")}</span>
           <Button
             variant="ghost"
             size="icon-xs"
