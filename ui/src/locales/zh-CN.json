@@ -154,12 +154,16 @@
     "recent": "最近",
     "todo": "待办",
     "inProgress": "进行中",
+    "in_review": "进行中",
     "inReview": "审核中",
     "cancelled": "已取消",
     "critical": "紧急",
     "high": "高",
     "medium": "中",
-    "low": "低"
+    "low": "低",
+    "projectDefault": "项目默认",
+    "newIsolatedWorkspace": "新建隔离工作区",
+    "reuseExistingWorkspace": "复用现有工作区"
   },
   "agents": {
     "title": "智能体",
