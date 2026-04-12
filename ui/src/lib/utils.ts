@@ -56,7 +56,7 @@ export function formatTokens(n: number): string {
   return String(n);
 }
 
-/** Map a raw provider slug to a display-friendly name. */
+/** 将原始提供商标识符映射到易于显示的名称。 */
 export function providerDisplayName(provider: string): string {
   const map: Record<string, string> = {
     anthropic: "Anthropic",
@@ -150,35 +150,35 @@ export function financeDirectionDisplayName(direction: FinanceDirection): string
   return direction === "credit" ? "Credit" : "Debit";
 }
 
-/** Build an issue URL using the human-readable identifier when available. */
+/** 使用人类可读的标识符构建工单 URL（如果有）。 */
 export function issueUrl(issue: { id: string; identifier?: string | null }): string {
   return `/issues/${issue.identifier ?? issue.id}`;
 }
 
-/** Build an agent route URL using the short URL key when available. */
+/** 使用短 URL 键构建智能体路由 URL（如果有）。 */
 export function agentRouteRef(agent: { id: string; urlKey?: string | null; name?: string | null }): string {
   return agent.urlKey ?? deriveAgentUrlKey(agent.name, agent.id);
 }
 
-/** Build an agent URL using the short URL key when available. */
+/** 使用短 URL 键构建智能体 URL（如果有）。 */
 export function agentUrl(agent: { id: string; urlKey?: string | null; name?: string | null }): string {
   return `/agents/${agentRouteRef(agent)}`;
 }
 
-/** Build a project route reference, falling back to UUID when the derived key is ambiguous. */
+/** 构建项目路由引用，在派生的键不明确时回退到 UUID。 */
 export function projectRouteRef(project: { id: string; urlKey?: string | null; name?: string | null }): string {
   const key = project.urlKey ?? deriveProjectUrlKey(project.name, project.id);
-  // Guard for rolling deploys or legacy data where the server returned a bare slug without UUID suffix.
+  // 防护：用于滚动部署或遗留数据，此时服务器返回的是没有 UUID 后缀的裸露 slug。
   if (key === normalizeProjectUrlKey(project.name) && hasNonAsciiContent(project.name)) return project.id;
   return key;
 }
 
-/** Build a project URL using the short URL key when available. */
+/** 使用短 URL 键构建项目 URL（如果有）。 */
 export function projectUrl(project: { id: string; urlKey?: string | null; name?: string | null }): string {
   return `/projects/${projectRouteRef(project)}`;
 }
 
-/** Build a project workspace URL scoped under its project. */
+/** 在其项目下构建项目工作区 URL。 */
 export function projectWorkspaceUrl(
   project: { id: string; urlKey?: string | null; name?: string | null },
   workspaceId: string,

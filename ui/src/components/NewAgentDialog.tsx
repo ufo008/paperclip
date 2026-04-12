@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@/lib/router";
 import { useDialog } from "../context/DialogContext";
@@ -31,6 +32,7 @@ function isAgentAdapterType(type: string): boolean {
 }
 
 export function NewAgentDialog() {
+  const { t } = useTranslation();
   const { newAgentOpen, closeNewAgent, openNewIssue } = useDialog();
   const { selectedCompanyId } = useCompany();
   const navigate = useNavigate();
@@ -167,7 +169,7 @@ export function NewAgentDialog() {
                   onClick={() => setShowAdvancedCards(false)}
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  Back
+                  {t('app.back')}
                 </button>
                 <p className="text-sm text-muted-foreground">
                   Choose your adapter type for advanced setup.

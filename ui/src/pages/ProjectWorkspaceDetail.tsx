@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "@/lib/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isUuidLike, type ProjectWorkspace } from "@paperclipai/shared";
@@ -209,6 +210,7 @@ function DetailRow({ label, children }: { label: string; children: React.ReactNo
 }
 
 export function ProjectWorkspaceDetail() {
+  const { t } = useTranslation();
   const { companyPrefix, projectId, workspaceId } = useParams<{
     companyPrefix?: string;
     projectId: string;
@@ -357,11 +359,11 @@ export function ProjectWorkspaceDetail() {
         <Button variant="ghost" size="sm" asChild>
           <Link to={`/projects/${canonicalProjectRef}/workspaces`}>
             <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to workspaces
+            {t("projectWorkspace.backToWorkspaces")}
           </Link>
         </Button>
         <div className="inline-flex items-center rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground">
-          {workspace.isPrimary ? "Primary workspace" : "Secondary workspace"}
+          {workspace.isPrimary ? t("projectWorkspace.primaryWorkspace") : t("projectWorkspace.secondaryWorkspace")}
         </div>
       </div>
 
@@ -371,13 +373,11 @@ export function ProjectWorkspaceDetail() {
             <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
               <div className="space-y-2">
                 <div className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  Project workspace
+                  {t("projectWorkspace.projectWorkspace")}
                 </div>
                 <h1 className="text-2xl font-semibold">{workspace.name}</h1>
                 <p className="max-w-2xl text-sm text-muted-foreground">
-                  Configure the concrete workspace Paperclip attaches to this project. These values drive per-workspace
-                  checkout behavior, default runtime services for child execution workspaces, and let you override setup
-                  or cleanup commands when one workspace needs special handling.
+                  {t("projectWorkspace.configureDescription")}
                 </p>
               </div>
               {!workspace.isPrimary ? (
@@ -390,12 +390,12 @@ export function ProjectWorkspaceDetail() {
                   {setPrimaryWorkspace.isPending
                     ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     : <Check className="mr-2 h-4 w-4" />}
-                  Make primary
+                  {t("projectWorkspace.makePrimary")}
                 </Button>
               ) : (
                 <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300 sm:max-w-sm">
                   <Sparkles className="h-4 w-4" />
-                  This is the project’s primary codebase workspace.
+                  {t("projectWorkspace.primaryWorkspaceMessage")}
                 </div>
               )}
             </div>

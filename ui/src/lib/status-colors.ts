@@ -1,15 +1,15 @@
 /**
- * Canonical status & priority color definitions.
+ * 规范的 status 和 priority 颜色定义。
  *
- * Every component that renders a status indicator (StatusIcon, StatusBadge,
- * agent status dots, etc.) should import from here so colors stay consistent.
+ * 每个渲染状态指示器的组件（StatusIcon、StatusBadge、
+ * 智能体状态点等）都应该从这里导入颜色，以保持一致性。
  */
 
 // ---------------------------------------------------------------------------
-// Issue status colors
+// 工单状态颜色
 // ---------------------------------------------------------------------------
 
-/** StatusIcon circle: text + border classes */
+/** StatusIcon 圆圈：文本 + 边框类 */
 export const issueStatusIcon: Record<string, string> = {
   backlog: "text-muted-foreground border-muted-foreground",
   todo: "text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400",
@@ -22,7 +22,7 @@ export const issueStatusIcon: Record<string, string> = {
 
 export const issueStatusIconDefault = "text-muted-foreground border-muted-foreground";
 
-/** Text-only color for issue statuses (dropdowns, labels) */
+/** 仅文本颜色，用于工单状态（下拉框、标签） */
 export const issueStatusText: Record<string, string> = {
   backlog: "text-muted-foreground",
   todo: "text-blue-600 dark:text-blue-400",
@@ -36,23 +36,23 @@ export const issueStatusText: Record<string, string> = {
 export const issueStatusTextDefault = "text-muted-foreground";
 
 // ---------------------------------------------------------------------------
-// Badge colors — used by StatusBadge for all entity types
+// 徽章颜色 — 由 StatusBadge 用于所有实体类型
 // ---------------------------------------------------------------------------
 
 export const statusBadge: Record<string, string> = {
-  // Agent statuses
+  // 智能体状态
   active: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
   running: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300",
   paused: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300",
   idle: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300",
   archived: "bg-muted text-muted-foreground",
 
-  // Goal statuses
+  // 目标状态
   planned: "bg-muted text-muted-foreground",
   achieved: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
   completed: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
 
-  // Run statuses
+  // 运行状态
   failed: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
   timed_out: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300",
   succeeded: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
@@ -60,13 +60,13 @@ export const statusBadge: Record<string, string> = {
   terminated: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
   pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300",
 
-  // Approval statuses
+  // 审批状态
   pending_approval: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
   revision_requested: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
   approved: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
   rejected: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
 
-  // Issue statuses — consistent hues with issueStatusIcon above
+  // 工单状态 — 与上面的 issueStatusIcon 颜色一致
   backlog: "bg-muted text-muted-foreground",
   todo: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
   in_progress: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300",
@@ -79,7 +79,7 @@ export const statusBadge: Record<string, string> = {
 export const statusBadgeDefault = "bg-muted text-muted-foreground";
 
 // ---------------------------------------------------------------------------
-// Agent status dot — solid background for small indicator dots
+// 智能体状态点 — 用于小指示器点的纯色背景
 // ---------------------------------------------------------------------------
 
 export const agentStatusDot: Record<string, string> = {

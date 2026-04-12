@@ -58,7 +58,7 @@ export function parseAssigneeValue(value: string): AssigneeSelection {
     const assigneeUserId = value.slice("user:".length);
     return { assigneeAgentId: null, assigneeUserId: assigneeUserId || null };
   }
-  // Backward compatibility for older drafts/defaults that stored a raw agent id.
+  // 向后兼容：用于存储原始智能体 ID 的旧草稿/默认值。
   return { assigneeAgentId: value, assigneeUserId: null };
 }
 

@@ -13,9 +13,9 @@ export const PRESET_LABELS: Record<DatePreset, string> = {
 
 export const PRESET_KEYS: DatePreset[] = ["mtd", "7d", "30d", "ytd", "all", "custom"];
 
-// note: computeRange is called inside a useMemo that re-evaluates once per minute
-// (driven by minuteTick). this means sliding windows (7d, 30d) advance their upper
-// bound at most once per minute — acceptable for a cost dashboard.
+// 注意：computeRange 在 useMemo 内部调用，每分钟重新评估一次
+//（由 minuteTick 驱动）。这意味着滑动窗口（7d、30d）的上限
+// 最多每分钟推进一次 — 对于成本仪表板来说是可以接受的。
 function computeRange(preset: DatePreset): { from: string; to: string } {
   const now = new Date();
   const to = now.toISOString();
@@ -42,8 +42,8 @@ function computeRange(preset: DatePreset): { from: string; to: string } {
   }
 }
 
-// floor a Date to the nearest minute so the query key is stable across
-// 30s refetch ticks (prevents new cache entries on every poll cycle)
+// 将 Date 向下取整到最接近的分钟，以便查询键在
+// 30 秒重新获取 tick 之间保持稳定（防止每个轮询周期创建新的缓存条目）
 function floorToMinute(d: Date): string {
   const floored = new Date(d);
   floored.setSeconds(0, 0);
@@ -57,10 +57,10 @@ export interface UseDateRangeResult {
   setCustomFrom: (v: string) => void;
   customTo: string;
   setCustomTo: (v: string) => void;
-  /** resolved iso strings ready to pass to api calls; empty string means unbounded */
+  /** 已解析的 ISO 字符串，准备传递给 API 调用；空字符串表示无限制 */
   from: string;
   to: string;
-  /** false when preset=custom but both dates are not yet selected */
+  /** 当 preset=custom 但两个日期都尚未选择时为 false */
   customReady: boolean;
 }
 
@@ -69,9 +69,9 @@ export function useDateRange(): UseDateRangeResult {
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
 
-  // tick at the next calendar minute boundary, then every 60s, so sliding presets
-  // (7d, 30d) advance their upper bound in sync with wall clock minutes rather than
-  // drifting by the mount offset.
+  // 在下一个日历分钟边界 tick，然后每 60 秒 tick 一次，这样滑动预设
+  //（7d、30d）可以与挂钟分钟同步推进其上限，而不是
+  // 随着月份偏移而漂移。
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [minuteTick, setMinuteTick] = useState(() => floorToMinute(new Date()));
   useEffect(() => {
@@ -92,15 +92,15 @@ export function useDateRange(): UseDateRangeResult {
 
   const { from, to } = useMemo(() => {
     if (preset !== "custom") return computeRange(preset);
-    // treat custom date strings as local-date boundaries so the full day is included
-    // regardless of the user's timezone. "from" starts at local midnight, "to" at 23:59:59.999.
+    // 将自定义日期字符串作为本地日期边界处理，以包含完整的一天
+    // 而不管用户的时区如何。"from" 从本地午夜开始，"to" 到 23:59:59.999。
     const fromDate = customFrom ? new Date(customFrom + "T00:00:00") : null;
     const toDate = customTo ? new Date(customTo + "T23:59:59.999") : null;
     return {
       from: fromDate ? fromDate.toISOString() : "",
       to: toDate ? toDate.toISOString() : "",
     };
-  // minuteTick drives re-evaluation of sliding presets once per minute.
+  // minuteTick 每分钟驱动滑动预设的重新计算。
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset, customFrom, customTo, minuteTick]);
 

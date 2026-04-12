@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PatchInstanceGeneralSettings, BackupRetentionPolicy } from "@paperclipai/shared";
@@ -7,7 +8,7 @@ import {
   MONTHLY_RETENTION_PRESETS,
   DEFAULT_BACKUP_RETENTION,
 } from "@paperclipai/shared";
-import { LogOut, SlidersHorizontal } from "lucide-react";
+import { LogOut, SlidersHorizontal, Globe } from "lucide-react";
 import { authApi } from "@/api/auth";
 import { instanceSettingsApi } from "@/api/instanceSettings";
 import { Button } from "../components/ui/button";
@@ -15,12 +16,15 @@ import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { queryKeys } from "../lib/queryKeys";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { cn } from "../lib/utils";
+import { useLanguage } from "../hooks/useLanguage";
 
 const FEEDBACK_TERMS_URL = import.meta.env.VITE_FEEDBACK_TERMS_URL?.trim() || "https://paperclip.ing/tos";
 
 export function InstanceGeneralSettings() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  const { currentLanguage, languages, switchLanguage, isI18nextReady } = useLanguage();
   const [actionError, setActionError] = useState<string | null>(null);
 
   const signOutMutation = useMutation({
@@ -80,7 +84,7 @@ export function InstanceGeneralSettings() {
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-semibold">General</h1>
+          <h1 className="text-lg font-semibold">{t('settings.general')}</h1>
         </div>
         <p className="text-sm text-muted-foreground">
           Configure instance-wide defaults that affect how operator-visible logs are displayed.
@@ -128,6 +132,38 @@ export function InstanceGeneralSettings() {
             aria-label="Toggle keyboard shortcuts"
           />
         </div>
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-5">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">{t('settings.language') || 'Language'}</h2>
+          </div>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            Select your preferred language for the interface.
+          </p>
+        </div>
+        {isI18nextReady && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                type="button"
+                disabled={updateGeneralMutation.isPending}
+                className={cn(
+                  "rounded-lg border px-3 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+                  lang.code === currentLanguage
+                    ? "border-foreground bg-accent text-foreground"
+                    : "border-border bg-background hover:bg-accent/50",
+                )}
+                onClick={() => switchLanguage(lang.code)}
+              >
+                <div className="text-sm font-medium">{lang.name}</div>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5">

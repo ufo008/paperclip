@@ -59,7 +59,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     [companies],
   );
 
-  // Auto-select first company when list loads
+  // 列表加载时自动选择第一个公司
   useEffect(() => {
     if (companies.length === 0) return;
 

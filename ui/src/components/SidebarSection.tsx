@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 interface SidebarSectionProps {
   label: string;
@@ -6,6 +7,7 @@ interface SidebarSectionProps {
 }
 
 export function SidebarSection({ label, children }: SidebarSectionProps) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-widest font-mono text-muted-foreground/60">

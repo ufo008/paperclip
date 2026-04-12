@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "@/lib/router";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { authApi } from "../api/auth";
 import { queryKeys } from "../lib/queryKeys";
 
 export function CliAuthPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const params = useParams();
   const [searchParams] = useSearchParams();
@@ -45,11 +47,11 @@ export function CliAuthPage() {
   });
 
   if (!challengeId || !token) {
-    return <div className="mx-auto max-w-xl py-10 text-sm text-destructive">Invalid CLI auth URL.</div>;
+    return <div className="mx-auto max-w-xl py-10 text-sm text-destructive">{t("errors.validationError")}</div>;
   }
 
   if (sessionQuery.isLoading || challengeQuery.isLoading) {
-    return <div className="mx-auto max-w-xl py-10 text-sm text-muted-foreground">Loading CLI auth challenge...</div>;
+    return <div className="mx-auto max-w-xl py-10 text-sm text-muted-foreground">{t("app.loading")}</div>;
   }
 
   if (challengeQuery.error) {
@@ -58,7 +60,7 @@ export function CliAuthPage() {
         <div className="rounded-lg border border-border bg-card p-6">
           <h1 className="text-lg font-semibold">CLI auth challenge unavailable</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {challengeQuery.error instanceof Error ? challengeQuery.error.message : "Challenge is invalid or expired."}
+            {challengeQuery.error instanceof Error ? challengeQuery.error.message : t("errors.validationError")}
           </p>
         </div>
       </div>
@@ -105,12 +107,12 @@ export function CliAuthPage() {
     return (
       <div className="mx-auto max-w-xl py-10">
         <div className="rounded-lg border border-border bg-card p-6">
-          <h1 className="text-xl font-semibold">Sign in required</h1>
+          <h1 className="text-xl font-semibold">{t("errors.unauthorized")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in or create an account, then return to this page to approve the CLI access request.
+            {t("errors.unauthorizedMessage")}
           </p>
           <Button asChild className="mt-4">
-            <Link to={`/auth?next=${encodeURIComponent(currentPath)}`}>Sign in / Create account</Link>
+            <Link to={`/auth?next=${encodeURIComponent(currentPath)}`}>{t("auth.signIn")}</Link>
           </Button>
         </div>
       </div>
@@ -152,7 +154,7 @@ export function CliAuthPage() {
           <p className="mt-4 text-sm text-destructive">
             {(approveMutation.error ?? cancelMutation.error) instanceof Error
               ? ((approveMutation.error ?? cancelMutation.error) as Error).message
-              : "Failed to update CLI auth challenge"}
+              : t("errors.serverError")}
           </p>
         )}
 
@@ -167,7 +169,7 @@ export function CliAuthPage() {
             onClick={() => approveMutation.mutate()}
             disabled={!challenge.canApprove || approveMutation.isPending || cancelMutation.isPending}
           >
-            {approveMutation.isPending ? "Approving..." : "Approve CLI access"}
+            {approveMutation.isPending ? t("app.loading") : "Approve CLI access"}
           </Button>
           <Button
             type="button"
@@ -175,7 +177,7 @@ export function CliAuthPage() {
             onClick={() => cancelMutation.mutate()}
             disabled={approveMutation.isPending || cancelMutation.isPending}
           >
-            {cancelMutation.isPending ? "Cancelling..." : "Cancel"}
+            {cancelMutation.isPending ? t("app.loading") : t("app.cancel")}
           </Button>
         </div>
       </div>

@@ -54,7 +54,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
-      // Ignore local storage write failures in restricted environments.
+      // 在受限环境中忽略 localStorage 写入失败。
     }
   }, [theme]);
 

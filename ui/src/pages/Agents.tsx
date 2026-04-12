@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useLocation } from "@/lib/router";
 import { useQuery } from "@tanstack/react-query";
 import { agentsApi, type OrgNode } from "../api/agents";
@@ -54,6 +55,7 @@ function filterOrgTree(nodes: OrgNode[], tab: FilterTab, showTerminated: boolean
 }
 
 export function Agents() {
+  const { t } = useTranslation();
   const { selectedCompanyId } = useCompany();
   const { openNewAgent } = useDialog();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -109,7 +111,7 @@ export function Agents() {
   }, [agents]);
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Agents" }]);
+    setBreadcrumbs([{ label: t('agents.title') }]);
   }, [setBreadcrumbs]);
 
   if (!selectedCompanyId) {
@@ -129,10 +131,10 @@ export function Agents() {
         <Tabs value={tab} onValueChange={(v) => navigate(`/agents/${v}`)}>
           <PageTabBar
             items={[
-              { value: "all", label: "All" },
-              { value: "active", label: "Active" },
-              { value: "paused", label: "Paused" },
-              { value: "error", label: "Error" },
+              { value: "all", label: t('agents.all') },
+              { value: "active", label: t('agents.active') },
+              { value: "paused", label: t('agents.paused') },
+              { value: "error", label: t('agents.error') },
             ]}
             value={tab}
             onValueChange={(v) => navigate(`/agents/${v}`)}
@@ -194,7 +196,7 @@ export function Agents() {
           )}
           <Button size="sm" variant="outline" onClick={openNewAgent}>
             <Plus className="h-3.5 w-3.5 mr-1.5" />
-            New Agent
+            {t('agents.newAgent')}
           </Button>
         </div>
       </div>
@@ -209,7 +211,7 @@ export function Agents() {
         <EmptyState
           icon={Bot}
           message="Create your first agent to get started."
-          action="New Agent"
+          action={t('agents.newAgent')}
           onAction={openNewAgent}
         />
       )}

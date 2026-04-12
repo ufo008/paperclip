@@ -15,7 +15,7 @@ function getCompanyPaths(): Record<string, string> {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {
-    /* ignore */
+    /* 忽略 */
   }
   return {};
 }
@@ -27,8 +27,8 @@ function saveCompanyPath(companyId: string, path: string) {
 }
 
 /**
- * Remembers the last visited page per company and navigates to it on company switch.
- * Falls back to /dashboard if no page was previously visited for a company.
+ * 记住每个公司最近访问的页面，并在切换公司时导航到该页面。
+ * 如果公司之前没有访问过任何页面，则回退到 /dashboard。
  */
 export function useCompanyPageMemory() {
   const { companies, selectedCompanyId, selectedCompany, selectionSource } = useCompany();
@@ -45,9 +45,9 @@ export function useCompanyPageMemory() {
     [companies, location.pathname],
   );
 
-  // Save current path for current company on every location change.
-  // Uses prevCompanyId ref so we save under the correct company even
-  // during the render where selectedCompanyId has already changed.
+  // 每次位置更改时保存当前公司当前路径。
+  // 使用 prevCompanyId ref，这样即使在 selectedCompanyId 已更改的
+  // 渲染过程中，我们也能保存到正确的公司下。
   const fullPath = location.pathname + location.search;
   useEffect(() => {
     const companyId = rememberedPathOwnerCompanyId;
@@ -57,7 +57,7 @@ export function useCompanyPageMemory() {
     }
   }, [fullPath, rememberedPathOwnerCompanyId]);
 
-  // Navigate to saved path when company changes
+  // 切换公司时导航到保存的路径
   useEffect(() => {
     if (!selectedCompanyId) return;
 

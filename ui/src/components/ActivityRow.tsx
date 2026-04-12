@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "@/lib/router";
 import { Identity } from "./Identity";
 import { timeAgo } from "../lib/timeAgo";
@@ -25,6 +26,7 @@ interface ActivityRowProps {
 }
 
 export function ActivityRow({ event, agentMap, entityNameMap, entityTitleMap, className }: ActivityRowProps) {
+  const { t } = useTranslation();
   const verb = formatActivityVerb(event.action, event.details, { agentMap });
 
   const isHeartbeatEvent = event.entityType === "heartbeat_run";

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDateTime } from "../lib/utils";
@@ -191,6 +192,7 @@ function DashboardPreview({
 }
 
 export function RunTranscriptUxLab() {
+  const { t } = useTranslation();
   const [selectedSurface, setSelectedSurface] = useState<SurfaceId>("detail");
   const [detailMode, setDetailMode] = useState<TranscriptMode>("nice");
   const [streaming, setStreaming] = useState(true);

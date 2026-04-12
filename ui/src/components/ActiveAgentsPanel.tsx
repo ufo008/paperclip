@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "@/lib/router";
 import { useQuery } from "@tanstack/react-query";
 import type { Issue } from "@paperclipai/shared";
@@ -23,6 +24,7 @@ interface ActiveAgentsPanelProps {
 }
 
 export function ActiveAgentsPanel({ companyId }: ActiveAgentsPanelProps) {
+  const { t } = useTranslation();
   const { data: liveRuns } = useQuery({
     queryKey: [...queryKeys.liveRuns(companyId), "dashboard"],
     queryFn: () => heartbeatsApi.liveRunsForCompany(companyId, MIN_DASHBOARD_RUNS),

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "@/lib/router";
 import { useQuery } from "@tanstack/react-query";
 import { agentsApi, type OrgNode } from "../api/agents";
@@ -131,6 +132,7 @@ const defaultDotColor = "#a3a3a3";
 // ── Main component ──────────────────────────────────────────────────────
 
 export function OrgChart() {
+  const { t } = useTranslation();
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
   const navigate = useNavigate();
@@ -154,8 +156,8 @@ export function OrgChart() {
   }, [agents]);
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Org Chart" }]);
-  }, [setBreadcrumbs]);
+    setBreadcrumbs([{ label: t("sidebar.org") }]);
+  }, [setBreadcrumbs, t]);
 
   // Layout computation
   const layout = useMemo(() => layoutForest(orgTree ?? []), [orgTree]);
@@ -247,7 +249,7 @@ export function OrgChart() {
   }, [zoom, pan]);
 
   if (!selectedCompanyId) {
-    return <EmptyState icon={Network} message="Select a company to view the org chart." />;
+    return <EmptyState icon={Network} message={t("dashboard.createOrSelect")} />;
   }
 
   if (isLoading) {
@@ -255,7 +257,7 @@ export function OrgChart() {
   }
 
   if (orgTree && orgTree.length === 0) {
-    return <EmptyState icon={Network} message="No organizational hierarchy defined." />;
+    return <EmptyState icon={Network} message={t("errors.notFound")} />;
   }
 
   return (
@@ -264,13 +266,13 @@ export function OrgChart() {
       <Link to="/company/import">
         <Button variant="outline" size="sm">
           <Upload className="mr-1.5 h-3.5 w-3.5" />
-          Import company
+          {t("projects.title")}
         </Button>
       </Link>
       <Link to="/company/export">
         <Button variant="outline" size="sm">
           <Download className="mr-1.5 h-3.5 w-3.5" />
-          Export company
+          {t("projects.title")}
         </Button>
       </Link>
     </div>
@@ -334,8 +336,8 @@ export function OrgChart() {
             setZoom(fitZoom);
             setPan({ x: (cW - chartW) / 2, y: (cH - chartH) / 2 });
           }}
-          title="Fit to screen"
-          aria-label="Fit chart to screen"
+          title={t("dashboard.createOrSelect")}
+          aria-label={t("dashboard.createOrSelect")}
         >
           Fit
         </button>

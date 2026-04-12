@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ChangeEvent, useEffect, useState } from "react";
 import { Link } from "@/lib/router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ export function CompanySettings() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const { pushToast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   // General settings local state
   const [companyName, setCompanyName] = useState("");
   const [description, setDescription] = useState("");
@@ -249,7 +251,7 @@ export function CompanySettings() {
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-2">
         <Settings className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-lg font-semibold">Company Settings</h1>
+        <h1 className="text-lg font-semibold">{t('settings.company')}</h1>
       </div>
 
       {/* General */}

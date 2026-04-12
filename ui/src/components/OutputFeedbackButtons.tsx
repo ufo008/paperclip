@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { FeedbackDataSharingPreference, FeedbackVoteValue } from "@paperclipai/shared";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,7 @@ export function OutputFeedbackButtons({
   rightSlot?: React.ReactNode;
   inline?: boolean;
 }) {
+  const { t } = useTranslation();
   const [pendingVote, setPendingVote] = useState<{
     vote: FeedbackVoteValue;
     reason?: string;
@@ -124,7 +126,7 @@ export function OutputFeedbackButtons({
           onClick={() => handleVote("up")}
         >
           <ThumbsUp className="mr-1.5 h-3.5 w-3.5" />
-          Helpful
+          {t("feedback.helpful")}
         </Button>
         <Button
           type="button"
@@ -135,17 +137,17 @@ export function OutputFeedbackButtons({
           onClick={() => handleVote("down")}
         >
           <ThumbsDown className="mr-1.5 h-3.5 w-3.5" />
-          Needs work
+          {t("feedback.needsWork")}
         </Button>
         {rightSlot ? <div className="ml-auto">{rightSlot}</div> : null}
       </div>
       {collectingDownvoteReason ? (
         <div className="mt-2 rounded-md border border-border/60 bg-accent/20 p-3">
-          <div className="mb-2 text-sm font-medium">What could have been better?</div>
+          <div className="mb-2 text-sm font-medium">{t("feedback.whatCouldBeBetter")}</div>
           <Textarea
             value={downvoteReason}
             onChange={(event) => setDownvoteReason(event.target.value)}
-            placeholder="Add a short note"
+            placeholder={t("feedback.addShortNote")}
             className="min-h-20 resize-y bg-background"
             disabled={disabled || isSaving}
           />
@@ -161,7 +163,7 @@ export function OutputFeedbackButtons({
                 setDownvoteAllowSharing(undefined);
               }}
             >
-              Dismiss
+              {t("app.dismiss")}
             </Button>
             <Button
               type="button"
@@ -174,7 +176,7 @@ export function OutputFeedbackButtons({
                 });
               }}
             >
-              {isSaving ? "Saving..." : "Save note"}
+              {isSaving ? t("app.saving") : t("feedback.saveNote")}
             </Button>
           </div>
         </div>

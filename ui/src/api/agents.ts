@@ -81,8 +81,8 @@ export const agentsApi = {
     try {
       return await api.get<AgentDetail>(agentPath(id, companyId));
     } catch (error) {
-      // Backward-compat fallback: if backend shortname lookup reports ambiguity,
-      // resolve using company agent list while ignoring terminated agents.
+      // 向后兼容回退：如果后端短名称查找报告歧义，
+      // 使用公司智能体列表进行解析，同时忽略已终止的智能体。
       if (
         !(error instanceof ApiError) ||
         error.status !== 409 ||

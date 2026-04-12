@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useSearchParams } from "@/lib/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { issuesApi } from "../api/issues";
@@ -14,6 +15,7 @@ import { IssuesList } from "../components/IssuesList";
 import { CircleDot } from "lucide-react";
 
 export function Issues() {
+  const { t } = useTranslation();
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
   const location = useLocation();
@@ -76,8 +78,8 @@ export function Issues() {
   );
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Issues" }]);
-  }, [setBreadcrumbs]);
+    setBreadcrumbs([{ label: t('issues.title') }]);
+  }, [setBreadcrumbs, t]);
 
   const { data: issues, isLoading, error } = useQuery({
     queryKey: [

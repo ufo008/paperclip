@@ -314,7 +314,7 @@ function buildActivityToast(
 
   if (action === "issue.updated") {
     if (readString(details?.source) === "comment") {
-      // Comment-driven updates emit a paired comment event; show one combined toast on the comment event.
+      // 由评论驱动的更新会发出配对的评论事件；在评论事件上显示一条合并的 toast。
       return null;
     }
     const changeDesc = describeIssueUpdate(details);
@@ -553,8 +553,8 @@ function invalidateActivityQueries(
     queryClient.invalidateQueries({ queryKey: queryKeys.costs(companyId) });
     queryClient.invalidateQueries({ queryKey: queryKeys.usageByProvider(companyId) });
     queryClient.invalidateQueries({ queryKey: queryKeys.usageWindowSpend(companyId) });
-    // usageQuotaWindows is intentionally excluded: quota windows come from external provider
-    // apis on a 5-minute poll and do not change in response to cost events logged by agents
+    // usageQuotaWindows 被故意排除：配额窗口来自外部提供商
+    // API 每 5 分钟轮询一次，不会因智能体记录的成本事件而改变
     return;
   }
 
@@ -689,8 +689,8 @@ function closeSocketQuietly(target: LiveUpdatesSocketLike | null, reason: string
   if (!target) return;
 
   if (target.readyState === SOCKET_CONNECTING) {
-    // Let the handshake complete and then close. Calling close() while the
-    // socket is still CONNECTING is what triggers the noisy browser error.
+    // 让握手完成然后关闭。在
+    // socket 仍处于 CONNECTING 时调用 close() 会触发烦人的浏览器错误。
     target.onopen = () => {
       resetSocketHandlers(target);
       target.close(1000, reason);
@@ -805,13 +805,13 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
             agentId: currentActorRef.current.agentId,
           });
         } catch {
-          // Ignore non-JSON payloads.
+          // 忽略非 JSON 载荷。
         }
       };
 
       nextSocket.onerror = () => {
-        // Wait for onclose to drive the reconnect. Self-closing here is what
-        // produces the "closed before connection established" browser noise.
+        // 等待 onclose 驱动重连。在这里自关闭会产生
+        // "关闭前连接未建立"的浏览器噪音。
       };
 
       nextSocket.onclose = () => {
@@ -822,9 +822,9 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
       };
     };
 
-    // Delay initial connect slightly so React StrictMode's double-invoke
-    // cleanup fires before the WebSocket is created, avoiding the
-    // "WebSocket closed before connection established" dev-mode error.
+    // 稍微延迟初始连接，以便 React StrictMode 的双重调用
+    // 清理在 WebSocket 创建之前触发，避免
+    // "WebSocket closed before connection established" 开发模式错误。
     const connectTimer = window.setTimeout(connect, 0);
 
     return () => {

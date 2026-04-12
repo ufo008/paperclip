@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, Link, Navigate, useBeforeUnload } from "@/lib/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -613,6 +614,7 @@ function WorkspaceOperationsSection({
 }
 
 export function AgentDetail() {
+  const { t } = useTranslation();
   const { companyPrefix, agentId, tab: urlTab, runId: urlRunId } = useParams<{
     companyPrefix?: string;
     agentId: string;
@@ -851,7 +853,7 @@ export function AgentDetail() {
 
   useEffect(() => {
     const crumbs: { label: string; href?: string }[] = [
-      { label: "Agents", href: "/agents" },
+      { label: t('agents.title'), href: "/agents" },
     ];
     const agentName = agent?.name ?? routeAgentRef ?? "Agent";
     if (activeView === "dashboard" && !urlRunId) {
@@ -859,24 +861,24 @@ export function AgentDetail() {
     } else {
       crumbs.push({ label: agentName, href: `/agents/${canonicalAgentRef}/dashboard` });
       if (urlRunId) {
-        crumbs.push({ label: "Runs", href: `/agents/${canonicalAgentRef}/runs` });
+        crumbs.push({ label: t('agents.runs'), href: `/agents/${canonicalAgentRef}/runs` });
         crumbs.push({ label: `Run ${urlRunId.slice(0, 8)}` });
       } else if (activeView === "instructions") {
-        crumbs.push({ label: "Instructions" });
+        crumbs.push({ label: t('agents.instructions') });
       } else if (activeView === "configuration") {
-        crumbs.push({ label: "Configuration" });
+        crumbs.push({ label: t('agents.configuration') });
       // } else if (activeView === "skills") { // TODO: bring back later
-      //   crumbs.push({ label: "Skills" });
+      //   crumbs.push({ label: t('agents.skills') });
       } else if (activeView === "runs") {
-        crumbs.push({ label: "Runs" });
+        crumbs.push({ label: t('agents.runs') });
       } else if (activeView === "budget") {
-        crumbs.push({ label: "Budget" });
+        crumbs.push({ label: t('agents.budget') });
       } else {
-        crumbs.push({ label: "Dashboard" });
+        crumbs.push({ label: t('agents.dashboard') });
       }
     }
     setBreadcrumbs(crumbs);
-  }, [setBreadcrumbs, agent, routeAgentRef, canonicalAgentRef, activeView, urlRunId]);
+  }, [setBreadcrumbs, agent, routeAgentRef, canonicalAgentRef, activeView, urlRunId, t]);
 
   useEffect(() => {
     closePanel();
@@ -1005,12 +1007,12 @@ export function AgentDetail() {
         >
           <PageTabBar
             items={[
-              { value: "dashboard", label: "Dashboard" },
-              { value: "instructions", label: "Instructions" },
-              { value: "skills", label: "Skills" },
-              { value: "configuration", label: "Configuration" },
-              { value: "runs", label: "Runs" },
-              { value: "budget", label: "Budget" },
+              { value: "dashboard", label: t('agents.dashboard') },
+              { value: "instructions", label: t('agents.instructions') },
+              { value: "skills", label: t('agents.skills') },
+              { value: "configuration", label: t('agents.configuration') },
+              { value: "runs", label: t('agents.runs') },
+              { value: "budget", label: t('agents.budget') },
             ]}
             value={activeView}
             onValueChange={(value) => navigate(`/agents/${canonicalAgentRef}/${value}`)}

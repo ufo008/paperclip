@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { pickTextColorForPillBg } from "@/lib/color-contrast";
 import { Link } from "@/lib/router";
 import type { Issue } from "@paperclipai/shared";
@@ -158,6 +159,7 @@ export function IssueProperties({
   onUpdate,
   inline,
 }: IssuePropertiesProps) {
+  const { t } = useTranslation();
   const { selectedCompanyId } = useCompany();
   const queryClient = useQueryClient();
   const companyId = issue.companyId ?? selectedCompanyId;
@@ -769,7 +771,7 @@ export function IssueProperties({
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <PropertyRow label="Status">
+        <PropertyRow label={t('issues.status')}>
           <StatusIcon
             status={issue.status}
             onChange={(status) => onUpdate({ status })}
@@ -777,7 +779,7 @@ export function IssueProperties({
           />
         </PropertyRow>
 
-        <PropertyRow label="Priority">
+        <PropertyRow label={t('issues.priority')}>
           <PriorityIcon
             priority={issue.priority}
             onChange={(priority) => onUpdate({ priority })}
@@ -787,7 +789,7 @@ export function IssueProperties({
 
         <PropertyPicker
           inline={inline}
-          label="Labels"
+          label={t('issues.labels')}
           open={labelsOpen}
           onOpenChange={(open) => { setLabelsOpen(open); if (!open) setLabelSearch(""); }}
           triggerContent={labelsTrigger}
@@ -799,7 +801,7 @@ export function IssueProperties({
 
         <PropertyPicker
           inline={inline}
-          label="Assignee"
+          label={t('issues.assignee')}
           open={assigneeOpen}
           onOpenChange={(open) => { setAssigneeOpen(open); if (!open) setAssigneeSearch(""); }}
           triggerContent={assigneeTrigger}
@@ -819,7 +821,7 @@ export function IssueProperties({
 
         <PropertyPicker
           inline={inline}
-          label="Project"
+          label={t('issues.project')}
           open={projectOpen}
           onOpenChange={(open) => { setProjectOpen(open); if (!open) setProjectSearch(""); }}
           triggerContent={projectTrigger}
@@ -840,7 +842,7 @@ export function IssueProperties({
 
         <PropertyPicker
           inline={inline}
-          label="Blocked by"
+          label={t('issues.blockedBy')}
           open={blockedByOpen}
           onOpenChange={(open) => {
             setBlockedByOpen(open);
@@ -853,7 +855,7 @@ export function IssueProperties({
           {blockedByContent}
         </PropertyPicker>
 
-        <PropertyRow label="Blocking">
+        <PropertyRow label={t('issues.blocks')}>
           {blockingIssues.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {blockingIssues.map((relation) => (
@@ -869,7 +871,7 @@ export function IssueProperties({
           ) : null}
         </PropertyRow>
 
-        <PropertyRow label="Sub-issues">
+        <PropertyRow label={t('issues.subtasks')}>
           <div className="flex flex-wrap items-center gap-1.5">
             {childIssues.length > 0
               ? childIssues.map((child) => (
@@ -1010,10 +1012,10 @@ export function IssueProperties({
             <span className="text-sm">{formatDate(issue.completedAt)}</span>
           </PropertyRow>
         )}
-        <PropertyRow label="Created">
+        <PropertyRow label={t('issues.createdAt')}>
           <span className="text-sm">{formatDate(issue.createdAt)}</span>
         </PropertyRow>
-        <PropertyRow label="Updated">
+        <PropertyRow label={t('issues.updatedAt')}>
           <span className="text-sm">{timeAgo(issue.updatedAt)}</span>
         </PropertyRow>
       </div>

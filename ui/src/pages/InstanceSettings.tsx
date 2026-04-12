@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock3, ExternalLink, Settings } from "lucide-react";
@@ -29,6 +30,7 @@ function buildAgentHref(agent: InstanceSchedulerHeartbeatAgent) {
 export function InstanceSettings() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -168,7 +170,7 @@ export function InstanceSettings() {
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Settings className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-semibold">Scheduler Heartbeats</h1>
+          <h1 className="text-lg font-semibold">{t('settings.heartbeats')}</h1>
         </div>
         <p className="text-sm text-muted-foreground">
           Agents with a timer heartbeat enabled across all of your companies.

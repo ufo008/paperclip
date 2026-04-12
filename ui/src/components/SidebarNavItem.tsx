@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { NavLink } from "@/lib/router";
 import { cn } from "../lib/utils";
 import { useSidebar } from "../context/SidebarContext";
@@ -30,6 +31,7 @@ export function SidebarNavItem({
   alert = false,
   liveCount,
 }: SidebarNavItemProps) {
+  const { t } = useTranslation();
   const { isMobile, setSidebarOpen } = useSidebar();
 
   return (

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { TranscriptEntry } from "../../adapters";
 import { MarkdownBody } from "../MarkdownBody";
 import { cn, formatTokens } from "../../lib/utils";
@@ -1396,6 +1397,7 @@ export function RunTranscriptView({
   className,
   thinkingClassName,
 }: RunTranscriptViewProps) {
+  const { t } = useTranslation();
   const blocks = useMemo(() => normalizeTranscript(entries, streaming), [entries, streaming]);
   const visibleBlocks = limit ? blocks.slice(-limit) : blocks;
   const visibleEntries = limit ? entries.slice(-limit) : entries;

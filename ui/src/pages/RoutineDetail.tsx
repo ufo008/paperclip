@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate, useParams } from "@/lib/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -150,6 +151,7 @@ function TriggerEditor({
   onRotate: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState({
     label: trigger.label ?? "",
     cronExpression: trigger.cronExpression ?? "",
@@ -175,10 +177,10 @@ function TriggerEditor({
         </div>
         <span className="text-xs text-muted-foreground">
           {trigger.kind === "schedule" && trigger.nextRunAt
-            ? `Next: ${new Date(trigger.nextRunAt).toLocaleString()}`
+            ? `${t('routines.next')}: ${new Date(trigger.nextRunAt).toLocaleString()}`
             : trigger.kind === "webhook"
-              ? "Webhook"
-              : "API"}
+              ? t('routines.webhook')
+              : t('routines.api')}
         </span>
       </div>
 
@@ -262,6 +264,7 @@ function TriggerEditor({
 }
 
 export function RoutineDetail() {
+  const { t } = useTranslation();
   const { routineId } = useParams<{ routineId: string }>();
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -382,7 +385,7 @@ export function RoutineDetail() {
 
   useEffect(() => {
     if (!routine) return;
-    setBreadcrumbs([{ label: "Routines", href: "/routines" }, { label: routine.title }]);
+    setBreadcrumbs([{ label: t('routines.title'), href: "/routines" }, { label: routine.title }]);
     if (!routineDefaults) return;
 
     const changedRoutine = hydratedRoutineIdRef.current !== routine.id;
@@ -390,7 +393,7 @@ export function RoutineDetail() {
       setEditDraft(routineDefaults);
       hydratedRoutineIdRef.current = routine.id;
     }
-  }, [routine, routineDefaults, isEditDirty, setBreadcrumbs]);
+  }, [routine, routineDefaults, isEditDirty, setBreadcrumbs, t]);
 
   useEffect(() => {
     autoResizeTextarea(titleInputRef.current);

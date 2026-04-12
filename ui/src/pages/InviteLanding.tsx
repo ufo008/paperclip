@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@/lib/router";
 import { accessApi } from "../api/access";
@@ -30,6 +31,7 @@ function readNestedString(value: unknown, path: string[]): string | null {
 }
 
 export function InviteLandingPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const params = useParams();
   const token = (params.token ?? "").trim();
@@ -107,11 +109,11 @@ export function InviteLandingPage() {
   });
 
   if (!token) {
-    return <div className="mx-auto max-w-xl py-10 text-sm text-destructive">Invalid invite token.</div>;
+    return <div className="mx-auto max-w-xl py-10 text-sm text-destructive">{t("errors.validationError")}</div>;
   }
 
   if (inviteQuery.isLoading || healthQuery.isLoading || sessionQuery.isLoading) {
-    return <div className="mx-auto max-w-xl py-10 text-sm text-muted-foreground">Loading invite...</div>;
+    return <div className="mx-auto max-w-xl py-10 text-sm text-muted-foreground">{t("app.loading")}</div>;
   }
 
   if (inviteQuery.error || !invite) {
@@ -136,7 +138,7 @@ export function InviteLandingPage() {
             The first instance admin is now configured. You can continue to the board.
           </p>
           <Button asChild className="mt-4">
-            <Link to="/">Open board</Link>
+            <Link to="/">{t("sidebar.dashboard")}</Link>
           </Button>
         </div>
       </div>
@@ -308,10 +310,10 @@ export function InviteLandingPage() {
           onClick={() => acceptMutation.mutate()}
         >
           {acceptMutation.isPending
-            ? "Submitting…"
+            ? t("app.loading")
             : invite.inviteType === "bootstrap_ceo"
-              ? "Accept bootstrap invite"
-              : "Submit join request"}
+              ? t("onboarding.addAgent")
+              : t("app.submit")}
         </Button>
       </div>
     </div>

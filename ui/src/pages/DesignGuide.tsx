@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BookOpen,
   Bot,
@@ -173,6 +174,7 @@ function Swatch({ name, cssVar }: { name: string; cssVar: string }) {
 /* ------------------------------------------------------------------ */
 
 export function DesignGuide() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState("todo");
   const [priority, setPriority] = useState("medium");
   const [selectValue, setSelectValue] = useState("in_progress");

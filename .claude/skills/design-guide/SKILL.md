@@ -1,164 +1,160 @@
 ---
 name: design-guide
 description: >
-  Paperclip UI design system guide for building consistent, reusable frontend
-  components. Use when creating new UI components, modifying existing ones,
-  adding pages or features to the frontend, styling UI elements, or when you
-  need to understand the design language and conventions. Covers: component
-  creation, design tokens, typography, status/priority systems, composition
-  patterns, and the /design-guide showcase page. Always use this skill
-  alongside the frontend-design skill (for visual quality) and the
-  web-design-guidelines skill (for web best practices).
+  Paperclip UI 设计系统指南，用于构建一致的、可复用的前端组件。在创建新的 UI 组件、修改现有组件、
+  向前端添加页面或功能、设置 UI 元素样式，或需要理解设计语言和约定时使用。涵盖：组件创建、
+  设计令牌、字体排版、状态/优先级系统、组合模式，以及 /design-guide 展示页面。
+  使用此技能时请同时使用 frontend-design 技能（视觉质量）和 web-design-guidelines 技能（网页最佳实践）。
 ---
 
-# Paperclip Design Guide
+# Paperclip 设计指南
 
-Paperclip's UI is a professional-grade control plane — dense, keyboard-driven, dark-themed by default. Every pixel earns its place.
+Paperclip 的 UI 是一个专业级的控制平面——密集的、键盘驱动的、默认深色主题。每一个像素都物尽其用。
 
-**Always use with:** `frontend-design` (visual polish) and `web-design-guidelines` (web best practices).
+**始终配合使用：** `frontend-design`（视觉打磨）和 `web-design-guidelines`（网页最佳实践）。
 
 ---
 
-## 1. Design Principles
+## 1. 设计原则
 
-- **Dense but scannable.** Maximum information without clicks to reveal. Whitespace separates, not pads.
-- **Keyboard-first.** Global shortcuts (Cmd+K, C, [, ]). Power users rarely touch the mouse.
-- **Contextual, not modal.** Inline editing over dialog boxes. Dropdowns over page navigations.
-- **Dark theme default.** Neutral grays (OKLCH), not pure black. Accent colors for status/priority only. Text is the primary visual element.
-- **Component-driven.** Prefer reusable components that capture style conventions. Build at the right abstraction — not too granular, not too monolithic.
+- **密集但可扫描。** 最大信息量，无需点击即可揭示。空白用于分隔，而非填充。
+- **键盘优先。** 全局快捷键（Cmd+K、C、[、]）。高级用户很少触碰鼠标。
+- **上下文式，而非模态。** 内联编辑优于对话框。下拉菜单优于页面导航。
+- **默认深色主题。** 中性灰色（OKLCH），而非纯黑。强调色仅用于状态/优先级。文本是主要的视觉元素。
+- **组件驱动。** 优先使用捕获样式约定的可复用组件。在正确的抽象级别构建——不要太细粒化，也不要太整体化。
 
 ---
 
-## 2. Tech Stack
+## 2. 技术栈
 
 - **React 19** + **TypeScript** + **Vite**
-- **Tailwind CSS v4** with CSS variables (OKLCH color space)
-- **shadcn/ui** (new-york style, neutral base, CSS variables enabled)
-- **Radix UI** primitives (accessibility, focus management)
-- **Lucide React** icons (16px nav, 14px inline)
-- **class-variance-authority** (CVA) for component variants
-- **clsx + tailwind-merge** via `cn()` utility
+- **Tailwind CSS v4** 配合 CSS 变量（OKLCH 色彩空间）
+- **shadcn/ui**（new-york 风格，中性基础，启用 CSS 变量）
+- **Radix UI** 原语（无障碍、焦点管理）
+- **Lucide React** 图标（导航 16px，内联 14px）
+- **class-variance-authority**（CVA）用于组件变体
+- **clsx + tailwind-merge** 通过 `cn()` 工具函数
 
-Config: `ui/components.json` (aliases: `@/components`, `@/components/ui`, `@/lib`, `@/hooks`)
+配置：`ui/components.json`（别名：`@/components`、`@/components/ui`、`@/lib`、`@/hooks`）
 
 ---
 
-## 3. Design Tokens
+## 3. 设计令牌
 
-All tokens defined as CSS variables in `ui/src/index.css`. Both light and dark themes use OKLCH.
+所有令牌定义为 `ui/src/index.css` 中的 CSS 变量。浅色和深色主题都使用 OKLCH。
 
-### Colors
+### 颜色
 
-Use semantic token names, never raw color values:
+使用语义令牌名称，绝不使用原始颜色值：
 
-| Token | Usage |
+| 令牌 | 用途 |
 |-------|-------|
-| `--background` / `--foreground` | Page background and primary text |
-| `--card` / `--card-foreground` | Card surfaces |
-| `--primary` / `--primary-foreground` | Primary actions, emphasis |
-| `--secondary` / `--secondary-foreground` | Secondary surfaces |
-| `--muted` / `--muted-foreground` | Subdued text, labels |
-| `--accent` / `--accent-foreground` | Hover states, active nav items |
-| `--destructive` | Destructive actions |
-| `--border` | All borders |
-| `--ring` | Focus rings |
-| `--sidebar-*` | Sidebar-specific variants |
-| `--chart-1` through `--chart-5` | Data visualization |
+| `--background` / `--foreground` | 页面背景和主文本 |
+| `--card` / `--card-foreground` | 卡片表面 |
+| `--primary` / `--primary-foreground` | 主要操作、强调 |
+| `--secondary` / `--secondary-foreground` | 次要表面 |
+| `--muted` / `--muted-foreground` | 淡化文本、标签 |
+| `--accent` / `--accent-foreground` | 悬停状态、激活的导航项 |
+| `--destructive` | 破坏性操作 |
+| `--border` | 所有边框 |
+| `--ring` | 焦点环 |
+| `--sidebar-*` | 侧边栏特定变体 |
+| `--chart-1` 到 `--chart-5` | 数据可视化 |
 
-### Radius
+### 圆角
 
-Single `--radius` variable (0.625rem) with derived sizes:
+单一 `--radius` 变量（0.625rem）及其派生尺寸：
 
-- `rounded-sm` — small inputs, pills
-- `rounded-md` — buttons, inputs, small components
-- `rounded-lg` — cards, dialogs
-- `rounded-xl` — card containers, large components
-- `rounded-full` — badges, avatars, status dots
+- `rounded-sm` — 小输入框、药丸形
+- `rounded-md` — 按钮、输入框、小组件
+- `rounded-lg` — 卡片、对话框
+- `rounded-xl` — 卡片容器、大组件
+- `rounded-full` — 徽章、头像、状态点
 
-### Shadows
+### 阴影
 
-Minimal shadows: `shadow-xs` (outline buttons), `shadow-sm` (cards). No heavy shadows.
+最小阴影：`shadow-xs`（轮廓按钮）、`shadow-sm`（卡片）。无重阴影。
 
 ---
 
-## 4. Typography Scale
+## 4. 字体排版比例
 
-Use these exact patterns — do not invent new ones:
+使用这些确切模式——不要发明新的：
 
-| Pattern | Classes | Usage |
+| 模式 | 类名 | 用途 |
 |---------|---------|-------|
-| Page title | `text-xl font-bold` | Top of pages |
-| Section title | `text-lg font-semibold` | Major sections |
-| Section heading | `text-sm font-semibold text-muted-foreground uppercase tracking-wide` | Section headers in design guide, sidebar |
-| Card title | `text-sm font-medium` or `text-sm font-semibold` | Card headers, list item titles |
-| Body | `text-sm` | Default body text |
-| Muted | `text-sm text-muted-foreground` | Descriptions, secondary text |
-| Tiny label | `text-xs text-muted-foreground` | Metadata, timestamps, property labels |
-| Mono identifier | `text-xs font-mono text-muted-foreground` | Issue keys (PAP-001), CSS vars |
-| Large stat | `text-2xl font-bold` | Dashboard metric values |
-| Code/log | `font-mono text-xs` | Log output, code snippets |
+| 页面标题 | `text-xl font-bold` | 页面顶部 |
+| 章节标题 | `text-lg font-semibold` | 主要章节 |
+| 章节标题 | `text-sm font-semibold text-muted-foreground uppercase tracking-wide` | 设计指南、侧边栏中的章节标题 |
+| 卡片标题 | `text-sm font-medium` 或 `text-sm font-semibold` | 卡片头部、列表项标题 |
+| 正文 | `text-sm` | 默认正文文本 |
+| 淡化 | `text-sm text-muted-foreground` | 描述、次要文本 |
+| 微型标签 | `text-xs text-muted-foreground` | 元数据、时间戳、属性标签 |
+| 单色标识符 | `text-xs font-mono text-muted-foreground` | Issue 键（PAP-001）、CSS 变量 |
+| 大数字 | `text-2xl font-bold` | 仪表板指标值 |
+| 代码/日志 | `font-mono text-xs` | 日志输出、代码片段 |
 
 ---
 
-## 5. Status & Priority Systems
+## 5. 状态和优先级系统
 
-### Status Colors (consistent across all entities)
+### 状态颜色（跨所有实体一致）
 
-Defined in `StatusBadge.tsx` and `StatusIcon.tsx`:
+定义在 `StatusBadge.tsx` 和 `StatusIcon.tsx` 中：
 
-| Status | Color | Entity types |
+| 状态 | 颜色 | 实体类型 |
 |--------|-------|-------------|
-| active, achieved, completed, succeeded, approved, done | Green shades | Agents, goals, issues, approvals |
-| running | Cyan | Agents |
-| paused | Orange | Agents |
-| idle, pending | Yellow | Agents, approvals |
-| failed, error, rejected, blocked | Red shades | Runs, agents, approvals, issues |
-| archived, planned, backlog, cancelled | Neutral gray | Various |
-| todo | Blue | Issues |
-| in_progress | Indigo | Issues |
-| in_review | Violet | Issues |
+| active, achieved, completed, succeeded, approved, done | 绿色系 | 智能体、目标、issue、审批 |
+| running | 青色 | 智能体 |
+| paused | 橙色 | 智能体 |
+| idle, pending | 黄色 | 智能体、审批 |
+| failed, error, rejected, blocked | 红色系 | 运行、智能体、审批、issue |
+| archived, planned, backlog, cancelled | 中性灰色 | 各处 |
+| todo | 蓝色 | Issue |
+| in_progress | 靛蓝色 | Issue |
+| in_review | 紫罗兰色 | Issue |
 
-### Priority Icons
+### 优先级图标
 
-Defined in `PriorityIcon.tsx`: critical (red/AlertTriangle), high (orange/ArrowUp), medium (yellow/Minus), low (blue/ArrowDown).
+定义在 `PriorityIcon.tsx` 中：critical（红色/AlertTriangle）、high（橙色/ArrowUp）、medium（黄色/Minus）、low（蓝色/ArrowDown）。
 
-### Agent Status Dots
+### 智能体状态点
 
-Inline colored dots: running (cyan, animate-pulse), active (green), paused (yellow), error (red), offline (neutral).
-
----
-
-## 6. Component Hierarchy
-
-Three tiers:
-
-1. **shadcn/ui primitives** (`ui/src/components/ui/`) — Button, Card, Input, Badge, Dialog, Tabs, etc. Do not modify these directly; extend via composition.
-2. **Custom composites** (`ui/src/components/`) — StatusBadge, EntityRow, MetricCard, etc. These capture Paperclip-specific design language.
-3. **Page components** (`ui/src/pages/`) — Compose primitives and composites into full views.
-
-**See [references/component-index.md](references/component-index.md) for the complete component inventory with usage guidance.**
-
-### When to Create a New Component
-
-Create a reusable component when:
-- The same visual pattern appears in 2+ places
-- The pattern has interactive behavior (status changing, inline editing)
-- The pattern encodes domain logic (status colors, priority icons)
-
-Do NOT create a component for:
-- One-off layouts specific to a single page
-- Simple className combinations (use Tailwind directly)
-- Thin wrappers that add no semantic value
+内联彩色点：running（青色，animate-pulse）、active（绿色）、paused（黄色）、error（红色）、offline（中性）。
 
 ---
 
-## 7. Composition Patterns
+## 6. 组件层级
 
-These patterns describe how components work together. They may not be their own component, but they must be used consistently across the app.
+三个层级：
 
-### Entity Row with Status + Priority
+1. **shadcn/ui 原语**（`ui/src/components/ui/`）—— Button、Card、Input、Badge、Dialog、Tabs 等。不要直接修改这些；通过组合进行扩展。
+2. **自定义复合组件**（`ui/src/components/`）—— StatusBadge、EntityRow、MetricCard 等。这些捕获了 Paperclip 特定的设计语言。
+3. **页面组件**（`ui/src/pages/`）—— 将原语和复合组件组合成完整视图。
 
-The standard list item for issues and similar entities:
+**参见 [references/component-index.md](references/component-index.md) 获取完整的组件清单和使用指导。**
+
+### 何时创建新组件
+
+在以下情况下创建可复用组件：
+- 同一视觉模式出现在 2+ 个地方
+- 该模式具有交互行为（状态变化、内联编辑）
+- 该模式编码了领域逻辑（状态颜色、优先级图标）
+
+**不要**为以下情况创建组件：
+- 特定于单个页面的一次性布局
+- 简单的 className 组合（直接使用 Tailwind）
+- 没有添加任何语义价值的薄封装
+
+---
+
+## 7. 组合模式
+
+这些模式描述了组件如何协同工作。它们可能不是自己的组件，但必须在整个应用中一致使用。
+
+### 带状态和优先级的实体行
+
+Issue 和类似实体的标准列表项：
 
 ```tsx
 <EntityRow
@@ -171,11 +167,11 @@ The standard list item for issues and similar entities:
 />
 ```
 
-Leading slot always: StatusIcon first, then PriorityIcon. Trailing slot: StatusBadge or timestamp.
+前导槽始终：StatusIcon 在前，然后是 PriorityIcon。尾部槽：StatusBadge 或时间戳。
 
-### Grouped List
+### 分组列表
 
-Issues grouped by status header + entity rows:
+按状态头 + 实体行分组的 Issue：
 
 ```tsx
 <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-t-md">
@@ -189,9 +185,9 @@ Issues grouped by status header + entity rows:
 </div>
 ```
 
-### Property Row
+### 属性行
 
-Key-value pairs in properties panels:
+属性面板中的键值对：
 
 ```tsx
 <div className="flex items-center justify-between py-1.5">
@@ -200,11 +196,11 @@ Key-value pairs in properties panels:
 </div>
 ```
 
-Label is always `text-xs text-muted-foreground`, value on the right. Wrap in a container with `space-y-1`.
+标签始终是 `text-xs text-muted-foreground`，值在右侧。用 `space-y-1` 的容器包装。
 
-### Metric Card Grid
+### 指标卡片网格
 
-Dashboard metrics in a responsive grid:
+仪表板指标在响应式网格中：
 
 ```tsx
 <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -213,9 +209,9 @@ Dashboard metrics in a responsive grid:
 </div>
 ```
 
-### Progress Bar (Budget)
+### 进度条（预算）
 
-Color by threshold: green (<60%), yellow (60-85%), red (>85%):
+按阈值变色：绿色（<60%）、黄色（60-85%）、红色（>85%）：
 
 ```tsx
 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
@@ -223,49 +219,49 @@ Color by threshold: green (<60%), yellow (60-85%), red (>85%):
 </div>
 ```
 
-### Comment Thread
+### 评论线程
 
-Author header (name + timestamp) then body, in bordered cards with `space-y-3`. Add comment textarea + button below.
+作者头（姓名 + 时间戳），然后是正文，放在带 `space-y-3` 的边框卡片中。在下方添加评论文本区 + 按钮。
 
-### Cost Table
+### 成本表
 
-Standard `<table>` with `text-xs`, header row with `bg-accent/20`, `font-mono` for numeric values.
+标准 `<table>`，`text-xs`，表头行带 `bg-accent/20`，数字值用 `font-mono`。
 
-### Log Viewer
+### 日志查看器
 
-`bg-neutral-950 rounded-lg p-3 font-mono text-xs` container. Color lines by level: default (foreground), WARN (yellow-400), ERROR (red-400), SYS (blue-300). Include live indicator dot when streaming.
+`bg-neutral-950 rounded-lg p-3 font-mono text-xs` 容器。按级别着色行：默认（foreground）、WARN（yellow-400）、ERROR（red-400）、SYS（blue-300）。流式传输时包含实时指示器点。
 
 ---
 
-## 8. Interactive Patterns
+## 8. 交互模式
 
-### Hover States
+### 悬停状态
 
-- Entity rows: `hover:bg-accent/50`
-- Nav items: `hover:bg-accent/50 hover:text-accent-foreground`
-- Active nav: `bg-accent text-accent-foreground`
+- 实体行：`hover:bg-accent/50`
+- 导航项：`hover:bg-accent/50 hover:text-accent-foreground`
+- 激活的导航：`bg-accent text-accent-foreground`
 
-### Focus
+### 焦点
 
-`focus-visible:ring-ring focus-visible:ring-[3px]` — standard Tailwind focus-visible ring.
+`focus-visible:ring-ring focus-visible:ring-[3px]` —— 标准 Tailwind focus-visible 环。
 
-### Disabled
+### 禁用
 
 `disabled:opacity-50 disabled:pointer-events-none`
 
-### Inline Editing
+### 内联编辑
 
-Use `InlineEditor` component — click text to edit, Enter saves, Escape cancels.
+使用 `InlineEditor` 组件——点击文本编辑，Enter 保存，Escape 取消。
 
-### Popover Selectors
+### Popover 选择器
 
-StatusIcon and PriorityIcon use Radix Popover for inline selection. Follow this pattern for any clickable property that opens a picker.
+StatusIcon 和 PriorityIcon 使用 Radix Popover 进行内联选择。对于任何打开选择器的可点击属性，遵循此模式。
 
 ---
 
-## 9. Layout System
+## 9. 布局系统
 
-Three-zone layout defined in `Layout.tsx`:
+`Layout.tsx` 中定义的三区域布局：
 
 ```
 ┌──────────┬──────────────────────────────┬──────────────────────┐
@@ -275,28 +271,28 @@ Three-zone layout defined in `Layout.tsx`:
 └──────────┴──────────────────────────────┴──────────────────────┘
 ```
 
-- Sidebar: `w-60`, collapsible, contains CompanySwitcher + SidebarSections
-- Properties panel: `w-80`, shown on detail views, hidden on lists
-- Main content: scrollable, `flex-1`
+- 侧边栏：`w-60`，可折叠，包含 CompanySwitcher + SidebarSections
+- 属性面板：`w-80`，显示在详情视图，列表上隐藏
+- 主内容：可滚动，`flex-1`
 
 ---
 
-## 10. The /design-guide Page
+## 10. /design-guide 页面
 
-**Location:** `ui/src/pages/DesignGuide.tsx`
-**Route:** `/design-guide`
+**位置：** `ui/src/pages/DesignGuide.tsx`
+**路由：** `/design-guide`
 
-This is the living showcase of every component and pattern in the app. It is the source of truth for how things look.
+这是应用中每个组件和模式的活展示。它是事物外观的真相来源。
 
-### Rules
+### 规则
 
-1. **When you add a new reusable component, you MUST add it to the design guide page.** Show all variants, sizes, and states.
-2. **When you modify an existing component's API, update its design guide section.**
-3. **When you add a new composition pattern, add a section demonstrating it.**
-4. Follow the existing structure: `<Section title="...">` wrapper with `<SubSection>` for grouping.
-5. Keep sections ordered logically: foundational (colors, typography) first, then primitives, then composites, then patterns.
+1. **当你添加新的可复用组件时，你必须将其添加到设计指南页面。** 展示所有变体、尺寸和状态。
+2. **当你修改现有组件的 API 时，更新其设计指南部分。**
+3. **当你添加新的组合模式时，添加演示它的部分。**
+4. 遵循现有结构：`<Section title="...">` 包装器，带 `<SubSection>` 用于分组。
+5. 保持章节逻辑顺序：基础（颜色、字体排版）在前，然后是原语，然后是复合组件，然后是模式。
 
-### Adding a New Section
+### 添加新章节
 
 ```tsx
 <Section title="My New Component">
@@ -314,38 +310,38 @@ This is the living showcase of every component and pattern in the app. It is the
 
 ---
 
-## 11. Component Index
+## 11. 组件索引
 
-**See [references/component-index.md](references/component-index.md) for the full component inventory.**
+**参见 [references/component-index.md](references/component-index.md) 获取完整的组件清单。**
 
-When you create a new reusable component:
-1. Add it to the component index reference file
-2. Add it to the /design-guide page
-3. Follow existing naming and file conventions
-
----
-
-## 12. File Conventions
-
-- **shadcn primitives:** `ui/src/components/ui/{component}.tsx` — lowercase, kebab-case
-- **Custom components:** `ui/src/components/{ComponentName}.tsx` — PascalCase
-- **Pages:** `ui/src/pages/{PageName}.tsx` — PascalCase
-- **Utilities:** `ui/src/lib/{name}.ts`
-- **Hooks:** `ui/src/hooks/{useName}.ts`
-- **API modules:** `ui/src/api/{entity}.ts`
-- **Context providers:** `ui/src/context/{Name}Context.tsx`
-
-All components use `cn()` from `@/lib/utils` for className merging. All components use CVA for variant definitions when they have multiple visual variants.
+当你创建新的可复用组件时：
+1. 将其添加到组件索引参考文件
+2. 将其添加到 /design-guide 页面
+3. 遵循现有的命名和文件约定
 
 ---
 
-## 13. Common Mistakes to Avoid
+## 12. 文件约定
 
-- Using raw hex/rgb colors instead of CSS variable tokens
-- Creating ad-hoc typography styles instead of using the established scale
-- Hardcoding status colors instead of using StatusBadge/StatusIcon
-- Building one-off styled elements when a reusable component exists
-- Adding components without updating the design guide page
-- Using `shadow-md` or heavier — keep shadows minimal (xs, sm only)
-- Using `rounded-2xl` or larger — max is `rounded-xl` (except `rounded-full` for pills)
-- Forgetting dark mode — always use semantic tokens, never hardcode light/dark values
+- **shadcn 原语：** `ui/src/components/ui/{component}.tsx` — 小写、kebab-case
+- **自定义组件：** `ui/src/components/{ComponentName}.tsx` — PascalCase
+- **页面：** `ui/src/pages/{PageName}.tsx` — PascalCase
+- **工具函数：** `ui/src/lib/{name}.ts`
+- **Hooks：** `ui/src/hooks/{useName}.ts`
+- **API 模块：** `ui/src/api/{entity}.ts`
+- **上下文提供者：** `ui/src/context/{Name}Context.tsx`
+
+所有组件使用 `@/lib/utils` 的 `cn()` 进行 className 合并。当组件有多个视觉变体时，所有组件使用 CVA 进行变体定义。
+
+---
+
+## 13. 应避免的常见错误
+
+- 使用原始 hex/rgb 颜色而不是 CSS 变量令牌
+- 创建临时字体排版样式而不是使用既定的比例
+- 硬编码状态颜色而不是使用 StatusBadge/StatusIcon
+- 当存在可复用组件时构建一次性的样式元素
+- 添加组件而不更新设计指南页面
+- 使用 `shadow-md` 或更重的阴影——保持阴影最小（仅 xs、sm）
+- 使用 `rounded-2xl` 或更大——最大是 `rounded-xl`（药丸形除外 `rounded-full`）
+- 忘记深色模式——始终使用语义令牌，绝不硬编码浅色/深色值

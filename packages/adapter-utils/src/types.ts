@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Minimal adapter-facing interfaces (no drizzle dependency)
+// 最小适配器接口（无 drizzle 依赖）
 // ---------------------------------------------------------------------------
 
 export interface AdapterAgent {
@@ -12,7 +12,7 @@ export interface AdapterAgent {
 
 export interface AdapterRuntime {
   /**
-   * Legacy single session id view. Prefer `sessionParams` + `sessionDisplayId`.
+   * 旧版单一会话 ID 视图。建议使用 sessionParams + sessionDisplayId。
    */
   sessionId: string | null;
   sessionParams: Record<string, unknown> | null;
@@ -21,7 +21,7 @@ export interface AdapterRuntime {
 }
 
 // ---------------------------------------------------------------------------
-// Execution types (moved from server/src/adapters/types.ts)
+// 执行类型（从 server/src/adapters/types.ts 移出）
 // ---------------------------------------------------------------------------
 
 export interface UsageSummary {
@@ -70,7 +70,7 @@ export interface AdapterExecutionResult {
   errorMeta?: Record<string, unknown>;
   usage?: UsageSummary;
   /**
-   * Legacy single session id output. Prefer `sessionParams` + `sessionDisplayId`.
+   * 旧版单一会话 ID 输出。建议使用 sessionParams + sessionDisplayId。
    */
   sessionId?: string | null;
   sessionParams?: Record<string, unknown> | null;
@@ -209,7 +209,7 @@ export interface AdapterEnvironmentTestContext {
   };
 }
 
-/** Payload for the onHireApproved adapter lifecycle hook (e.g. join-request or hire_agent approval). */
+/** onHireApproved 适配器生命周期 hook 的载荷（例如 join-request 或 hire_agent 审批）。 */
 export interface HireApprovedPayload {
   companyId: string;
   agentId: string;
@@ -219,11 +219,11 @@ export interface HireApprovedPayload {
   source: "join_request" | "approval";
   sourceId: string;
   approvedAt: string;
-  /** Canonical operator-facing message for cloud adapters to show the user. */
+  /** 云适配器向用户显示的标准操作员界面消息。 */
   message: string;
 }
 
-/** Result of onHireApproved hook; failures are non-fatal to the approval flow. */
+/** onHireApproved hook 的结果；失败对该审批流程非致命。 */
 export interface HireApprovedHookResult {
   ok: boolean;
   error?: string;
@@ -231,44 +231,44 @@ export interface HireApprovedHookResult {
 }
 
 // ---------------------------------------------------------------------------
-// Quota window types — used by adapters that can report provider quota/rate-limit state
+// 配额窗口类型 — 用于能报告提供商配额/速率限制状态的适配器
 // ---------------------------------------------------------------------------
 
-/** a single rate-limit or usage window returned by a provider quota API */
+/** 提供商配额 API 返回的单个速率限制或使用量窗口 */
 export interface QuotaWindow {
-  /** human label, e.g. "5h", "7d", "Sonnet 7d", "Credits" */
+  /** 人工标签，例如 "5h"、"7d"、"Sonnet 7d"、"Credits" */
   label: string;
-  /** percent of the window already consumed (0-100), null when not reported */
+  /** 已消耗窗口的百分比（0-100），未报告时为 null */
   usedPercent: number | null;
-  /** iso timestamp when this window resets, null when not reported */
+  /** 此窗口重置的 ISO 时间戳，未报告时为 null */
   resetsAt: string | null;
-  /** free-form value label for credit-style windows, e.g. "$4.20 remaining" */
+  /** 信用风格窗口的免费格式值标签，例如 "$4.20 remaining" */
   valueLabel: string | null;
-  /** optional supporting text, e.g. reset details or provider-specific notes */
+  /** 可选的 Supporting 文本，例如重置详情或提供商特定备注 */
   detail?: string | null;
 }
 
-/** result for one provider from getQuotaWindows() */
+/** getQuotaWindows() 一个提供商的结果 */
 export interface ProviderQuotaResult {
-  /** provider slug, e.g. "anthropic", "openai" */
+  /** 提供商 slug，例如 "anthropic"、"openai" */
   provider: string;
-  /** source label when the provider reports where the quota data came from */
+  /** 提供商报告配额数据来源时的源标签 */
   source?: string | null;
-  /** true when the fetch succeeded and windows is populated */
+  /** 获取成功且窗口已填充时为 true */
   ok: boolean;
-  /** error message when ok is false */
+  /** ok 为 false 时的错误消息 */
   error?: string;
   windows: QuotaWindow[];
 }
 
 // ---------------------------------------------------------------------------
-// Adapter config schema — declarative UI config for external adapters
+// 适配器配置模式 — 外部适配器的声明式 UI 配置
 // ---------------------------------------------------------------------------
 
 export interface ConfigFieldOption {
   label: string;
   value: string;
-  /** Optional group key for categorizing options (e.g. provider name) */
+  /** 用于对选项进行分组的可选组键（例如提供商名称） */
   group?: string;
 }
 
@@ -281,7 +281,7 @@ export interface ConfigFieldSchema {
   hint?: string;
   required?: boolean;
   group?: string;
-  /** Optional metadata — not rendered, but available to custom UI logic */
+  /** 可选元数据 — 不渲染，但可供自定义 UI 逻辑使用 */
   meta?: Record<string, unknown>;
 }
 
@@ -302,36 +302,34 @@ export interface ServerAdapterModule {
   listModels?: () => Promise<AdapterModel[]>;
   agentConfigurationDoc?: string;
   /**
-   * Optional lifecycle hook when an agent is approved/hired (join-request or hire_agent approval).
-   * adapterConfig is the agent's adapter config so the adapter can e.g. send a callback to a configured URL.
+   * 可选：代理被批准/雇用时的生命周期 hook（join-request 或 hire_agent 审批）。
+   * adapterConfig 是代理的适配器配置，以便适配器可以向配置的 URL 发送回调等。
    */
   onHireApproved?: (
     payload: HireApprovedPayload,
     adapterConfig: Record<string, unknown>,
   ) => Promise<HireApprovedHookResult>;
   /**
-   * Optional: fetch live provider quota/rate-limit windows for this adapter.
-   * Returns a ProviderQuotaResult so the server can aggregate across adapters
-   * without knowing provider-specific credential paths or API shapes.
+   * 可选：获取此适配器的实时提供商配额/速率限制窗口。
+   * 返回 ProviderQuotaResult，以便服务器可以在不知道提供商特定凭证路径或 API 形状的情况下跨适配器聚合。
    */
   getQuotaWindows?: () => Promise<ProviderQuotaResult>;
   /**
-   * Optional: detect the currently configured model from local config files.
-   * Returns the detected model/provider and the config source, or null if
-   * the adapter does not support detection or no config is found.
+   * 可选：从本地配置文件检测当前配置的模型。
+   * 返回检测到的模型/提供商和配置源，如果适配器不支持检测或未找到配置则返回 null。
    */
   detectModel?: () => Promise<{ model: string; provider: string; source: string; candidates?: string[] } | null>;
   /**
-   * Optional: return a declarative config schema so the UI can render
-   * adapter-specific form fields without shipping React components.
-   * Dynamic options (e.g. scanning a profiles directory) should be
-   * resolved inside this method — the caller receives a fully hydrated schema.
+   * 可选：返回声明式配置模式，以便 UI 可以渲染
+   * 适配器特定的表单字段，而无需发布 React 组件。
+   * 动态选项（例如扫描 profiles 目录）应在
+   * 此方法内解析 — 调用方接收完全填充的模式。
    */
   getConfigSchema?: () => Promise<AdapterConfigSchema> | AdapterConfigSchema;
 }
 
 // ---------------------------------------------------------------------------
-// UI types (moved from ui/src/adapters/types.ts)
+// UI 类型（从 ui/src/adapters/types.ts 移出）
 // ---------------------------------------------------------------------------
 
 export type TranscriptEntry =
@@ -350,7 +348,7 @@ export type TranscriptEntry =
 export type StdoutLineParser = (line: string, ts: string) => TranscriptEntry[];
 
 // ---------------------------------------------------------------------------
-// CLI types (moved from cli/src/adapters/types.ts)
+// CLI 类型（从 cli/src/adapters/types.ts 移出）
 // ---------------------------------------------------------------------------
 
 export interface CLIAdapterModule {
@@ -359,7 +357,7 @@ export interface CLIAdapterModule {
 }
 
 // ---------------------------------------------------------------------------
-// UI config form values (moved from ui/src/components/AgentConfigForm.tsx)
+// UI 配置表单值（从 ui/src/components/AgentConfigForm.tsx 移出）
 // ---------------------------------------------------------------------------
 
 export interface CreateConfigValues {
@@ -389,6 +387,6 @@ export interface CreateConfigValues {
   maxTurnsPerRun: number;
   heartbeatEnabled: boolean;
   intervalSec: number;
-  /** Arbitrary key-value pairs populated by schema-driven config fields. */
+  /** 由模式驱动的配置字段填充的任意键值对。 */
   adapterSchemaValues?: Record<string, unknown>;
 }

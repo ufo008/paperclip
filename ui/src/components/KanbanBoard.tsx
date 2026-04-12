@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "@/lib/router";
 import {
   DndContext,
@@ -21,6 +22,7 @@ import { StatusIcon } from "./StatusIcon";
 import { PriorityIcon } from "./PriorityIcon";
 import { Identity } from "./Identity";
 import type { Issue } from "@paperclipai/shared";
+import { cn } from "../lib/utils";
 
 const boardStatuses = [
   "backlog",
@@ -136,6 +138,8 @@ function KanbanCard({
     return agents.find((a) => a.id === id)?.name ?? null;
   };
 
+  const { t } = useTranslation();
+
   return (
     <div
       ref={setNodeRef}
@@ -159,9 +163,29 @@ function KanbanCard({
             {issue.identifier ?? issue.id.slice(0, 8)}
           </span>
           {isLive && (
-            <span className="relative flex h-2 w-2 shrink-0 mt-0.5">
-              <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 sm:gap-1.5 sm:px-2",
+                "bg-blue-500/10",
+              )}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-pulse rounded-full bg-blue-400 opacity-75" />
+                <span
+                  className={cn(
+                    "relative inline-flex h-2 w-2 rounded-full",
+                    "bg-blue-500",
+                  )}
+                />
+              </span>
+              <span
+                className={cn(
+                  "hidden text-[11px] font-medium sm:inline",
+                  "text-blue-600 dark:text-blue-400",
+                )}
+              >
+                {t('kanban.live')}
+              </span>
             </span>
           )}
         </div>
@@ -192,6 +216,7 @@ export function KanbanBoard({
   liveIssueIds,
   onUpdateIssue,
 }: KanbanBoardProps) {
+  const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(

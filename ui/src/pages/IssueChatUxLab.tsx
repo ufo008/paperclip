@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,6 +133,7 @@ function RotatingReasoningDemo({ intervalMs = 2200 }: { intervalMs?: number }) {
 }
 
 export function IssueChatUxLab() {
+  const { t } = useTranslation();
   const [showComposer, setShowComposer] = useState(true);
 
   return (

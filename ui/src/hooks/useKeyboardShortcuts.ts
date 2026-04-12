@@ -24,31 +24,31 @@ export function useKeyboardShortcuts({
         return;
       }
 
-      // Don't fire shortcuts when typing in inputs
+      // 在输入框中输入时不触发快捷键
       if (isKeyboardShortcutTextInputTarget(e.target)) {
         return;
       }
 
-      // ? → Show keyboard shortcuts cheatsheet
+      // ? → 显示键盘快捷键速查表
       if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         onShowShortcuts?.();
         return;
       }
 
-      // C → New Issue
+      // C → 新建工单
       if (e.key === "c" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         onNewIssue?.();
       }
 
-      // [ → Toggle Sidebar
+      // [ → 切换侧边栏
       if (e.key === "[" && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         onToggleSidebar?.();
       }
 
-      // ] → Toggle Panel
+      // ] → 切换面板
       if (e.key === "]" && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         onTogglePanel?.();
