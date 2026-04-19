@@ -3,7 +3,7 @@
 1. 以 auth 模式启动 Paperclip。
 ```bash
 cd <paperclip-repo-root>
-pnpm dev --tailscale-auth
+pnpm dev --bind lan
 ```
 然后验证：
 ```bash

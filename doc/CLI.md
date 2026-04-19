@@ -1,49 +1,51 @@
-# CLI 参考文档
+# CLI Reference
 
-Paperclip CLI 现支持以下功能：
+Paperclip CLI now supports both:
 
-- 实例设置/诊断（`onboard`、`doctor`、`configure`、`env`、`allowed-hostname`）
-- 控制平面客户端操作（issues、approvals、agents、activity、dashboard）
+- instance setup/diagnostics (`onboard`, `doctor`, `configure`, `env`, `allowed-hostname`)
+- control-plane client operations (issues, approvals, agents, activity, dashboard)
 
-## 基本用法
+## Base Usage
 
-在开发环境中使用仓库脚本：
+Use repo script in development:
 
 ```sh
 pnpm paperclipai --help
 ```
 
-首次本地引导并运行：
+First-time local bootstrap + run:
 
 ```sh
 pnpm paperclipai run
 ```
 
-选择本地实例：
+Choose local instance:
 
 ```sh
 pnpm paperclipai run --instance dev
 ```
 
-## 部署模式
+## Deployment Modes
 
-模式分类和设计意图记录在 `doc/DEPLOYMENT-MODES.md` 中。
+Mode taxonomy and design intent are documented in `doc/DEPLOYMENT-MODES.md`.
 
-当前 CLI 行为：
+Current CLI behavior:
 
-- `paperclipai onboard` 和 `paperclipai configure --section server` 在配置中设置部署模式
-- 运行时可以使用 `PAPERCLIP_DEPLOYMENT_MODE` 覆盖模式
-- `paperclipai run` 和 `paperclipai doctor` 尚未暴露直接的 `--mode` 标志
+- `paperclipai onboard` and `paperclipai configure --section server` set deployment mode in config
+- server onboarding/configure ask for reachability intent and write `server.bind`
+- `paperclipai run --bind <loopback|lan|tailnet>` passes a quickstart bind preset into first-run onboarding when config is missing
+- runtime can override mode with `PAPERCLIP_DEPLOYMENT_MODE`
+- `paperclipai run` and `paperclipai doctor` still do not expose a direct low-level `--mode` flag
 
-目标行为（计划中）记录在 `doc/DEPLOYMENT-MODES.md` 第 5 节中。
+Canonical behavior is documented in `doc/DEPLOYMENT-MODES.md`.
 
-允许经过身份验证/私有的主机名（例如自定义 Tailscale DNS）：
+Allow an authenticated/private hostname (for example custom Tailscale DNS):
 
 ```sh
 pnpm paperclipai allowed-hostname dotta-macbook-pro
 ```
 
-所有客户端命令支持：
+All client commands support:
 
 - `--data-dir <path>`
 - `--api-base <url>`
@@ -52,18 +54,18 @@ pnpm paperclipai allowed-hostname dotta-macbook-pro
 - `--profile <name>`
 - `--json`
 
-公司范围的命令还支持 `--company-id <id>`。
+Company-scoped commands also support `--company-id <id>`.
 
-在任何 CLI 命令上使用 `--data-dir` 可以将所有默认本地状态（config/context/db/logs/storage/secrets）与 `~/.paperclip` 隔离：
+Use `--data-dir` on any CLI command to isolate all default local state (config/context/db/logs/storage/secrets) away from `~/.paperclip`:
 
 ```sh
 pnpm paperclipai run --data-dir ./tmp/paperclip-dev
 pnpm paperclipai issue list --data-dir ./tmp/paperclip-dev
 ```
 
-## 上下文配置文件
+## Context Profiles
 
-在 `~/.paperclip/context.json` 中存储本地默认值：
+Store local defaults in `~/.paperclip/context.json`:
 
 ```sh
 pnpm paperclipai context set --api-base http://localhost:3100 --company-id <company-id>
@@ -72,14 +74,14 @@ pnpm paperclipai context list
 pnpm paperclipai context use default
 ```
 
-为避免在上下文中存储密钥，请设置 `apiKeyEnvVarName` 并将密钥保留在环境变量中：
+To avoid storing secrets in context, set `apiKeyEnvVarName` and keep the key in env:
 
 ```sh
 pnpm paperclipai context set --api-key-env-var-name PAPERCLIP_API_KEY
 export PAPERCLIP_API_KEY=...
 ```
 
-## 公司命令
+## Company Commands
 
 ```sh
 pnpm paperclipai company list
@@ -87,19 +89,19 @@ pnpm paperclipai company get <company-id>
 pnpm paperclipai company delete <company-id-or-prefix> --yes --confirm <same-id-or-prefix>
 ```
 
-示例：
+Examples:
 
 ```sh
 pnpm paperclipai company delete PAP --yes --confirm PAP
 pnpm paperclipai company delete 5cbe79ee-acb3-4597-896e-7662742593cd --yes --confirm 5cbe79ee-acb3-4597-896e-7662742593cd
 ```
 
-注意事项：
+Notes:
 
-- 删除操作由 `PAPERCLIP_ENABLE_COMPANY_DELETION` 控制。
-- 使用 agent 身份验证时，公司删除是公司范围的。请使用当前公司 ID/前缀（例如通过 `--company-id` 或 `PAPERCLIP_COMPANY_ID`），而不是其他公司。
+- Deletion is server-gated by `PAPERCLIP_ENABLE_COMPANY_DELETION`.
+- With agent authentication, company deletion is company-scoped. Use the current company ID/prefix (for example via `--company-id` or `PAPERCLIP_COMPANY_ID`), not another company.
 
-## Issue 命令
+## Issue Commands
 
 ```sh
 pnpm paperclipai issue list --company-id <company-id> [--status todo,in_progress] [--assignee-agent-id <agent-id>] [--match text]
@@ -111,7 +113,7 @@ pnpm paperclipai issue checkout <issue-id> --agent-id <agent-id> [--expected-sta
 pnpm paperclipai issue release <issue-id>
 ```
 
-## Agent 命令
+## Agent Commands
 
 ```sh
 pnpm paperclipai agent list --company-id <company-id>
@@ -119,20 +121,20 @@ pnpm paperclipai agent get <agent-id>
 pnpm paperclipai agent local-cli <agent-id-or-shortname> --company-id <company-id>
 ```
 
-`agent local-cli` 是将本地 Claude/Codex 作为 Paperclip agent 手动运行的最快方式：
+`agent local-cli` is the quickest way to run local Claude/Codex manually as a Paperclip agent:
 
-- 创建一个新的长期有效的 agent API 密钥
-- 将缺失的 Paperclip 技能安装到 `~/.codex/skills` 和 `~/.claude/skills`
-- 打印 `export ...` 行用于 `PAPERCLIP_API_URL`、`PAPERCLIP_COMPANY_ID`、`PAPERCLIP_AGENT_ID` 和 `PAPERCLIP_API_KEY`
+- creates a new long-lived agent API key
+- installs missing Paperclip skills into `~/.codex/skills` and `~/.claude/skills`
+- prints `export ...` lines for `PAPERCLIP_API_URL`, `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_AGENT_ID`, and `PAPERCLIP_API_KEY`
 
-基于短名称的本地设置示例：
+Example for shortname-based local setup:
 
 ```sh
 pnpm paperclipai agent local-cli codexcoder --company-id <company-id>
 pnpm paperclipai agent local-cli claudecoder --company-id <company-id>
 ```
 
-## Approval 命令
+## Approval Commands
 
 ```sh
 pnpm paperclipai approval list --company-id <company-id> [--status pending]
@@ -145,29 +147,29 @@ pnpm paperclipai approval resubmit <approval-id> [--payload '{"...":"..."}']
 pnpm paperclipai approval comment <approval-id> --body "..."
 ```
 
-## Activity 命令
+## Activity Commands
 
 ```sh
 pnpm paperclipai activity list --company-id <company-id> [--agent-id <agent-id>] [--entity-type issue] [--entity-id <id>]
 ```
 
-## Dashboard 命令
+## Dashboard Commands
 
 ```sh
 pnpm paperclipai dashboard get --company-id <company-id>
 ```
 
-## 心跳命令
+## Heartbeat Command
 
-`heartbeat run` 现也支持 context/api-key 选项，并使用共享的客户端栈：
+`heartbeat run` now also supports context/api-key options and uses the shared client stack:
 
 ```sh
 pnpm paperclipai heartbeat run --agent-id <agent-id> [--api-base http://localhost:3100] [--api-key <token>]
 ```
 
-## 本地存储默认值
+## Local Storage Defaults
 
-默认本地实例根目录为 `~/.paperclip/instances/default`：
+Default local instance root is `~/.paperclip/instances/default`:
 
 - config: `~/.paperclip/instances/default/config.json`
 - embedded db: `~/.paperclip/instances/default/db`
@@ -175,21 +177,21 @@ pnpm paperclipai heartbeat run --agent-id <agent-id> [--api-base http://localhos
 - storage: `~/.paperclip/instances/default/data/storage`
 - secrets key: `~/.paperclip/instances/default/secrets/master.key`
 
-使用环境变量覆盖基础目录或实例：
+Override base home or instance with env vars:
 
 ```sh
 PAPERCLIP_HOME=/custom/home PAPERCLIP_INSTANCE_ID=dev pnpm paperclipai run
 ```
 
-## 存储配置
+## Storage Configuration
 
-配置存储提供者和设置：
+Configure storage provider and settings:
 
 ```sh
 pnpm paperclipai configure --section storage
 ```
 
-支持的提供者：
+Supported providers:
 
-- `local_disk`（默认；本地单用户安装）
-- `s3`（S3 兼容的对象存储）
+- `local_disk` (default; local single-user installs)
+- `s3` (S3-compatible object storage)

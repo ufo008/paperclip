@@ -1,15 +1,15 @@
 # AGENTS.md
 
-本文件为在此仓库工作的人类和 AI 贡献者提供指导。
+Guidance for human and AI contributors working in this repository.
 
-## 1. 目的
+## 1. Purpose
 
-Paperclip 是 AI Agent 公司的控制平面。
-当前的实现目标版本为 V1，定义在 `doc/SPEC-implementation.md` 中。
+Paperclip is a control plane for AI-agent companies.
+The current implementation target is V1 and is defined in `doc/SPEC-implementation.md`.
 
-## 2. 优先阅读
+## 2. Read This First
 
-在进行任何修改之前，请按以下顺序阅读：
+Before making changes, read in this order:
 
 1. `doc/GOAL.md`
 2. `doc/PRODUCT.md`
@@ -17,98 +17,113 @@ Paperclip 是 AI Agent 公司的控制平面。
 4. `doc/DEVELOPING.md`
 5. `doc/DATABASE.md`
 
-`doc/SPEC.md` 是长期产品背景文档。
-`doc/SPEC-implementation.md` 是 V1 构建的具体契约。
+`doc/SPEC.md` is long-horizon product context.
+`doc/SPEC-implementation.md` is the concrete V1 build contract.
 
-## 3. 仓库结构
+## 3. Repo Map
 
-- `server/`：Express REST API 和编排服务
-- `ui/`：React + Vite 面板 UI
-- `packages/db/`：Drizzle schema、数据库迁移和数据库客户端
-- `packages/shared/`：共享类型、常量、验证器和 API 路径常量
-- `packages/adapters/`：Agent 适配器实现（Claude、Codex、Cursor 等）
-- `packages/adapter-utils/`：共享适配器工具
-- `packages/plugins/`：插件系统包
-- `doc/`：运维和产品文档
+- `server/`: Express REST API and orchestration services
+- `ui/`: React + Vite board UI
+- `packages/db/`: Drizzle schema, migrations, DB clients
+- `packages/shared/`: shared types, constants, validators, API path constants
+- `packages/adapters/`: agent adapter implementations (Claude, Codex, Cursor, etc.)
+- `packages/adapter-utils/`: shared adapter utilities
+- `packages/plugins/`: plugin system packages
+- `doc/`: operational and product docs
 
-## 4. 开发设置（自动数据库）
+## 4. Dev Setup (Auto DB)
 
-开发时使用嵌入式 PGlite，无需设置 `DATABASE_URL` 环境变量。
+Use embedded PGlite in dev by leaving `DATABASE_URL` unset.
 
 ```sh
 pnpm install
 pnpm dev
 ```
 
-这将启动：
+This starts:
 
-- API：`http://localhost:3100`
-- UI：`http://localhost:3100`（在开发中间件模式下由 API 服务器提供服务）
+- API: `http://localhost:3100`
+- UI: `http://localhost:3100` (served by API server in dev middleware mode)
 
-快速验证：
+Quick checks:
 
 ```sh
 curl http://localhost:3100/api/health
 curl http://localhost:3100/api/companies
 ```
 
-重置本地开发数据库：
+Reset local dev DB:
 
 ```sh
 rm -rf data/pglite
 pnpm dev
 ```
 
-## 5. 核心工程规则
+## 5. Core Engineering Rules
 
-1. **保持变更在公司范围内。**
-   每个领域实体都应该属于某个公司，路由/服务中必须强制执行公司边界。
+1. Keep changes company-scoped.
+Every domain entity should be scoped to a company and company boundaries must be enforced in routes/services.
 
-2. **保持契约同步。**
-   如果修改了 schema 或 API 行为，请更新所有受影响的层：
-   - `packages/db` 的 schema 和导出
-   - `packages/shared` 的类型/常量/验证器
-   - `server` 的路由/服务
-   - `ui` 的 API 客户端和页面
+2. Keep contracts synchronized.
+If you change schema/API behavior, update all impacted layers:
+- `packages/db` schema and exports
+- `packages/shared` types/constants/validators
+- `server` routes/services
+- `ui` API clients and pages
 
-3. **保持控制平面不变式。**
-   - 单人任务模型
-   - 原子性问题检出语义
-   - 治理操作的审批门禁
-   - 预算硬性自动暂停行为
-   - 变更操作的活动日志
+3. Preserve control-plane invariants.
+- Single-assignee task model
+- Atomic issue checkout semantics
+- Approval gates for governed actions
+- Budget hard-stop auto-pause behavior
+- Activity logging for mutating actions
 
-4. **除非被要求，否则不要全面替换战略文档。**
-   优先进行增量更新。保持 `doc/SPEC.md` 和 `doc/SPEC-implementation.md` 同步。
+4. Do not replace strategic docs wholesale unless asked.
+Prefer additive updates. Keep `doc/SPEC.md` and `doc/SPEC-implementation.md` aligned.
 
-5. **保持仓库计划文档的日期化和集中管理。**
-   当在仓库内创建计划文档时，新计划文档应放在 `doc/plans/` 目录下，文件名格式为 `YYYY-MM-DD-slug.md`。这不替代 Paperclip 问题规划：如果 Paperclip issue 要求提供计划，请根据 `paperclip` skill 更新 issue 的 `plan` 文档，而不是创建仓库 markdown 文件。
+5. Keep repo plan docs dated and centralized.
+When you are creating a plan file in the repository itself, new plan documents belong in `doc/plans/` and should use `YYYY-MM-DD-slug.md` filenames. This does not replace Paperclip issue planning: if a Paperclip issue asks for a plan, update the issue `plan` document per the `paperclip` skill instead of creating a repo markdown file.
 
-## 6. 数据库变更工作流
+## 6. Database Change Workflow
 
-修改数据模型时：
+When changing data model:
 
-1. 编辑 `packages/db/src/schema/*.ts`
-2. 确保新表从 `packages/db/src/schema/index.ts` 导出
-3. 生成迁移：
+1. Edit `packages/db/src/schema/*.ts`
+2. Ensure new tables are exported from `packages/db/src/schema/index.ts`
+3. Generate migration:
 
 ```sh
 pnpm db:generate
 ```
 
-4. 验证编译：
+4. Validate compile:
 
 ```sh
 pnpm -r typecheck
 ```
 
-注意事项：
-- `packages/db/drizzle.config.ts` 从 `dist/schema/*.js` 读取编译后的 schema
-- `pnpm db:generate` 会先编译 `packages/db`
+Notes:
+- `packages/db/drizzle.config.ts` reads compiled schema from `dist/schema/*.js`
+- `pnpm db:generate` compiles `packages/db` first
 
-## 7. 交付前验证
+## 7. Verification Before Hand-off
 
-在声称完成之前，运行完整的检查：
+Default local/agent test path:
+
+```sh
+pnpm test
+```
+
+This is the cheap default and only runs the Vitest suite. Browser suites stay opt-in:
+
+```sh
+pnpm test:e2e
+pnpm test:release-smoke
+```
+
+Run the browser suites only when your change touches them or when you are explicitly verifying CI/release flows.
+
+Run this full check before claiming done:
 
 ```sh
 pnpm -r typecheck
@@ -116,86 +131,86 @@ pnpm test:run
 pnpm build
 ```
 
-如果有任何无法运行的步骤，明确报告哪些未运行及原因。
+If anything cannot be run, explicitly report what was not run and why.
 
-## 8. API 和认证期望
+## 8. API and Auth Expectations
 
-- 基础路径：`/api`
-- Board 访问被视为完全控制操作员上下文
-- Agent 访问使用 bearer API 密钥（`agent_api_keys`），在存储时进行哈希处理
-- Agent 密钥不得访问其他公司
+- Base path: `/api`
+- Board access is treated as full-control operator context
+- Agent access uses bearer API keys (`agent_api_keys`), hashed at rest
+- Agent keys must not access other companies
 
-添加端点时：
+When adding endpoints:
 
-- 应用公司访问检查
-- 强制执行执行者权限（board vs agent）
-- 为变更操作写入活动日志
-- 返回一致的 HTTP 错误（`400/401/403/404/409/422/500`）
+- apply company access checks
+- enforce actor permissions (board vs agent)
+- write activity log entries for mutations
+- return consistent HTTP errors (`400/401/403/404/409/422/500`)
 
-## 9. UI 期望
+## 9. UI Expectations
 
-- 保持路由和导航与可用的 API 表面对齐
-- 为公司范围的页面使用公司选择上下文
-- 明确展示失败情况，不要静默忽略 API 错误
+- Keep routes and nav aligned with available API surface
+- Use company selection context for company-scoped pages
+- Surface failures clearly; do not silently ignore API errors
 
-## 10. 拉取请求要求
+## 10. Pull Request Requirements
 
-创建拉取请求时（通过 `gh pr create` 或其他方式），**必须**阅读并填写 [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) 的每个部分。不要编写临时 PR 正文——使用模板作为 PR 描述的结构。必需部分：
+When creating a pull request (via `gh pr create` or any other method), you **must** read and fill in every section of [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md). Do not craft ad-hoc PR bodies — use the template as the structure for your PR description. Required sections:
 
-- **Thinking Path** — 从项目上下文到此次变更的推理过程（参见 `CONTRIBUTING.md` 中的示例）
-- **What Changed** — 具体变更的要点列表
-- **Verification** — 审查者如何确认其正常工作
-- **Risks** — 可能出现什么问题
-- **Model Used** — 生成或辅助此次变更的 AI 模型（提供商、确切模型 ID、上下文窗口、功能）。如果没有使用 AI，请写 "None — human-authored"。
-- **Checklist** — 所有条目已勾选
+- **Thinking Path** — trace reasoning from project context to this change (see `CONTRIBUTING.md` for examples)
+- **What Changed** — bullet list of concrete changes
+- **Verification** — how a reviewer can confirm it works
+- **Risks** — what could go wrong
+- **Model Used** — the AI model that produced or assisted with the change (provider, exact model ID, context window, capabilities). Write "None — human-authored" if no AI was used.
+- **Checklist** — all items checked
 
-## 11. 完成定义
+## 11. Definition of Done
 
-当以下全部为真时，变更才算完成：
+A change is done when all are true:
 
-1. 行为符合 `doc/SPEC-implementation.md`
-2. Typecheck、测试和构建均通过
-3. 契约在 db/shared/server/ui 各层同步
-4. 行为或命令变更时文档已更新
-5. PR 描述遵循 [PR 模板](.github/PULL_REQUEST_TEMPLATE.md) 且所有部分已填写（包括 Model Used）
+1. Behavior matches `doc/SPEC-implementation.md`
+2. Typecheck, tests, and build pass
+3. Contracts are synced across db/shared/server/ui
+4. Docs updated when behavior or commands change
+5. PR description follows the [PR template](.github/PULL_REQUEST_TEMPLATE.md) with all sections filled in (including Model Used)
 
-## 11. Fork 特定：HenkDz/paperclip
+## 11. Fork-Specific: HenkDz/paperclip
 
-这是 `paperclipai/paperclip` 的分支，包含 QoL 补丁和一个**仅外部**的 Hermes 适配器方案，位于分支 `feat/externalize-hermes-adapter`（[tree](https://github.com/HenkDz/paperclip/tree/feat/externalize-hermes-adapter)）。
+This is a fork of `paperclipai/paperclip` with QoL patches and an **external-only** Hermes adapter story on branch `feat/externalize-hermes-adapter` ([tree](https://github.com/HenkDz/paperclip/tree/feat/externalize-hermes-adapter)).
 
-### 分支策略
+### Branch Strategy
 
-- `feat/externalize-hermes-adapter` → 核心**没有** `hermes-paperclip-adapter` 依赖，也**没有**内置的 `hermes_local` 注册。通过适配器插件管理器安装 Hermes（`@henkey/hermes-paperclip-adapter` 或 `file:` 路径）。
-- 较早的分支可能仍记录内置 Hermes；以本文件作为 externalize 分支的权威版本。
+- `feat/externalize-hermes-adapter` → core has **no** `hermes-paperclip-adapter` dependency and **no** built-in `hermes_local` registration. Install Hermes via the Adapter Plugin manager (`@henkey/hermes-paperclip-adapter` or a `file:` path).
+- Older fork branches may still document built-in Hermes; treat this file as authoritative for the externalize branch.
 
-### Hermes（仅插件）
+### Hermes (plugin only)
 
-- 通过 **Board → Adapter manager** 注册（与 Droid 相同）。包加载后类型仍为 `hermes_local`。
-- UI 使用包中的通用 **config-schema** + **ui-parser.js**——`server/` 或 `ui/` 源码中无 Hermes 导入。
-- 可选：在 `~/.paperclip/adapter-plugins.json` 中添加 `file:` 条目，用于适配器仓库的本地开发。
+- Register through **Board → Adapter manager** (same as Droid). Type remains `hermes_local` once the package is loaded.
+- UI uses generic **config-schema** + **ui-parser.js** from the package — no Hermes imports in `server/` or `ui/` source.
+- Optional: `file:` entry in `~/.paperclip/adapter-plugins.json` for local dev of the adapter repo.
 
-### 本地开发
+### Local Dev
 
-- Fork 在端口 3101+ 上运行（如果上游实例占用 3100，会自动检测）
-- `npx vite build` 在 NTFS 上会挂起——改用 `node node_modules/vite/bin/vite.js build`
-- NTFS 上服务器启动需要 30-60 秒——不要立即判定为失败
-- 启动前终止所有 paperclip 进程：`pkill -f "paperclip"; pkill -f "tsx.*index.ts"`
-- Vite 缓存会在 `rm -rf dist` 后保留——需同时删除：`rm -rf ui/dist ui/node_modules/.vite`
+- Fork runs on port 3101+ (auto-detects if 3100 is taken by upstream instance)
+- `npx vite build` hangs on NTFS — use `node node_modules/vite/bin/vite.js build` instead
+- Server startup from NTFS takes 30-60s — don't assume failure immediately
+- Kill ALL paperclip processes before starting: `pkill -f "paperclip"; pkill -f "tsx.*index.ts"`
+- Vite cache survives `rm -rf dist` — delete both: `rm -rf ui/dist ui/node_modules/.vite`
 
-### Fork QoL 补丁（不在上游）
+### Fork QoL Patches (not in upstream)
 
-这些是 fork UI 的本地修改。如果重新复制源码，必须重新应用：
+These are local modifications in the fork's UI. If re-copying source, these must be re-applied:
 
-1. **stderr_group** — `RunTranscriptView.tsx` 中 MCP 初始化噪音的琥珀色手风琴
-2. **tool_group** — 连续非终端工具（write、read、search、browser）的手风琴
-3. **Dashboard excerpt** — `LatestRunCard` 去除 markdown，只显示前 3 行/280 字符
+1. **stderr_group** — amber accordion for MCP init noise in `RunTranscriptView.tsx`
+2. **tool_group** — accordion for consecutive non-terminal tools (write, read, search, browser)
+3. **Dashboard excerpt** — `LatestRunCard` strips markdown, shows first 3 lines/280 chars
 
-### 插件系统
+### Plugin System
 
-PR #2218（`feat/external-adapter-phase1`）添加了外部适配器支持。参见根 `AGENTS.md` 的完整详情。
+PR #2218 (`feat/external-adapter-phase1`) adds external adapter support. See root `AGENTS.md` for full details.
 
-- 适配器可以通过 `~/.paperclip/adapter-plugins.json` 作为外部插件加载
-- 插件加载器应该**零硬编码**适配器导入——纯动态加载
-- `createServerAdapter()` 必须包含**所有**可选字段（尤其是 `detectModel`）
-- 内置 UI 适配器可以遮盖外部插件解析器——完全外部化时移除内置版本
-- 参考外部适配器：Hermes（`@henkey/hermes-paperclip-adapter` 或 `file:`）和 Droid（npm）
+- Adapters can be loaded as external plugins via `~/.paperclip/adapter-plugins.json`
+- The plugin-loader should have ZERO hardcoded adapter imports — pure dynamic loading
+- `createServerAdapter()` must include ALL optional fields (especially `detectModel`)
+- Built-in UI adapters can shadow external plugin parsers — remove built-in when fully externalizing
+- Reference external adapters: Hermes (`@henkey/hermes-paperclip-adapter` or `file:`) and Droid (npm)

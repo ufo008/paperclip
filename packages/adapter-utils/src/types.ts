@@ -120,7 +120,7 @@ export interface AdapterExecutionContext {
   context: Record<string, unknown>;
   onLog: (stream: "stdout" | "stderr", chunk: string) => Promise<void>;
   onMeta?: (meta: AdapterInvocationMeta) => Promise<void>;
-  onSpawn?: (meta: { pid: number; startedAt: string }) => Promise<void>;
+  onSpawn?: (meta: { pid: number; processGroupId: number | null; startedAt: string }) => Promise<void>;
   authToken?: string;
 }
 
@@ -326,6 +326,36 @@ export interface ServerAdapterModule {
    * 此方法内解析 — 调用方接收完全填充的模式。
    */
   getConfigSchema?: () => Promise<AdapterConfigSchema> | AdapterConfigSchema;
+
+  // ---------------------------------------------------------------------------
+  // Adapter capability flags
+  //
+  // These allow adapter plugins to declare what "local" capabilities they
+  // support, replacing hardcoded type lists in the server and UI.
+  // All flags are optional — when undefined, the server falls back to
+  // legacy hardcoded lists for built-in adapters.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Adapter supports managed instructions bundle (AGENTS.md files).
+   * When true, the server uses instructionsPathKey (default "instructionsFilePath")
+   * to resolve the instructions config key, and the UI shows the bundle editor.
+   * Built-in local adapters default to true; external plugins must opt in.
+   */
+  supportsInstructionsBundle?: boolean;
+
+  /**
+   * The adapterConfig key that holds the instructions file path.
+   * Defaults to "instructionsFilePath" when supportsInstructionsBundle is true.
+   */
+  instructionsPathKey?: string;
+
+  /**
+   * Adapter needs runtime skill entries materialized (written to disk)
+   * before being passed via config. Used by adapters that scan a directory
+   * rather than reading config.paperclipRuntimeSkills.
+   */
+  requiresMaterializedRuntimeSkills?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -370,6 +400,7 @@ export interface CreateConfigValues {
   chrome: boolean;
   dangerouslySkipPermissions: boolean;
   search: boolean;
+  fastMode: boolean;
   dangerouslyBypassSandbox: boolean;
   command: string;
   args: string;

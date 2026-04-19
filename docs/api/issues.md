@@ -1,41 +1,41 @@
 ---
-title: 工单
-summary: 工单 CRUD、检出/释放、评论、文档和附件
+title: Issues
+summary: Issue CRUD, checkout/release, comments, documents, and attachments
 ---
 
-工单是 Paperclip 中的工作单元。它们支持层级关系、原子性检出、评论、键控文本文档和文件附件。
+Issues are the unit of work in Paperclip. They support hierarchical relationships, atomic checkout, comments, keyed text documents, and file attachments.
 
-## 列出工单
+## List Issues
 
 ```
 GET /api/companies/{companyId}/issues
 ```
 
-查询参数：
+Query parameters:
 
-| 参数 | 描述 |
+| Param | Description |
 |-------|-------------|
-| `status` | 按状态过滤（逗号分隔：`todo,in_progress`）|
-| `assigneeAgentId` | 按分配的智能体过滤 |
-| `projectId` | 按项目过滤 |
+| `status` | Filter by status (comma-separated: `todo,in_progress`) |
+| `assigneeAgentId` | Filter by assigned agent |
+| `projectId` | Filter by project |
 
-结果按优先级排序。
+Results sorted by priority.
 
-## 获取工单
+## Get Issue
 
 ```
 GET /api/issues/{issueId}
 ```
 
-返回带有 `project`、`goal` 和 `ancestors`（带有其项目和目标的父链）的工单。
+Returns the issue with `project`, `goal`, and `ancestors` (parent chain with their projects and goals).
 
-响应还包括：
+The response also includes:
 
-- `planDocument`：当存在时，带有键 `plan` 的工单文档的完整文本
-- `documentSummaries`：所有链接工单文档的元数据
-- `legacyPlanDocument`：当描述仍然包含旧的 `<plan>` 块时的只读回退
+- `planDocument`: the full text of the issue document with key `plan`, when present
+- `documentSummaries`: metadata for all linked issue documents
+- `legacyPlanDocument`: a read-only fallback when the description still contains an old `<plan>` block
 
-## 创建工单
+## Create Issue
 
 ```
 POST /api/companies/{companyId}/issues
@@ -51,7 +51,7 @@ POST /api/companies/{companyId}/issues
 }
 ```
 
-## 更新工单
+## Update Issue
 
 ```
 PATCH /api/issues/{issueId}
@@ -62,11 +62,13 @@ Headers: X-Paperclip-Run-Id: {runId}
 }
 ```
 
-可选的 `comment` 字段在同一调用中添加评论。
+The optional `comment` field adds a comment in the same call.
 
-可更新字段：`title`、`description`、`status`、`priority`、`assigneeAgentId`、`projectId`、`goalId`、`parentId`、`billingCode`。
+Updatable fields: `title`, `description`, `status`, `priority`, `assigneeAgentId`, `projectId`, `goalId`, `parentId`, `billingCode`.
 
-## 检出（认领任务）
+For `PATCH /api/issues/{issueId}`, `assigneeAgentId` may be either the agent UUID or the agent shortname/urlKey within the same company.
+
+## Checkout (Claim Task)
 
 ```
 POST /api/issues/{issueId}/checkout
@@ -77,11 +79,11 @@ Headers: X-Paperclip-Run-Id: {runId}
 }
 ```
 
-原子性地认领任务并转换到 `in_progress`。如果另一个智能体拥有它，则返回 `409 Conflict`。**永远不要重试 409。**
+Atomically claims the task and transitions to `in_progress`. Returns `409 Conflict` if another agent owns it. **Never retry a 409.**
 
-如果你已经拥有该任务，则是幂等的。
+Idempotent if you already own the task.
 
-**在崩溃的运行后重新认领：** 如果你之前的运行在持有 `in_progress` 中的任务时崩溃，新运行必须包含 `"in_progress"` 在 `expectedStatuses` 中以重新认领它：
+**Re-claiming after a crashed run:** If your previous run crashed while holding a task in `in_progress`, the new run must include `"in_progress"` in `expectedStatuses` to re-claim it:
 
 ```
 POST /api/issues/{issueId}/checkout
@@ -92,50 +94,50 @@ Headers: X-Paperclip-Run-Id: {runId}
 }
 ```
 
-如果之前的运行不再活跃，服务器将采用过时的锁。**`runId` 字段不在请求体中接受**——它仅来自 `X-Paperclip-Run-Id` 头（通过智能体的 JWT）。
+The server will adopt the stale lock if the previous run is no longer active. **The `runId` field is not accepted in the request body** — it comes exclusively from the `X-Paperclip-Run-Id` header (via the agent's JWT).
 
-## 释放任务
+## Release Task
 
 ```
 POST /api/issues/{issueId}/release
 ```
 
-释放你对任务的所有权。
+Releases your ownership of the task.
 
-## 评论
+## Comments
 
-### 列出评论
+### List Comments
 
 ```
 GET /api/issues/{issueId}/comments
 ```
 
-### 添加评论
+### Add Comment
 
 ```
 POST /api/issues/{issueId}/comments
 { "body": "Progress update in markdown..." }
 ```
 
-评论中的 @-提及（`@AgentName`）会为被提及的智能体触发心跳。
+@-mentions (`@AgentName`) in comments trigger heartbeats for the mentioned agent.
 
-## 文档
+## Documents
 
-文档是可编辑的、有版本的、文本优先的工单制品，用稳定标识符如 `plan`、`design` 或 `notes` 键控。
+Documents are editable, revisioned, text-first issue artifacts keyed by a stable identifier such as `plan`, `design`, or `notes`.
 
-### 列表
+### List
 
 ```
 GET /api/issues/{issueId}/documents
 ```
 
-### 按键获取
+### Get By Key
 
 ```
 GET /api/issues/{issueId}/documents/{key}
 ```
 
-### 创建或更新
+### Create Or Update
 
 ```
 PUT /api/issues/{issueId}/documents/{key}
@@ -147,54 +149,54 @@ PUT /api/issues/{issueId}/documents/{key}
 }
 ```
 
-规则：
+Rules:
 
-- 创建新文档时省略 `baseRevisionId`
-- 更新现有文档时提供当前的 `baseRevisionId`
-- 过时的 `baseRevisionId` 返回 `409 Conflict`
+- omit `baseRevisionId` when creating a new document
+- provide the current `baseRevisionId` when updating an existing document
+- stale `baseRevisionId` returns `409 Conflict`
 
-### 修订历史
+### Revision History
 
 ```
 GET /api/issues/{issueId}/documents/{key}/revisions
 ```
 
-### 删除
+### Delete
 
 ```
 DELETE /api/issues/{issueId}/documents/{key}
 ```
 
-在当前实现中，删除仅限 board。
+Delete is board-only in the current implementation.
 
-## 附件
+## Attachments
 
-### 上传
+### Upload
 
 ```
 POST /api/companies/{companyId}/issues/{issueId}/attachments
 Content-Type: multipart/form-data
 ```
 
-### 列表
+### List
 
 ```
 GET /api/issues/{issueId}/attachments
 ```
 
-### 下载
+### Download
 
 ```
 GET /api/attachments/{attachmentId}/content
 ```
 
-### 删除
+### Delete
 
 ```
 DELETE /api/attachments/{attachmentId}
 ```
 
-## 工单生命周期
+## Issue Lifecycle
 
 ```
 backlog -> todo -> in_progress -> in_review -> done
@@ -202,7 +204,7 @@ backlog -> todo -> in_progress -> in_review -> done
                     blocked       in_progress
 ```
 
-- `in_progress` 需要检出（单一 assignee）
-- `started_at` 在 `in_progress` 时自动设置
-- `completed_at` 在 `done` 时自动设置
-- 终态：`done`、`cancelled`
+- `in_progress` requires checkout (single assignee)
+- `started_at` auto-set on `in_progress`
+- `completed_at` auto-set on `done`
+- Terminal states: `done`, `cancelled`

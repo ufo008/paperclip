@@ -1,35 +1,37 @@
 ---
-title: 智能体
-summary: 智能体生命周期、配置、密钥和心跳调用
+title: Agents
+summary: Agent lifecycle, configuration, keys, and heartbeat invocation
 ---
 
-管理公司内的 AI 智能体（员工）。
+Manage AI agents (employees) within a company.
 
-## 列出智能体
+## List Agents
 
 ```
 GET /api/companies/{companyId}/agents
 ```
 
-返回公司中的所有智能体。
+Returns all agents in the company.
 
-## 获取智能体
+This route does not accept query filters. Unsupported query parameters return `400`.
+
+## Get Agent
 
 ```
 GET /api/agents/{agentId}
 ```
 
-返回包括命令链的智能体详情。
+Returns agent details including chain of command.
 
-## 获取当前智能体
+## Get Current Agent
 
 ```
 GET /api/agents/me
 ```
 
-返回当前认证智能体的智能体记录。
+Returns the agent record for the currently authenticated agent.
 
-**响应：**
+**Response:**
 
 ```json
 {
@@ -50,7 +52,7 @@ GET /api/agents/me
 }
 ```
 
-## 创建智能体
+## Create Agent
 
 ```
 POST /api/companies/{companyId}/agents
@@ -65,7 +67,7 @@ POST /api/companies/{companyId}/agents
 }
 ```
 
-## 更新智能体
+## Update Agent
 
 ```
 PATCH /api/agents/{agentId}
@@ -75,71 +77,71 @@ PATCH /api/agents/{agentId}
 }
 ```
 
-## 暂停智能体
+## Pause Agent
 
 ```
 POST /api/agents/{agentId}/pause
 ```
 
-临时停止智能体的心跳。
+Temporarily stops heartbeats for the agent.
 
-## 恢复智能体
+## Resume Agent
 
 ```
 POST /api/agents/{agentId}/resume
 ```
 
-恢复暂停智能体的心跳。
+Resumes heartbeats for a paused agent.
 
-## 终止智能体
+## Terminate Agent
 
 ```
 POST /api/agents/{agentId}/terminate
 ```
 
-永久停用智能体。**不可逆。**
+Permanently deactivates the agent. **Irreversible.**
 
-## 创建 API 密钥
+## Create API Key
 
 ```
 POST /api/agents/{agentId}/keys
 ```
 
-返回智能体的长寿命 API 密钥。安全存储它——完整值只显示一次。
+Returns a long-lived API key for the agent. Store it securely — the full value is only shown once.
 
-## 调用心跳
+## Invoke Heartbeat
 
 ```
 POST /api/agents/{agentId}/heartbeat/invoke
 ```
 
-手动为智能体触发心跳。
+Manually triggers a heartbeat for the agent.
 
-## 组织结构图
+## Org Chart
 
 ```
 GET /api/companies/{companyId}/org
 ```
 
-返回公司的完整组织树。
+Returns the full organizational tree for the company.
 
-## 列出适配器模型
+## List Adapter Models
 
 ```
 GET /api/companies/{companyId}/adapters/{adapterType}/models
 ```
 
-返回适配器类型的可选择模型。
+Returns selectable models for an adapter type.
 
-- 对于 `codex_local`，模型与 OpenAI 发现合并（当可用时）。
-- 对于 `opencode_local`，模型从 `opencode models` 发现并以 `provider/model` 格式返回。
-- `opencode_local` 不返回静态回退模型；如果发现不可用，此列表可能为空。
+- For `codex_local`, models are merged with OpenAI discovery when available.
+- For `opencode_local`, models are discovered from `opencode models` and returned in `provider/model` format.
+- `opencode_local` does not return static fallback models; if discovery is unavailable, this list can be empty.
 
-## 配置修订
+## Config Revisions
 
 ```
 GET /api/agents/{agentId}/config-revisions
 POST /api/agents/{agentId}/config-revisions/{revisionId}/rollback
 ```
 
-查看并回滚智能体配置更改。
+View and roll back agent configuration changes.

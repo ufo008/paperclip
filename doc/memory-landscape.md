@@ -1,151 +1,156 @@
 # Memory Landscape
 
-日期：2026-03-17
+Date: 2026-03-17
 
-本文件总结了任务 `PAP-530` 中引用的 memory 系统，并提取了对 Paperclip 重要的设计模式。
+This document summarizes the memory systems referenced in task `PAP-530` and extracts the design patterns that matter for Paperclip.
 
-## Paperclip 从本次调研中需要什么
+## What Paperclip Needs From This Survey
 
-Paperclip 并不试图成为一个单一观点的 memory 引擎。更实用的目标是成为一个控制平面 memory 层，该层：
+Paperclip is not trying to become a single opinionated memory engine. The more useful target is a control-plane memory surface that:
 
-- 保持公司范围作用域
-- 让每个公司选择默认的 memory 提供者
-- 让特定 agent 可以覆盖该默认值
-- 保持追溯到 Paperclip runs、issues、comments 和 documents 的来源
-- 以与控制平面记录其他工作相同的方式记录 memory 相关的成本和延迟
-- 与插件提供的提供者配合工作，而不仅仅是内置的
+- stays company-scoped
+- lets each company choose a default memory provider
+- lets specific agents override that default
+- keeps provenance back to Paperclip runs, issues, comments, and documents
+- records memory-related cost and latency the same way the rest of the control plane records work
+- works with plugin-provided providers, not only built-ins
 
-问题不是"哪个 memory 项目会赢？"问题是"什么是能够位于多个截然不同的 memory 系统之上而不会抹平有用差异的最小 Paperclip 契约？"
+The question is not "which memory project wins?" The question is "what is the smallest Paperclip contract that can sit above several very different memory systems without flattening away the useful differences?"
 
-## 快速分组
+## Quick Grouping
 
-### Hosted memory API
+### Hosted memory APIs
 
 - `mem0`
+- `AWS Bedrock AgentCore Memory`
 - `supermemory`
 - `Memori`
 
-这些优化了简单的应用集成体验：发送对话/内容加上身份标识，然后稍后查询相关的 memory 或用户上下文。
+These optimize for a simple application integration story: send conversation/content plus an identity, then query for relevant memory or user context later.
 
-### 以 agent 为中心的 memory 框架 / memory OSes
+### Agent-centric memory frameworks / memory OSes
 
 - `MemOS`
 - `memU`
 - `EverMemOS`
 - `OpenViking`
 
-这些将 memory 视为 agent 运行时子系统，而不仅仅是搜索索引。它们通常添加 task memory、profiles、文件系统风格的组织、异步摄取或 skill/资源管理。
+These treat memory as an agent runtime subsystem, not only as a search index. They usually add task memory, profiles, filesystem-style organization, async ingestion, or skill/resource management.
 
-### 本地优先的 memory 存储 / 索引
+### Local-first memory stores / indexes
 
 - `nuggets`
 - `memsearch`
 
-这些强调本地持久化、可检查性和低运维开销。它们很有用，因为 Paperclip 今天就是本地优先的，需要至少一条零配置路径。
+These emphasize local persistence, inspectability, and low operational overhead. They are useful because Paperclip is local-first today and needs at least one zero-config path.
 
-## 各项目笔记
+## Per-Project Notes
 
-| 项目 | 形态 | 值得注意的 API / 模型 | 对 Paperclip 的适配度 | 主要不匹配点 |
+| Project | Shape | Notable API / model | Strong fit for Paperclip | Main mismatch |
 |---|---|---|---|---|
-| [nuggets](https://github.com/NeoVertex1/nuggets) | 本地 memory 引擎 + 消息网关 | 主题作用域的 HRR memory，包含 `remember`、`recall`、`forget`，事实提升到 `MEMORY.md` | 轻量级本地 memory 和自动提升的良好示例 | 非常特定的架构；不是通用的多租户服务 |
-| [mem0](https://github.com/mem0ai/mem0) | 托管 + OSS SDK | `add`、`search`、`getAll`、`get`、`update`、`delete`、`deleteAll`；通过 `user_id`、`agent_id`、`run_id`、`app_id` 进行实体分区 | 最接近带有身份标识和元数据过滤器的干净提供者 API | 提供者严重拥有提取权；Paperclip 不应假设每个后端都像 mem0 一样行为 |
-| [MemOS](https://github.com/MemTensor/MemOS) | memory OS / 框架 | 统一的 add-retrieve-edit-delete、memory cubes、多模态 memory、tool memory、异步调度器、反馈/修正 | 可选功能（超越普通搜索）的强大来源 | 比 Paperclip 首先应该标准化的最小契约要广泛得多 |
-| [supermemory](https://github.com/supermemoryai/supermemory) | 托管 memory + context API | `add`、`profile`、`search.memories`、`search.documents`、文档上传、设置；自动 profile 构建和遗忘 | "context bundle"而非原始搜索结果的强示例 | 围绕自己的本体论和托管流程严重产品化 |
-| [memU](https://github.com/NevaMind-AI/memU) | 主动式 agent memory 框架 | 文件系统隐喻、主动循环、意图预测、始终在线的 companion model | 当 memory 应该触发 agent 行为（而不仅仅是检索）时的良好来源 | 主动助手框架比 Paperclip 以 task 为中心的控制平面更宽泛 |
-| [Memori](https://github.com/MemoriLabs/Memori) | 托管 memory 结构 + SDK 包装器 | 针对 LLM SDK 注册，通过 `entity_id` + `process_id` 进行归属、会话、云 + BYODB | 模型客户端周围自动捕获的强示例 | 包装器中心的设计无法一对一映射到 Paperclip 的 run / issue / comment 生命周期 |
-| [EverMemOS](https://github.com/EverMind-AI/EverMemOS) | 对话式长期 memory 系统 | MemCell 提取、结构化 narratives、用户 profiles、混合检索/重排序 | 可追溯的 结构化 memories 和演化 profiles 的有用模型 | 专注于对话 memory 而非通用控制平面事件 |
-| [memsearch](https://github.com/zilliztech/memsearch) | markdown 优先的本地 memory 索引 | markdown 作为事实来源、`index`、`search`、`watch`、transcript 解析、插件钩子 | 本地内置提供者和可检查来源的优秀基线 | 有意简化；没有托管服务语义或丰富的修正工作流 |
-| [OpenViking](https://github.com/volcengine/OpenViking) | context 数据库 | memories/resources/skills 的文件系统风格组织、分层加载、可视化的检索轨迹 | browse/inspect UX 和 context 来源的强大来源 | 将 "context 数据库" 视为比 Paperclip 应该拥有的更大的产品表面 |
+| [nuggets](https://github.com/NeoVertex1/nuggets) | local memory engine + messaging gateway | topic-scoped HRR memory with `remember`, `recall`, `forget`, fact promotion into `MEMORY.md` | good example of lightweight local memory and automatic promotion | very specific architecture; not a general multi-tenant service |
+| [mem0](https://github.com/mem0ai/mem0) | hosted + OSS SDK | `add`, `search`, `getAll`, `get`, `update`, `delete`, `deleteAll`; entity partitioning via `user_id`, `agent_id`, `run_id`, `app_id` | closest to a clean provider API with identities and metadata filters | provider owns extraction heavily; Paperclip should not assume every backend behaves like mem0 |
+| [AWS Bedrock AgentCore Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory.html) | AWS-managed memory service | explicit short-term and long-term memories, actor/session/event APIs, memory strategies, namespace templates, optional self-managed extraction pipeline | strong example of provider-managed memory with clear scoped ids, retention controls, and standalone API access outside a single agent framework | AWS-hosted and IAM-centric; Paperclip would still need its own company/run/comment provenance, cost rollups, and likely a plugin wrapper instead of baking AWS semantics into core |
+| [MemOS](https://github.com/MemTensor/MemOS) | memory OS / framework | unified add-retrieve-edit-delete, memory cubes, multimodal memory, tool memory, async scheduler, feedback/correction | strong source for optional capabilities beyond plain search | much broader than the minimal contract Paperclip should standardize first |
+| [supermemory](https://github.com/supermemoryai/supermemory) | hosted memory + context API | `add`, `profile`, `search.memories`, `search.documents`, document upload, settings; automatic profile building and forgetting | strong example of "context bundle" rather than raw search results | heavily productized around its own ontology and hosted flow |
+| [memU](https://github.com/NevaMind-AI/memU) | proactive agent memory framework | file-system metaphor, proactive loop, intent prediction, always-on companion model | good source for when memory should trigger agent behavior, not just retrieval | proactive assistant framing is broader than Paperclip's task-centric control plane |
+| [Memori](https://github.com/MemoriLabs/Memori) | hosted memory fabric + SDK wrappers | registers against LLM SDKs, attribution via `entity_id` + `process_id`, sessions, cloud + BYODB | strong example of automatic capture around model clients | wrapper-centric design does not map 1:1 to Paperclip's run / issue / comment lifecycle |
+| [EverMemOS](https://github.com/EverMind-AI/EverMemOS) | conversational long-term memory system | MemCell extraction, structured narratives, user profiles, hybrid retrieval / reranking | useful model for provenance-rich structured memories and evolving profiles | focused on conversational memory rather than generalized control-plane events |
+| [memsearch](https://github.com/zilliztech/memsearch) | markdown-first local memory index | markdown as source of truth, `index`, `search`, `watch`, transcript parsing, plugin hooks | excellent baseline for a local built-in provider and inspectable provenance | intentionally simple; no hosted service semantics or rich correction workflow |
+| [OpenViking](https://github.com/volcengine/OpenViking) | context database | filesystem-style organization of memories/resources/skills, tiered loading, visualized retrieval trajectories | strong source for browse/inspect UX and context provenance | treats "context database" as a larger product surface than Paperclip should own |
 
-## 跨 Landscape 的共同原语
+## Common Primitives Across The Landscape
 
-尽管这些系统在架构上存在分歧，但它们在几个原语上趋于一致：
+Even though the systems disagree on architecture, they converge on a few primitives:
 
-- `ingest`：从文本、消息、文档或 transcripts 添加 memory
-- `query`：给定 task、问题或作用域搜索或检索 memory
-- `scope`：按 user、agent、project、process 或 session 分区 memory
-- `provenance`：携带足够的元数据来解释 memory 的来源
-- `maintenance`：随时间更新、遗忘、去重、压缩或修正 memories
-- `context assembly`：将原始 memories 转换为可供 agent 使用的 prompt -ready bundle
+- `ingest`: add memory from text, messages, documents, or transcripts
+- `query`: search or retrieve memory given a task, question, or scope
+- `scope`: partition memory by user, agent, project, process, or session
+- `provenance`: carry enough metadata to explain where a memory came from
+- `maintenance`: update, forget, dedupe, compact, or correct memories over time
+- `context assembly`: turn raw memories into a prompt-ready bundle for the agent
 
-如果 Paperclip 不暴露这些，它将无法很好地适应上述系统。
+If Paperclip does not expose these, it will not adapt well to the systems above.
 
-## 系统差异所在
+## Where The Systems Differ
 
-这些差异正是 Paperclip 需要分层契约而不是单一硬编码引擎的原因。
+These differences are exactly why Paperclip needs a layered contract instead of a single hard-coded engine.
 
-### 1. 谁拥有提取权？
+### 1. Who owns extraction?
 
-- `mem0`、`supermemory` 和 `Memori` 期望提供者从对话中推断 memories。
-- `memsearch` 期望主机决定要写入哪些 markdown，然后为其建立索引。
-- `MemOS`、`memU`、`EverMemOS` 和 `OpenViking` 处于中间位置，通常暴露更丰富的 memory 构建管道。
+- `mem0`, `supermemory`, and `Memori` expect the provider to infer memories from conversations.
+- `AWS Bedrock AgentCore Memory` supports both provider-managed extraction and self-managed pipelines where the host writes curated long-term memory records.
+- `memsearch` expects the host to decide what markdown to write, then indexes it.
+- `MemOS`, `memU`, `EverMemOS`, and `OpenViking` sit somewhere in between and often expose richer memory construction pipelines.
 
-Paperclip 应该同时支持：
-- 提供者管理的提取
-- Paperclip 管理的提取，配合提供者管理的存储/检索
+Paperclip should support both:
 
-### 2. 什么是事实来源？
+- provider-managed extraction
+- Paperclip-managed extraction with provider-managed storage / retrieval
 
-- `memsearch` 和 `nuggets` 使来源可在磁盘上检查。
-- 托管 API 通常使提供者的存储成为规范。
-- 像 `OpenViking` 和 `memU` 这样的文件系统风格系统将层次结构本身视为 memory 模型的一部分。
+### 2. What is the source of truth?
 
-Paperclip 不应要求单一存储形态。它应该要求能够规范化地追溯到 Paperclip 实体的引用。
+- `memsearch` and `nuggets` make the source inspectable on disk.
+- hosted APIs often make the provider store canonical.
+- filesystem-style systems like `OpenViking` and `memU` treat hierarchy itself as part of the memory model.
 
-### 3. Memory 仅仅是搜索，还是也包括 profile 和规划状态？
+Paperclip should not require a single storage shape. It should require normalized references back to Paperclip entities.
 
-- `mem0` 和 `memsearch` 以搜索和 CRUD 为中心。
-- `supermemory` 添加用户 profiles 作为一流输出。
-- `MemOS`、`memU`、`EverMemOS` 和 `OpenViking` 扩展到 tool traces、task memory、resources 和 skills。
+### 3. Is memory just search, or also profile and planning state?
 
-Paperclip 应该将普通搜索作为最低契约，使更丰富的输出成为可选功能。
+- `mem0` and `memsearch` center search and CRUD.
+- `supermemory` adds user profiles as a first-class output.
+- `MemOS`, `memU`, `EverMemOS`, and `OpenViking` expand into tool traces, task memory, resources, and skills.
 
-### 4. Memory 是同步还是异步？
+Paperclip should make plain search the minimum contract and richer outputs optional capabilities.
 
-- 本地工具通常在进程内同步工作。
-- 更大的系统添加调度器、后台索引、压缩或同步任务。
+### 4. Is memory synchronous or asynchronous?
 
-Paperclip 需要同时支持直接请求/响应操作和后台维护钩子。
+- local tools often work synchronously in-process.
+- `AWS Bedrock AgentCore Memory` is synchronous at the API edge, but its long-term memory path includes background extraction/indexing behavior and retention policies managed by the provider.
+- larger systems add schedulers, background indexing, compaction, or sync jobs.
 
-## Paperclip 特定的收获
+Paperclip needs both direct request/response operations and background maintenance hooks.
 
-### Paperclip 应该拥有这些关注点
+## Paperclip-Specific Takeaways
 
-- 将提供者绑定到公司并可选地在每个 agent 覆盖它
-- 将 Paperclip 实体映射到提供者作用域
-- 追溯到 issue comments、documents、runs 和 activity 的来源
-- memory 工作的成本 / token / 延迟报告
-- Paperclip UI 中的 browse 和 inspect 界面
-- 破坏性操作的治理
+### Paperclip should own these concerns
 
-### 提供者应该拥有这些关注点
+- binding a provider to a company and optionally overriding it per agent
+- mapping Paperclip entities into provider scopes
+- provenance back to issue comments, documents, runs, and activity
+- cost / token / latency reporting for memory work
+- browse and inspect surfaces in the Paperclip UI
+- governance on destructive operations
 
-- 提取启发式
-- embedding / 索引策略
-- 排序和重排序
-- profile 综合
-- 矛盾解决和遗忘逻辑
-- 存储引擎细节
+### Providers should own these concerns
 
-### 控制平面契约应该保持精简
+- extraction heuristics
+- embedding / indexing strategy
+- ranking and reranking
+- profile synthesis
+- contradiction resolution and forgetting logic
+- storage engine details
 
-Paperclip 不需要标准化每个提供者的每个功能。它需要：
+### The control-plane contract should stay small
 
-- 一个可移植的必需核心
-- 更丰富提供者的可选功能标志
-- 一种记录提供者原生 ID 和元数据的方式，而不假装所有提供者在内部是等效的
+Paperclip does not need to standardize every feature from every provider. It needs:
 
-## 建议方向
+- a required portable core
+- optional capability flags for richer providers
+- a way to record provider-native ids and metadata without pretending all providers are equivalent internally
 
-Paperclip 应该采用双层 memory 模型：
+## Recommended Direction
 
-1. `Memory binding + 控制平面层`
-   Paperclip 决定哪个 provider key 对公司、agent 或项目生效，并记录每个 memory 操作及其来源和使用情况。
+Paperclip should adopt a two-layer memory model:
 
-2. `Provider 适配器层`
-   内置或插件提供的适配器将 Paperclip memory 请求转换为提供者特定的调用。
+1. `Memory binding + control plane layer`
+   Paperclip decides which provider key is in effect for a company, agent, or project, and it logs every memory operation with provenance and usage.
 
-可移植核心应涵盖：
+2. `Provider adapter layer`
+   A built-in or plugin-supplied adapter turns Paperclip memory requests into provider-specific calls.
+
+The portable core should cover:
 
 - ingest / write
 - search / recall
@@ -154,7 +159,7 @@ Paperclip 应该采用双层 memory 模型：
 - forget / correction
 - usage reporting
 
-可选功能可涵盖：
+Optional capabilities can cover:
 
 - profile synthesis
 - async ingestion
@@ -162,12 +167,10 @@ Paperclip 应该采用双层 memory 模型：
 - tool / resource / skill memory
 - provider-native graph browsing
 
-这足以支持：
+That is enough to support:
 
-- 类似于 `memsearch` 的本地 markdown 优先基线
-- 类似于 `mem0`、`supermemory` 或 `Memori` 的托管服务
-- 像 `MemOS` 或 `OpenViking` 这样更丰富的 agent-memory 系统
+- a local markdown-first baseline similar to `memsearch`
+- hosted services similar to `mem0`, `supermemory`, or `Memori`
+- richer agent-memory systems like `MemOS` or `OpenViking`
 
-而不会迫使 Paperclip 本身成为一个单一的 memory 引擎。
-
-（文件结束 - 共 172 行）
+without forcing Paperclip itself to become a monolithic memory engine.
