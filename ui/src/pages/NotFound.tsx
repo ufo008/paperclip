@@ -31,7 +31,7 @@ export function NotFoundPage({ scope = "global", requestedPrefix }: NotFoundPage
   const title = scope === "invalid_company_prefix" ? t("sidebar.company") : t("errors.notFound");
   const description =
     scope === "invalid_company_prefix"
-      ? `No company matches prefix "${normalizedPrefix ?? "unknown"}".`
+      ? t("errors.noCompanyMatchesPrefix", { prefix: normalizedPrefix ?? "unknown" })
       : t("errors.notFoundMessage");
 
   return (
@@ -48,7 +48,7 @@ export function NotFoundPage({ scope = "global", requestedPrefix }: NotFoundPage
         </div>
 
         <div className="mt-4 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-          Requested path: <code className="font-mono">{currentPath}</code>
+          {t("errors.requestedPath")} <code className="font-mono">{currentPath}</code>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
